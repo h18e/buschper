@@ -33,3 +33,6 @@ final class NightRecord: NSManagedObject {
     @NSManaged var excluded: Bool
     @NSManaged var computedAt: Date?
 }
+
+/// Fuer ForEach und sheet(item:). Die Kennung ist das eigene `id`-Feld (UUID).
+extension NightRecord: Identifiable {}

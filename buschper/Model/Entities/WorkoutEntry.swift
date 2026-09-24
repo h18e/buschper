@@ -22,3 +22,6 @@ final class WorkoutEntry: NSManagedObject {
     @NSManaged var createdAt: Date?
     @NSManaged var updatedAt: Date?
 }
+
+/// Fuer ForEach und sheet(item:). Die Kennung ist das eigene `id`-Feld (UUID).
+extension WorkoutEntry: Identifiable {}

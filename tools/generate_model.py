@@ -240,6 +240,9 @@ def entity_swift(name: str) -> str:
         swift_type = "NSSet?" if to_many else f"{ENTITIES_REL_TYPE(rel_name, name)}?"
         out.append(f"    @NSManaged var {rel_name}: {swift_type}")
     out.append("}")
+    out.append("")
+    out.append("/// Fuer ForEach und sheet(item:). Die Kennung ist das eigene `id`-Feld (UUID).")
+    out.append(f"extension {name}: Identifiable {{}}")
     return "\n".join(out) + "\n"
 
 

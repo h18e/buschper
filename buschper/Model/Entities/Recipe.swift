@@ -22,3 +22,6 @@ final class Recipe: NSManagedObject {
     @NSManaged var updatedAt: Date?
     @NSManaged var ingredients: NSSet?
 }
+
+/// Fuer ForEach und sheet(item:). Die Kennung ist das eigene `id`-Feld (UUID).
+extension Recipe: Identifiable {}

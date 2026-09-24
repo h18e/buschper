@@ -16,3 +16,6 @@ final class IgnoredHealthSample: NSManagedObject {
     @NSManaged var kindRaw: String?
     @NSManaged var ignoredAt: Date?
 }
+
+/// Fuer ForEach und sheet(item:). Die Kennung ist das eigene `id`-Feld (UUID).
+extension IgnoredHealthSample: Identifiable {}

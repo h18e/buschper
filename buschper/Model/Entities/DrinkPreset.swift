@@ -19,3 +19,6 @@ final class DrinkPreset: NSManagedObject {
     @NSManaged var nutrientsJSON: String?
     @NSManaged var sortIndex: Int32
 }
+
+/// Fuer ForEach und sheet(item:). Die Kennung ist das eigene `id`-Feld (UUID).
+extension DrinkPreset: Identifiable {}

@@ -21,3 +21,6 @@ final class RecipeIngredient: NSManagedObject {
     @NSManaged var sortIndex: Int32
     @NSManaged var recipe: Recipe?
 }
+
+/// Fuer ForEach und sheet(item:). Die Kennung ist das eigene `id`-Feld (UUID).
+extension RecipeIngredient: Identifiable {}

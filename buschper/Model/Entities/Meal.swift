@@ -19,3 +19,6 @@ final class Meal: NSManagedObject {
     @NSManaged var updatedAt: Date?
     @NSManaged var entries: NSSet?
 }
+
+/// Fuer ForEach und sheet(item:). Die Kennung ist das eigene `id`-Feld (UUID).
+extension Meal: Identifiable {}

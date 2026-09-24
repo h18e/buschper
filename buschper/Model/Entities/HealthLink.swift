@@ -20,3 +20,6 @@ final class HealthLink: NSManagedObject {
     @NSManaged var pendingDelete: Bool
     @NSManaged var updatedAt: Date?
 }
+
+/// Fuer ForEach und sheet(item:). Die Kennung ist das eigene `id`-Feld (UUID).
+extension HealthLink: Identifiable {}

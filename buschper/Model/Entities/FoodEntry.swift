@@ -24,3 +24,6 @@ final class FoodEntry: NSManagedObject {
     @NSManaged var sortIndex: Int32
     @NSManaged var meal: Meal?
 }
+
+/// Fuer ForEach und sheet(item:). Die Kennung ist das eigene `id`-Feld (UUID).
+extension FoodEntry: Identifiable {}

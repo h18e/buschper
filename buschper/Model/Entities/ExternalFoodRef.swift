@@ -22,3 +22,6 @@ final class ExternalFoodRef: NSManagedObject {
     @NSManaged var useCount: Int32
     @NSManaged var lastUsedAt: Date?
 }
+
+/// Fuer ForEach und sheet(item:). Die Kennung ist das eigene `id`-Feld (UUID).
+extension ExternalFoodRef: Identifiable {}

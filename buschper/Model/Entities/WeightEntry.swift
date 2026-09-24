@@ -16,3 +16,6 @@ final class WeightEntry: NSManagedObject {
     @NSManaged var kg: Double
     @NSManaged var createdAt: Date?
 }
+
+/// Fuer ForEach und sheet(item:). Die Kennung ist das eigene `id`-Feld (UUID).
+extension WeightEntry: Identifiable {}

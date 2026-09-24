@@ -17,3 +17,6 @@ final class PortionSize: NSManagedObject {
     @NSManaged var sortIndex: Int32
     @NSManaged var product: FoodProduct?
 }
+
+/// Fuer ForEach und sheet(item:). Die Kennung ist das eigene `id`-Feld (UUID).
+extension PortionSize: Identifiable {}
