@@ -30,9 +30,18 @@ struct MeRecipeRow: View {
     }
 }
 
-/// Weitere Einstellungen: Erinnerungen, Export. Wird in Schritt 9 gefüllt.
+/// Weitere Einstellungen: Erinnerungen, Export.
 struct MeSettingsExtraRows: View {
     var body: some View {
-        EmptyView()
+        NavigationLink {
+            ReminderSettingsView()
+        } label: {
+            Label("Erinnerige", systemImage: "bell.fill")
+        }
+        NavigationLink {
+            ExportView()
+        } label: {
+            Label("Date exportiere", systemImage: "square.and.arrow.up")
+        }
     }
 }

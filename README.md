@@ -39,6 +39,8 @@ buschper/
 ├── Services/         Gerätelokale Einstellungen, Erinnerungen
 ├── Theme/            Farben pro Bereich, Karten, Bausteine
 └── Resources/        Asset-Katalog
+Shared/               Code für App und Widget (Widget-Zusammenfassung)
+buschperWidget/       Widget klein und mittel mit „+250 ml“
 buschperTests/        Tests der Rechenlogik (Swift Testing)
 tools/                Modell-Generator, Strukturprüfung, BLV-Import
 Config/               Signing, Entitlements, Info.plist
@@ -54,6 +56,15 @@ Config/               Signing, Entitlements, Info.plist
   getrennt in `Model/EntityExtensions/`.
 - **Nährwerte** liegen in Core Data als kompaktes JSON (`nutrientsJSON`). So kann ein
   Wert „unbekannt“ sein, statt stillschweigend 0 – wichtig für ehrliche Summen.
+
+## Widget
+
+Das Widget öffnet die Datenbank **nicht**. Die App legt nach jeder Änderung eine
+kleine Zusammenfassung in den App-Group-Bereich (`Shared/WidgetBridge.swift`);
+das Widget zeigt sie an. Der Knopf „+250 ml“ legt das Glas in eine Warteschlange
+und passt die Anzeige sofort an; die App übernimmt es beim nächsten Öffnen als
+richtigen Eintrag und schreibt es nach Health. So schreiben nie zwei Prozesse
+gleichzeitig in Core Data und iCloud.
 
 ## Farben
 
@@ -86,5 +97,5 @@ mit ⌘B, die Tests laufen mit ⌘U.
 | 6 | Rezepte, Kopieren, Teilen | ✅ |
 | 7 | Schlaf: Score, Tab, Morgen-Einschätzung | ✅ |
 | 8 | Schlafanalyse und Muster | ✅ |
-| 9 | Widget, Erinnerungen, Export | |
+| 9 | Widget, Erinnerungen, Export | ✅ |
 | 10 | SETUP und RELEASE vervollständigen | |

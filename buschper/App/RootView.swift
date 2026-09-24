@@ -66,6 +66,9 @@ struct RootView: View {
             }
         }
         .onOpenURL(perform: handleOpen)
+        .onReceive(NotificationCenter.default.publisher(for: .buschperOpenSleep)) { _ in
+            selection = .sleep
+        }
         .sheet(item: $importing) { meal in
             ImportMealView(meal: meal)
         }

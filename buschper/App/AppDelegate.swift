@@ -36,4 +36,18 @@ final class NotificationPresenter: NSObject, UNUserNotificationCenterDelegate {
     ) {
         completionHandler([.banner, .list, .sound])
     }
+
+    /// Antippen der Morgen-Erinnerung öffnet den Schlaf-Tab.
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        if response.notification.request.content.userInfo[NotificationScheduler.openSleepKey] as? Bool == true {
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .buschperOpenSleep, object: nil)
+            }
+        }
+        completionHandler()
+    }
 }

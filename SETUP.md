@@ -7,8 +7,8 @@ beschrieben, lieber nachfragen als raten.
 **Voraussetzungen:** Mac mit Xcode 26 oder neuer, iPhone mit iOS 26 oder neuer,
 Mitgliedschaft im Apple Developer Program (hast du).
 
-> **Stand:** Schritte 1–8 von 10 sind umgesetzt: alles ausser Widget,
-> Erinnerungen und Export.
+> **Stand:** Schritte 1–9 von 10 sind umgesetzt – die App ist funktional
+> vollständig. Schritt 10 ist diese Anleitung und die Release-Checkliste.
 > Diese Anleitung wächst mit jedem Schritt.
 
 ---
@@ -108,6 +108,16 @@ Widget (kommt in Schritt 9) sieht dann keine Daten.
 
 **Wenn HealthKit fehlt:** Oben links **+ Capability** → „HealthKit“ suchen →
 doppelklicken.
+
+**Das Widget ist ein eigenes Target.** In der Spalte **TARGETS** auf
+**buschperWidgetExtension** klicken und dort ebenfalls **Signing & Capabilities**
+prüfen:
+
+| Feld | Erwartet |
+|---|---|
+| Team | dein Team (kommt automatisch aus Schritt 2) |
+| Bundle Identifier | `ch.hebera.buschper.widget` |
+| App Groups | `group.ch.hebera.buschper` angehakt |
 
 ---
 
@@ -212,6 +222,16 @@ Schlafdaten; man könnte sie in der Health-App des Simulators von Hand eintragen
 | **Muster** | Erst „No z'weni Date“ – nach einigen Wochen erscheinen Zusammenhänge |
 | **Muster → Schwälle aapasse** | Grenzen ändern, dann „Übernäh u aui Nächt nöi uswärte“ |
 | ↻ oben rechts | Die letzten 90 Nächte neu auswerten |
+
+**Widget, Erinnerungen, Export testen:**
+
+| Test | Erwartung |
+|---|---|
+| Homescreen lange drücken → **+** → „buschper“ → klein und mittel | „No übrig … kcal“ und Flüssigkeit |
+| Im mittleren Widget **+250 ml** | Die Anzeige springt sofort; beim nächsten Öffnen von buschper steht das Glas in der Liste und in Health |
+| **Ig → Erinnerige** → Trink-Erinnerig ein | iOS fragt einmal nach Mitteilungen; Erinnerungen kommen zur vollen Stunde, heute nur bis das Ziel erreicht ist |
+| Morge-Iischätzig ein, Mitteilung antippen | buschper öffnet den Tab „Schlaf“ |
+| **Ig → Date exportiere** → Dateie erstelle → Teile | Fünf CSV-Dateien; in Excel öffnen |
 
 Voraussetzung für Schlafphasen: Apple Watch in der Nacht tragen, Schlaf-Fokus
 mit Schlafplan aktiv. Ohne Uhr kommt nur die Schlafdauer vom iPhone; der Score

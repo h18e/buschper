@@ -165,7 +165,8 @@ def swift_balance(text: str) -> tuple[int, int, int, str | None]:
 
 
 def check_swift_files() -> None:
-    files = sorted(ROOT.glob("buschper/**/*.swift")) + sorted(ROOT.glob("buschperTests/**/*.swift"))
+    files = (sorted(ROOT.glob("buschper/**/*.swift")) + sorted(ROOT.glob("buschperTests/**/*.swift"))
+             + sorted(ROOT.glob("Shared/**/*.swift")) + sorted(ROOT.glob("buschperWidget/**/*.swift")))
     if not files:
         problem("Keine Swift-Dateien gefunden.")
         return
@@ -345,6 +346,18 @@ def check_info_plist() -> None:
     for identifier in ("iCloud.ch.hebera.buschper", "group.ch.hebera.buschper"):
         if identifier not in persistence:
             problem(f"PersistenceController.swift: '{identifier}' stimmt nicht mit den Entitlements ueberein.")
+
+    widget_plist = ROOT / "Config" / "WidgetInfo.plist"
+    if not widget_plist.exists() or "com.apple.widgetkit-extension" not in widget_plist.read_text(encoding="utf-8"):
+        problem("Config/WidgetInfo.plist: NSExtensionPointIdentifier com.apple.widgetkit-extension fehlt.")
+    widget_entitlements = ROOT / "Config" / "buschperWidget.entitlements"
+    if not widget_entitlements.exists() or "group.ch.hebera.buschper" not in widget_entitlements.read_text(encoding="utf-8"):
+        problem("Config/buschperWidget.entitlements: App Group fehlt – das Widget saehe keine Daten.")
+    if "ch.hebera.buschper.widget" not in pbx:
+        problem("project.pbxproj: Bundle ID des Widgets muss mit ch.hebera.buschper. beginnen.")
+    bridge = (ROOT / "Shared" / "WidgetBridge.swift").read_text(encoding="utf-8")
+    if "group.ch.hebera.buschper" not in bridge:
+        problem("Shared/WidgetBridge.swift: App Group stimmt nicht mit den Entitlements ueberein.")
 
     ok("Info.plist und Entitlements enthalten die Laufzeit-Schluessel")
 
