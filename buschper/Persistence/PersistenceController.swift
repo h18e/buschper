@@ -1,3 +1,4 @@
+import CloudKit
 import CoreData
 import Foundation
 import os
