@@ -80,8 +80,8 @@ struct SleepFactorTests {
         #expect(metrics.kcalEaten == 1582)
         #expect(metrics.alcoholG == 10)
         #expect(metrics.dinnerKcal == 800)
-        #expect(metrics.lastMealMinute == 19 * 60)
-        #expect(metrics.lastCaffeineMinute == 16 * 60)
+        #expect(metrics.lastMealMinute == 1140.0)  // 19:00
+        #expect(metrics.lastCaffeineMinute == 960.0)  // 16:00
         #expect(metrics.fluidMl == 150)
 
         let factors = FactorEvaluator.factors(for: metrics, thresholds: thresholds)
