@@ -26,7 +26,12 @@ final class AppPreferences: ObservableObject {
 
     private let defaults: UserDefaults
 
-    init(defaults: UserDefaults = .standard) {
+    /// Die Einstellungen liegen im App-Group-Bereich, damit das Widget dieselbe
+    /// Geräte-Kennung und dieselbe Schnelltasten-Menge sieht wie die App.
+    static let sharedDefaults: UserDefaults =
+        UserDefaults(suiteName: PersistenceController.appGroupIdentifier) ?? .standard
+
+    init(defaults: UserDefaults = AppPreferences.sharedDefaults) {
         self.defaults = defaults
         defaults.register(defaults: [
             Key.usesOpenFoodFacts: true,

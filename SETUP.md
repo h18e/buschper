@@ -7,9 +7,9 @@ beschrieben, lieber nachfragen als raten.
 **Voraussetzungen:** Mac mit Xcode 26 oder neuer, iPhone mit iOS 26 oder neuer,
 Mitgliedschaft im Apple Developer Program (hast du).
 
-> **Stand:** Schritt 1 von 10 ist umgesetzt: Projekt, Datenmodell und die
-> Rechenlogik mit Tests. Die App startet mit leeren Platzhalter-Seiten. Diese
-> Anleitung wächst mit jedem Schritt.
+> **Stand:** Schritte 1–2 von 10 sind umgesetzt: Projekt, Datenmodell,
+> Rechenlogik mit Tests, Ersteinrichtung, Apple Health und der Tab „Ig“.
+> Diese Anleitung wächst mit jedem Schritt.
 
 ---
 
@@ -129,10 +129,27 @@ Die Testübersicht findest du mit **⌘ + 6** (Test Navigator).
 1. Oben in der Leiste ein iPhone-Modell wählen (z. B. „iPhone 17 Pro“)
 2. **⌘ + R**
 
-**Erwartung nach Schritt 1:** Die App startet dunkel mit vier Tabs. „Hüt“ zeigt
-leere farbige Karten, „Erfasse“ öffnet ein Blatt mit vier runden Knöpfen,
-„Schlaf“ und „Ig“ zeigen Platzhalter. Mehr kann sie noch nicht – es geht nur
-darum, dass Projekt, Datenbank und Tests sauber bauen.
+**Erwartung:** Die App startet dunkel mit der **Ersteinrichtung**:
+
+1. „Grüessech bi buschper“ → **Los**
+2. „Apple Health“ → **Mit Health verbinde** → iOS zeigt den Health-Dialog →
+   **Alle aktivieren** → **Zulassen**
+3. „Über di“ – im Simulator ist Health leer, also selbst ausfüllen
+4. „Dys Ziel“ → Ziel, Abschlag, Bewegungsprofil, Schlaf- und Schrittziel
+5. „Parat!“ → **Fertig**
+
+Danach: Tab **Ig** zeigt oben „Bedarf hüt“ mit Grundumsatz, Aktivkalorien,
+Abschlag und Budget. Darunter lassen sich Profil, Ziel, Makros und Tagesziele
+ändern – die Zahlen oben passen sich an.
+
+**Im Simulator** gibt es keine Aktivdaten. Vor 12:00 steht bei den Aktivkalorien
+0, ab 12:00 „Aktivkalorie (Schätzig)“ aus dem Bewegungsprofil. So ist es gewollt.
+
+**Auf dem iPhone** kommen Aktivkalorien, Gewicht und Profil aus Health. Die
+Ersteinrichtung füllt Geburtsdatum, Geschlecht, Grösse und Gewicht vor, wenn sie
+dort hinterlegt sind.
+
+Die Tabs „Hüt“ und „Schlaf“ und das „＋“ zeigen noch Platzhalter.
 
 **Erwartungsmanagement:** Der Code wurde ohne Compiler geschrieben. Ein paar
 Fehler beim ersten Bauen sind gut möglich. Schick mir den vollständigen
@@ -142,7 +159,18 @@ Fehlertext (Abschnitt 8).
 
 ## 7. CloudKit-Schema anlegen
 
-*Kommt mit Schritt 2, sobald die Einstellungen einen Bereich „Entwicklung“ haben.*
+Die Datenbankstruktur in iCloud entsteht nicht von selbst. Einmalig:
+
+1. App im Simulator oder auf dem iPhone starten, Ersteinrichtung abschliessen
+2. Tab **Ig** → ganz unten Abschnitt **Entwicklung**
+3. **CloudKit-Schema anlegen** antippen
+
+Kontrolle: https://icloud.developer.apple.com/dashboard → Container
+`iCloud.ch.hebera.buschper` → **Schema → Record Types**. Dort müssen Typen wie
+`CD_Profile`, `CD_Meal`, `CD_FoodEntry` und `CD_NightRecord` auftauchen.
+
+> Der Abschnitt **Entwicklung** erscheint nur in Debug-Builds. Dort gibt es auch
+> **Ersteinrichtung neu starten**, falls du sie nochmals durchspielen willst.
 
 ---
 

@@ -32,17 +32,6 @@ struct SleepPlaceholderView: View {
     }
 }
 
-struct MePlaceholderView: View {
-    var body: some View {
-        NavigationStack {
-            EmptyStateView(symbol: "person.crop.circle.fill", title: "Ig", message: "Chunnt i Schritt 2.")
-                .frame(maxHeight: .infinity)
-                .screenBackground()
-                .navigationTitle("Ig")
-        }
-    }
-}
-
 struct QuickAddPlaceholderView: View {
     var body: some View {
         VStack(spacing: 16) {

@@ -1,0 +1,52 @@
+import Foundation
+import Observation
+import SwiftUI
+
+/// Hält alle Dienste zusammen und wird einmal in die Umgebung gelegt.
+///
+/// `revision` wird bei jeder Datenänderung hochgezählt. Bildschirme, die Werte aus
+/// Apple Health dazuholen (und deshalb nicht allein von `@FetchRequest` leben),
+/// laden damit neu.
+@MainActor
+@Observable
+final class AppEnvironment {
+    let persistence: PersistenceController
+    let preferences: AppPreferences
+    let store: DataStore
+    let health: HealthDataProviding
+    let healthSync: HealthSyncService
+    let dayData: DayDataService
+
+    private(set) var revision = 0
+
+    init(persistence: PersistenceController, preferences: AppPreferences, health: HealthDataProviding) {
+        self.persistence = persistence
+        self.preferences = preferences
+        self.health = health
+        let store = DataStore(persistence: persistence, preferences: preferences)
+        self.store = store
+        self.healthSync = HealthSyncService(store: store, health: health)
+        self.dayData = DayDataService(store: store, health: health)
+    }
+
+    static let live = AppEnvironment(
+        persistence: .shared,
+        preferences: .shared,
+        health: HealthKitService()
+    )
+
+    /// Nach jeder Änderung aufrufen: speichert, lädt abhängige Anzeigen neu und
+    /// schreibt offene Aufträge nach Health.
+    func dataDidChange() {
+        store.save()
+        revision += 1
+        Task { await healthSync.processPending() }
+    }
+
+    /// Beim Wechsel in den Vordergrund: Health kann sich inzwischen geändert haben
+    /// (Schritte, Schlaf, Waage), und offene Aufträge sollen raus.
+    func appBecameActive() async {
+        revision += 1
+        await healthSync.processPending()
+    }
+}

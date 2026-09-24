@@ -7,6 +7,8 @@ import SwiftUI
 struct RootView: View {
     let loadError: Error?
 
+    @Environment(AppEnvironment.self) private var app
+
     enum TabID: Hashable {
         case today
         case add
@@ -16,6 +18,7 @@ struct RootView: View {
 
     @State private var selection: TabID = .today
     @State private var showsQuickAdd = false
+    @State private var showsOnboarding = false
 
     var body: some View {
         Group {
@@ -41,7 +44,7 @@ struct RootView: View {
                 .tag(TabID.sleep)
                 .tabItem { Label("Schlaf", systemImage: "moon.zzz.fill") }
 
-            MePlaceholderView()
+            MeView()
                 .tag(TabID.me)
                 .tabItem { Label("Ig", systemImage: "person.crop.circle.fill") }
         }
@@ -54,6 +57,16 @@ struct RootView: View {
         .sheet(isPresented: $showsQuickAdd) {
             QuickAddPlaceholderView()
                 .presentationDetents([.medium])
+        }
+        .fullScreenCover(isPresented: $showsOnboarding) {
+            OnboardingView(profile: app.store.profile()) {
+                showsOnboarding = false
+            }
+        }
+        .task(id: app.revision) {
+            if !app.store.profile().onboardingCompleted {
+                showsOnboarding = true
+            }
         }
     }
 }
