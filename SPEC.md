@@ -1,6 +1,6 @@
 # buschper – Spezifikation (Version 1)
 
-**Stand:** 2026-09-24 · **Status:** freigegeben, in Umsetzung · **Autor:** Claude Code für Raphi
+**Stand:** 2026-09-24 · **Status:** freigegeben und umgesetzt (Version 1) · **Autor:** Claude Code für Raphi
 
 Persönlicher Gesundheitstracker für iPhone. buschper erfasst Ernährung, Trinken,
 Aktivität, Gewicht und Schlaf, zeigt alles auf einem frei gestaltbaren Dashboard
@@ -550,10 +550,12 @@ Muster werden nach Stärke sortiert. Ausgeschlossene Nächte zählen nicht mit.
 | Klein | kcal übrig, Flüssigkeit in % |
 | Mittel | kcal übrig mit Makros, Flüssigkeit, Knopf **„+250 ml“** |
 
-Der Knopf erfasst Wasser direkt, ohne die App zu öffnen. Der Health-Eintrag dazu
-wird beim nächsten Öffnen der App nachgeschrieben, weil das Widget selbst nicht
-nach Health schreiben darf. Das Widget braucht dafür eine gemeinsame
-Datenablage mit der App (App Group).
+Der Knopf erfasst Wasser, ohne die App zu öffnen. *Umsetzung:* Das Widget öffnet
+die Datenbank nicht, sondern liest eine kleine Zusammenfassung, die die App im
+gemeinsamen App-Group-Bereich ablegt. Der Knopf legt das Glas in eine
+Warteschlange und passt die Anzeige sofort an; die App übernimmt es beim nächsten
+Öffnen als Eintrag und schreibt es nach Health. So schreiben nie zwei Prozesse
+gleichzeitig in Core Data und iCloud.
 
 ---
 

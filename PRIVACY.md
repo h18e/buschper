@@ -4,7 +4,7 @@
 App Store muss dieser Text unter einer erreichbaren URL liegen. Rechtlich geprüft
 ist er nicht.
 
-Stand: 24. September 2026
+Stand: 24. September 2026 (Version 1)
 
 ## Verantwortlich
 
@@ -57,6 +57,24 @@ Datenschutzerklärung von Open Food Facts: https://world.openfoodfacts.org/priva
 Teilst du eine Mahlzeit, enthält die Datei bzw. der QR-Code nur Name, Kategorie,
 Zutaten, Mengen und Nährwerte. Kein Datum, keine Gesundheitsdaten, keine Angaben
 zu deiner Person. Wohin sie geht, bestimmst du im Teilen-Menü.
+
+## Mitteilungen
+
+Trink-Erinnerungen und die Frage nach dem Schlaf am Morgen sind lokale
+Mitteilungen, die dein Gerät selbst plant. Dafür verlässt nichts dein Gerät.
+Beide sind standardmässig ausgeschaltet.
+
+## Widget
+
+Das Widget zeigt Kalorien, Makros und Flüssigkeit von heute. Dafür legt buschper
+eine kleine Zusammenfassung in einen Bereich auf deinem Gerät, den nur buschper
+und sein Widget lesen können. Auf dem Sperrbildschirm oder Homescreen ist diese
+Zusammenfassung für alle sichtbar, die dein Gerät sehen.
+
+## Export
+
+Der CSV-Export entsteht auf deinem Gerät. Wohin die Dateien gehen, bestimmst du
+im Teilen-Menü.
 
 ## Keine Weitergabe an Dritte
 

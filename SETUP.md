@@ -7,8 +7,9 @@ beschrieben, lieber nachfragen als raten.
 **Voraussetzungen:** Mac mit Xcode 26 oder neuer, iPhone mit iOS 26 oder neuer,
 Mitgliedschaft im Apple Developer Program (hast du).
 
-> **Stand:** Schritte 1–9 von 10 sind umgesetzt – die App ist funktional
-> vollständig. Schritt 10 ist diese Anleitung und die Release-Checkliste.
+> **Stand:** Version 1 ist vollständig umgesetzt (Schritte 1–10). Der Code ist
+> ohne Compiler entstanden – beim ersten Bauen sind ein paar Fehler zu erwarten.
+> Schick mir dann die vollständigen Fehlertexte (Abschnitt 8).
 > Diese Anleitung wächst mit jedem Schritt.
 
 ---
@@ -292,6 +293,36 @@ wenn du dich sicher fühlst.)
 
 ---
 
+## 7c. Auf dem eigenen iPhone starten
+
+1. iPhone per Kabel anschliessen, am iPhone **Vertrauen** bestätigen
+2. In Xcode oben das iPhone als Ziel wählen
+3. **⌘ + R**
+
+Beim allerersten Mal: am iPhone **Einstellungen → Allgemein → VPN & Geräteverwaltung
+→ Entwickler-App → deiner Apple-ID vertrauen**. Ausserdem verlangt iOS für
+Entwickler-Apps den **Entwicklermodus**: **Einstellungen → Datenschutz & Sicherheit
+→ Entwicklermodus** einschalten, iPhone startet neu.
+
+Am iPhone muss unter **Einstellungen → [dein Name]** iCloud aktiv sein, sonst
+gleicht nichts ab.
+
+**Erst auf dem iPhone sinnvoll testbar:** Aktivkalorien und Schritte, Schlaf,
+Gewicht von der Waage, Barcode mit der Kamera, QR-Code, Widget.
+
+## 7d. TestFlight für dich und deine Partnerin
+
+Alle Schritte stehen als Checkliste in [RELEASE.md](RELEASE.md) – vom App-Icon über
+das Hochladen bis zur Einladung deiner Partnerin als interne Testerin. Interne
+Tester brauchen keine Beta-Prüfung durch Apple; ein neuer Build ist nach dem
+Hochladen in rund einer halben Stunde auf beiden iPhones.
+
+Deine Partnerin hat danach ihre **eigene** buschper-Installation mit eigenem Profil
+und eigenen Daten in ihrer iCloud. Mahlzeiten tauscht ihr über **Teile** (Datei
+oder QR-Code) aus.
+
+---
+
 ## 8. Wenn etwas schiefgeht
 
 **Bei Build-Fehlern** zeigt der Issue Navigator in Xcode oft nur die halbe Meldung.
@@ -329,6 +360,12 @@ Falls es das Modell „iPhone 17 Pro“ bei dir nicht gibt, einen Namen aus
 | `Unable to initialize without an iCloud account` | **Kein Fehler der App.** Der Simulator ist nicht bei iCloud angemeldet. Die App läuft lokal normal weiter |
 | `The file "buschper.xcodeproj" couldn't be opened` | Xcode zu alt – es braucht Xcode 26 oder neuer |
 | Im Simulator lässt sich nichts eintippen | **I/O → Keyboard → Toggle Software Keyboard** (⌘K) |
+| `Multiple commands produce ... Info.plist` | Eine Info.plist ist in einen der Ordner `buschper/`, `buschperWidget/` oder `Shared/` gerutscht. Sie gehören nach `Config/` |
+| Widget zeigt „buschper einisch öffne“ | Die App war seit der Installation noch nie offen, oder die App Group fehlt beim Widget-Target (Abschnitt 4) |
+| `Embedded binary's bundle identifier is not prefixed with the parent app's` | Die Bundle ID des Widgets muss `ch.hebera.buschper.widget` sein |
+| Barcode-Scan zeigt nur ein Eingabefeld | Im Simulator normal (keine Kamera). Auf dem iPhone: Kamera für buschper erlauben |
+| Keine Schritte, kein Schlaf, keine Aktivkalorien | Health-Berechtigungen prüfen: Health-App → Profilbild → Apps → buschper → alles erlauben. Im Simulator gibt es keine solchen Daten |
+| `Unable to find ... blv_foods.json` im Log | Kein Fehler: ohne BLV-Import nimmt buschper die Richtwert-Liste |
 
 ---
 

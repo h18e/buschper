@@ -4,7 +4,7 @@ Persönlicher Gesundheitstracker für iPhone: Ernährung, Trinken, Aktivität, G
 und Schlaf. Dazu eine Schlafanalyse, die nach schlechten Nächten im Vortag nach
 Ursachen sucht und über die Zeit Muster erkennt.
 
-- **Spezifikation:** [SPEC.md](SPEC.md) ← aktueller Stand: Entwurf, wartet auf Freigabe
+- **Spezifikation:** [SPEC.md](SPEC.md)
 - **Ersteinrichtung:** [SETUP.md](SETUP.md)
 - **Vor einer Veröffentlichung:** [RELEASE.md](RELEASE.md)
 - **Datenschutz:** [PRIVACY.md](PRIVACY.md)
@@ -33,8 +33,8 @@ buschper/
 ├── Domain/           Reine Rechenlogik ohne Core Data, HealthKit und SwiftUI – voll getestet
 ├── Model/            Core-Data-Modell, Entitäten (generiert), bequeme Zugriffe
 ├── Persistence/      Core-Data-Stack mit privatem iCloud-Abgleich, im App-Group-Container
-├── Health/           Apple Health (ab Schritt 2)
-├── Food/             Lebensmittelsuche, BLV, Open Food Facts (ab Schritt 3)
+├── Health/           Apple Health lesen und schreiben, Abgleich
+├── Food/             Lebensmittelsuche, mitgelieferte Liste, Open Food Facts
 ├── Features/         Bildschirme
 ├── Services/         Gerätelokale Einstellungen, Erinnerungen
 ├── Theme/            Farben pro Bereich, Karten, Bausteine
@@ -98,4 +98,4 @@ mit ⌘B, die Tests laufen mit ⌘U.
 | 7 | Schlaf: Score, Tab, Morgen-Einschätzung | ✅ |
 | 8 | Schlafanalyse und Muster | ✅ |
 | 9 | Widget, Erinnerungen, Export | ✅ |
-| 10 | SETUP und RELEASE vervollständigen | |
+| 10 | SETUP und RELEASE vervollständigen | ✅ |
