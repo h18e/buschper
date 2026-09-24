@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+		Nur die Schlüssel, die Xcode nicht selber generiert.
+		Alles Übrige (CFBundleName, Version, Szenen-Manifest, Kamera- und Health-Texte …)
+		kommt aus GENERATE_INFOPLIST_FILE = YES und den INFOPLIST_KEY_*-Einstellungen.
+
+		Für die Schlüssel hier gibt es keine INFOPLIST_KEY_*-Entsprechung. Wer sie
+		trotzdem als Build-Einstellung schreibt, bekommt keinen Fehler – der
+		Schlüssel fehlt am Ende einfach in der App.
+	-->
+
+	<!-- CloudKit meldet Änderungen anderer Geräte über stille Push-Nachrichten. -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+
+	<!-- Dunkel ist das einzige Erscheinungsbild. -->
+	<key>UIUserInterfaceStyle</key>
+	<string>Dark</string>
+
+	<!-- Nur Apples eigene Verschlüsselung (CloudKit, HTTPS). -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+
+	<!--
+		Geteilte Mahlzeiten: eigener Dateityp ".buschper". Tippt die Empfängerin
+		die Datei in WhatsApp oder iMessage an, bietet iOS buschper zum Öffnen an.
+	-->
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeIdentifier</key>
+			<string>ch.hebera.buschper.meal</string>
+			<key>UTTypeDescription</key>
+			<string>buschper-Mahlzyt</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.json</string>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>buschper</string>
+				</array>
+				<key>public.mime-type</key>
+				<array>
+					<string>application/x-buschper-meal</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>buschper-Mahlzyt</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>ch.hebera.buschper.meal</string>
+			</array>
+		</dict>
+	</array>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<false/>
+
+	<!-- QR-Codes enthalten einen Link "buschper://import?m=…", den die Kamera öffnet. -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>ch.hebera.buschper.import</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>buschper</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

@@ -25,7 +25,58 @@ Ursachen sucht und über die Zeit Muster erkennt.
 | Sprache | Berndeutsch |
 | Abhängigkeiten | keine externen Pakete |
 
+## Aufbau
+
+```
+buschper/
+├── App/              Einstieg, Tabs
+├── Domain/           Reine Rechenlogik ohne Core Data, HealthKit und SwiftUI – voll getestet
+├── Model/            Core-Data-Modell, Entitäten (generiert), bequeme Zugriffe
+├── Persistence/      Core-Data-Stack mit privatem iCloud-Abgleich, im App-Group-Container
+├── Health/           Apple Health (ab Schritt 2)
+├── Food/             Lebensmittelsuche, BLV, Open Food Facts (ab Schritt 3)
+├── Features/         Bildschirme
+├── Services/         Gerätelokale Einstellungen, Erinnerungen
+├── Theme/            Farben pro Bereich, Karten, Bausteine
+└── Resources/        Asset-Katalog
+buschperTests/        Tests der Rechenlogik (Swift Testing)
+tools/                Modell-Generator, Strukturprüfung
+Config/               Signing, Entitlements, Info.plist
+```
+
+### Schichtenregel
+
+- **Domain** kennt weder Core Data noch HealthKit noch SwiftUI. Alles, was
+  gerechnet wird, liegt hier und bekommt Tests.
+- **Model** wird aus einer einzigen Definition erzeugt:
+  `python3 tools/generate_model.py` schreibt das Core-Data-Modell und die
+  `@NSManaged`-Klassen. Bequeme Zugriffe (`meal.category`, `entry.total`) stehen
+  getrennt in `Model/EntityExtensions/`.
+- **Nährwerte** liegen in Core Data als kompaktes JSON (`nutrientsJSON`). So kann ein
+  Wert „unbekannt“ sein, statt stillschweigend 0 – wichtig für ehrliche Summen.
+
+## Prüfen ohne Xcode
+
+```bash
+python3 tools/verify_structure.py
+```
+
+Prüft Klammern aller Swift-Dateien, XML und JSON, die Projektdatei, das
+Core-Data-Modell gegen die Klassen, Info.plist, Entitlements und die
+Health-Texte. Das ersetzt **keinen** Compiler: den Build-Nachweis liefert Xcode
+mit ⌘B, die Tests laufen mit ⌘U.
+
 ## Stand
 
-Die Spezifikation ist geschrieben, der Code folgt nach der Freigabe.
-Die Umsetzungsreihenfolge steht in [SPEC.md](SPEC.md), Abschnitt 21.
+| Schritt | Inhalt | Status |
+|---|---|---|
+| 1 | Projekt, Theme, Datenmodell, Persistenz, Rechenlogik mit Tests | ✅ |
+| 2 | Profil, Ersteinrichtung, Apple Health, Bedarfsberechnung | |
+| 3 | Ernährung: Suche, Produkte, Barcode, BLV, Open Food Facts, Chörbli, Schnell-Iitrag | |
+| 4 | Trinken, Gewicht, Training | |
+| 5 | Dashboard | |
+| 6 | Rezepte, Kopieren, Teilen | |
+| 7 | Schlaf: Score, Tab, Morgen-Einschätzung | |
+| 8 | Schlafanalyse und Muster | |
+| 9 | Widget, Erinnerungen, Export | |
+| 10 | SETUP und RELEASE vervollständigen | |

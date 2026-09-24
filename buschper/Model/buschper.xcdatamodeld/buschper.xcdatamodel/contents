@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23504" systemVersion="25A000" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="YES" userDefinedModelVersionIdentifier="">
+    <entity name="DrinkEntry" representedClassName="DrinkEntry" syncable="YES">
+        <attribute name="abvPercent" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="countsAsFluid" optional="YES" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="drinkTypeRaw" optional="YES" attributeType="String" defaultValueString="water"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="nutrientsJSON" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="presetId" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="timestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="volumeMl" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="DrinkPreset" representedClassName="DrinkPreset" syncable="YES">
+        <attribute name="abvPercent" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="drinkTypeRaw" optional="YES" attributeType="String" defaultValueString="custom"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="nutrientsJSON" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="sortIndex" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="volumeMl" optional="YES" attributeType="Double" defaultValueString="250.0" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="ExternalFoodRef" representedClassName="ExternalFoodRef" syncable="YES">
+        <attribute name="brand" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="externalId" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isFavorite" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="isLiquid" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="lastUsedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="nutrientsJSON" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="sourceRaw" optional="YES" attributeType="String" defaultValueString="off"/>
+        <attribute name="useCount" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="FoodEntry" representedClassName="FoodEntry" syncable="YES">
+        <attribute name="amount" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="grams" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isLiquid" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="kindRaw" optional="YES" attributeType="String" defaultValueString="product"/>
+        <attribute name="name" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="nutrientsJSON" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="servings" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="sortIndex" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="sourceId" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="unitLabel" optional="YES" attributeType="String" defaultValueString=""/>
+        <relationship name="meal" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Meal" inverseName="entries" inverseEntity="Meal"/>
+    </entity>
+    <entity name="FoodProduct" representedClassName="FoodProduct" syncable="YES">
+        <attribute name="barcode" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="brand" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isFavorite" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="isLiquid" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="lastUsedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="nutrientsJSON" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="originExternalId" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="originRaw" optional="YES" attributeType="String" defaultValueString="own"/>
+        <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="useCount" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="portions" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="PortionSize" inverseName="product" inverseEntity="PortionSize"/>
+    </entity>
+    <entity name="HealthLink" representedClassName="HealthLink" syncable="YES">
+        <attribute name="deviceId" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="localId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="localKindRaw" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="pendingDelete" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="pendingWrite" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="sampleUUIDs" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
+    <entity name="IgnoredHealthSample" representedClassName="IgnoredHealthSample" syncable="YES">
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="ignoredAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="kindRaw" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="sampleUUID" optional="YES" attributeType="String" defaultValueString=""/>
+    </entity>
+    <entity name="Meal" representedClassName="Meal" syncable="YES">
+        <attribute name="categoryRaw" optional="YES" attributeType="String" defaultValueString="snack"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="timestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="title" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="entries" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="FoodEntry" inverseName="meal" inverseEntity="FoodEntry"/>
+    </entity>
+    <entity name="NightRecord" representedClassName="NightRecord" syncable="YES">
+        <attribute name="asleepMinutes" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="awakeMinutes" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="badReasonsJSON" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="componentsJSON" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="computedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="coreMinutes" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="dayMetricsJSON" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="deepMinutes" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="excluded" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="factorsJSON" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="hasStages" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isBad" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="nightDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="note" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="rating" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="remMinutes" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="score" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="sleepOnset" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="tagsJSON" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="wakeTime" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
+    <entity name="PortionSize" representedClassName="PortionSize" syncable="YES">
+        <attribute name="grams" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="sortIndex" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="product" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="FoodProduct" inverseName="portions" inverseEntity="FoodProduct"/>
+    </entity>
+    <entity name="Profile" representedClassName="Profile" syncable="YES">
+        <attribute name="activityProfileRaw" optional="YES" attributeType="String" defaultValueString="light"/>
+        <attribute name="badNightRulesJSON" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="birthDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="carbsPercent" optional="YES" attributeType="Double" defaultValueString="45.0" usesScalarValueType="YES"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dashboardLayoutJSON" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="factorThresholdsJSON" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="fallbackWeightKg" optional="YES" attributeType="Double" defaultValueString="75.0" usesScalarValueType="YES"/>
+        <attribute name="fatPercent" optional="YES" attributeType="Double" defaultValueString="30.0" usesScalarValueType="YES"/>
+        <attribute name="fiberMinG" optional="YES" attributeType="Double" defaultValueString="30.0" usesScalarValueType="YES"/>
+        <attribute name="goalRaw" optional="YES" attributeType="String" defaultValueString="maintain"/>
+        <attribute name="heightCm" optional="YES" attributeType="Double" defaultValueString="175.0" usesScalarValueType="YES"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="offsetGain" optional="YES" attributeType="Double" defaultValueString="300.0" usesScalarValueType="YES"/>
+        <attribute name="offsetLose" optional="YES" attributeType="Double" defaultValueString="-500.0" usesScalarValueType="YES"/>
+        <attribute name="offsetMaintain" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="onboardingCompleted" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="proteinPercent" optional="YES" attributeType="Double" defaultValueString="25.0" usesScalarValueType="YES"/>
+        <attribute name="sexRaw" optional="YES" attributeType="String" defaultValueString="male"/>
+        <attribute name="sleepGoalMinutes" optional="YES" attributeType="Integer 32" defaultValueString="480" usesScalarValueType="YES"/>
+        <attribute name="stepGoal" optional="YES" attributeType="Integer 32" defaultValueString="10000" usesScalarValueType="YES"/>
+        <attribute name="targetWeightKg" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="waterGoalOverrideMl" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="Recipe" representedClassName="Recipe" syncable="YES">
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isFavorite" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="lastUsedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="note" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="servings" optional="YES" attributeType="Double" defaultValueString="1.0" usesScalarValueType="YES"/>
+        <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="useCount" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="ingredients" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="RecipeIngredient" inverseName="recipe" inverseEntity="RecipeIngredient"/>
+    </entity>
+    <entity name="RecipeIngredient" representedClassName="RecipeIngredient" syncable="YES">
+        <attribute name="amountG" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isLiquid" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="name" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="nutrientsJSON" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="sortIndex" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="sourceId" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="sourceKindRaw" optional="YES" attributeType="String" defaultValueString=""/>
+        <relationship name="recipe" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Recipe" inverseName="ingredients" inverseEntity="Recipe"/>
+    </entity>
+    <entity name="WeightEntry" representedClassName="WeightEntry" syncable="YES">
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="kg" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="timestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
+    <entity name="WorkoutEntry" representedClassName="WorkoutEntry" syncable="YES">
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="durationMinutes" optional="YES" attributeType="Double" defaultValueString="30.0" usesScalarValueType="YES"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="intensityRaw" optional="YES" attributeType="String" defaultValueString="moderate"/>
+        <attribute name="kcal" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="kcalIsManual" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="note" optional="YES" attributeType="String" defaultValueString=""/>
+        <attribute name="sportTypeRaw" optional="YES" attributeType="String" defaultValueString="other"/>
+        <attribute name="start" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
+</model>

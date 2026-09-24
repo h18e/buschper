@@ -1,6 +1,6 @@
 # buschper – Spezifikation (Version 1)
 
-**Stand:** 2026-09-24 · **Status:** Entwurf, wartet auf Freigabe · **Autor:** Claude Code für Raphi
+**Stand:** 2026-09-24 · **Status:** freigegeben, in Umsetzung · **Autor:** Claude Code für Raphi
 
 Persönlicher Gesundheitstracker für iPhone. buschper erfasst Ernährung, Trinken,
 Aktivität, Gewicht und Schlaf, zeigt alles auf einem frei gestaltbaren Dashboard
@@ -125,8 +125,14 @@ Ein fixer Wert in kcal pro Tag, frei änderbar. Vorgaben:
 | Halten | 0 kcal |
 | Zunehmen | +300 kcal |
 
-Untergrenze: Das Budget fällt nie unter den Grundumsatz. Greift diese Grenze,
-steht ein Hinweis dabei.
+Untergrenze: Das Budget fällt nie unter **1'500 kcal (Mann) bzw. 1'200 kcal (Frau)**.
+Greift diese Grenze, steht ein Hinweis dabei.
+
+*Korrektur beim Umsetzen:* Ursprünglich stand hier „nie unter den Grundumsatz“.
+Mit dem Live-Budget hätte das beim Abnehmen jeden Morgen den Abschlag aufgehoben,
+weil vor dem ersten Schritt noch keine Aktivkalorien da sind: Grundumsatz − 500
+wäre immer unter dem Grundumsatz. Die festen Mindestwerte sind die übliche
+Untergrenze für eine Reduktionskost.
 
 ### 4.5 Makroziele (Q11, Q25)
 
@@ -583,7 +589,7 @@ abgekürzt.
 
 | Entität | Wichtige Felder |
 |---|---|
-| **Profile** (genau eine) | sex, birthDate, heightCm, goal, goalOffsets (3), macroPctCarbs/Protein/Fat, fiberMinG, activityFactor, sleepGoalMin, stepGoal, waterGoalOverrideMl?, targetWeightKg?, dashboardLayout (JSON), analysisThresholds (JSON), reminderSettings (JSON), offLookupEnabled |
+| **Profile** (genau eine) | sex, birthDate, heightCm, goal, goalOffsets (3), macroPctCarbs/Protein/Fat, fiberMinG, activityProfile, sleepGoalMin, stepGoal, waterGoalOverrideMl?, targetWeightKg?, dashboardLayout (JSON), factorThresholds (JSON), badNightRules (JSON) |
 | **FoodProduct** | id, name, brand?, barcode?, isLiquid, origin (own / offCopy / blvCopy), **[N] pro 100**, isFavorite, useCount, lastUsedAt → portions |
 | **PortionSize** | id, name, grams → product |
 | **ExternalFoodRef** | id, source (off / blv), externalId, name, **[N] pro 100**, isFavorite, lastUsedAt. Merkt sich fremde Produkte für Favoriten und „Zletscht bruucht“ |
@@ -598,6 +604,12 @@ abgekürzt.
 | **NightRecord** | id, nightDate, score, components (JSON), asleepMin, deepMin, remMin, awakeMin, bedtime, wakeTime, hasStages, rating?, isBad, factors (JSON), dayMetrics (JSON), note?, tags, excluded, computedAt |
 | **IgnoredHealthSample** | uuid, kind, ignoredAt |
 | **HealthLink** | localId, sampleUUID, deviceId, pendingWrite. Verbindet eigene Einträge mit ihren Health-Werten, damit Ändern und Löschen dort nachgezogen wird |
+
+Erinnerungen und der Schalter für Open Food Facts liegen **pro Gerät** (nicht im
+Profil), weil jedes Gerät seine Mitteilungen selbst plant.
+
+Das Modell wird mit `tools/generate_model.py` aus einer einzigen Definition
+erzeugt (Modell-XML und Entitätsklassen), damit beide nie auseinanderlaufen.
 
 Gesundheitsdaten aus Health (Schritte, Aktivkalorien, fremde Gewichte, Schlafphasen)
 werden **nicht** in Core Data kopiert, sondern bei Bedarf gelesen. Ausnahme ist

@@ -1,0 +1,12 @@
+// buschper – Signierung
+//
+// Diese Datei ist im Git und bleibt leer. Deine persoenliche Team-ID gehoert in
+// Config/Signing.local.xcconfig – die Datei ist in .gitignore eingetragen und wird
+// deshalb nie von einem "git pull" ueberschrieben.
+//
+// Einrichtung (einmalig):
+//   cp Config/Signing.local.xcconfig.example Config/Signing.local.xcconfig
+//   danach die Team-ID eintragen. Details in SETUP.md.
+//
+// Das Fragezeichen bedeutet: einbinden, falls vorhanden – sonst still ignorieren.
+#include? "Signing.local.xcconfig"
