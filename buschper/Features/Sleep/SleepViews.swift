@@ -1,3 +1,4 @@
+import CoreData
 import SwiftUI
 
 /// Tab „Schlaf“ (SPEC 11.5).

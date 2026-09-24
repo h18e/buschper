@@ -1,3 +1,4 @@
+import CoreData
 import SwiftUI
 
 /// Ersteinrichtung (SPEC 4.1): Health verbinden, Profil aus Health vorausfüllen,

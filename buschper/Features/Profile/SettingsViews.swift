@@ -1,3 +1,4 @@
+import CoreData
 import SwiftUI
 
 /// Apple Health: Status, Berechtigung, was gelesen und geschrieben wird.

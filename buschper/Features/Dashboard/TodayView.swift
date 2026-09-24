@@ -1,3 +1,4 @@
+import CoreData
 import SwiftUI
 
 /// Tab „Hüt“: das Dashboard (SPEC 13).

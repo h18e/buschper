@@ -1,3 +1,4 @@
+import CoreData
 import SwiftUI
 
 /// Menge wählen: Gramm/ml oder eine Portionsgrösse, mit Vorschau der Nährwerte.

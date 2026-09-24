@@ -1,3 +1,4 @@
+import CoreData
 import SwiftUI
 
 /// Zutat für ein Rezept suchen – dieselben Quellen wie beim Erfassen, aber ohne

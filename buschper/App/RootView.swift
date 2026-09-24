@@ -1,3 +1,4 @@
+import CoreData
 import SwiftUI
 
 /// Die vier Tabs aus SPEC 2: Hüt · ＋ · Schlaf · Ig.

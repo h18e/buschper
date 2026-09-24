@@ -1,3 +1,4 @@
+import CoreData
 import SwiftUI
 
 /// Das Blatt hinter „＋“: Ässe · Trinke · Gwicht · Training (SPEC 2).

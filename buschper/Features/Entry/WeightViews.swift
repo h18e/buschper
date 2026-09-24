@@ -1,3 +1,4 @@
+import CoreData
 import SwiftUI
 
 /// „Gwicht“: manuell erfassen oder bearbeiten (SPEC 9).

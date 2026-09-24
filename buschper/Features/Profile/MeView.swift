@@ -1,3 +1,4 @@
+import CoreData
 import SwiftUI
 
 /// Tab „Ig“: Profil, Ziele, Sammlungen und Einstellungen.

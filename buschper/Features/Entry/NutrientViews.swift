@@ -1,3 +1,4 @@
+import CoreData
 import SwiftUI
 
 /// Kompakte Zeile: „640 kcal · 90 g KH · 25 g Eiwiss · 20 g Fett“.

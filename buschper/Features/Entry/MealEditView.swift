@@ -1,3 +1,4 @@
+import CoreData
 import SwiftUI
 
 /// Eine erfasste Mahlzeit bearbeiten: Zeit, Kategorie, Einträge (SPEC 5.9).

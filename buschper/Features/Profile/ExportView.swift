@@ -1,3 +1,4 @@
+import CoreData
 import SwiftUI
 
 /// Alle Daten als CSV für Excel (SPEC 16).

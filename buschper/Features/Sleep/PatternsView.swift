@@ -1,3 +1,4 @@
+import CoreData
 import SwiftUI
 
 /// Muster: Welche Faktoren gehen bei dir mit schlechterem Schlaf einher? (SPEC 12.4)

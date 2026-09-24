@@ -1,3 +1,4 @@
+import CoreData
 import SwiftUI
 
 /// Eigenes Produkt erfassen, bearbeiten oder ein fremdes korrigieren (SPEC 5.5).

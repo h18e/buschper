@@ -1,3 +1,4 @@
+import CoreData
 import SwiftUI
 
 /// „Ässe“: suchen, scannen, ins Chörbli legen, einmal sichern (SPEC 5.3).

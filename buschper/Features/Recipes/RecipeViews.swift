@@ -1,3 +1,4 @@
+import CoreData
 import SwiftUI
 
 /// Rezepte verwalten (SPEC 5.7).

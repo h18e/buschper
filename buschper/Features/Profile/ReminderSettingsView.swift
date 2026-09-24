@@ -1,3 +1,4 @@
+import CoreData
 import SwiftUI
 
 /// Erinnerungen ein-/ausschalten (SPEC 15).

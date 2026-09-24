@@ -1,3 +1,4 @@
+import CoreData
 import SwiftUI
 
 /// Sammlungen im Tab „Ig“: eigene Produkte, Rezepte, Favoriten.

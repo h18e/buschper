@@ -1,3 +1,4 @@
+import CoreData
 import Charts
 import SwiftUI
 

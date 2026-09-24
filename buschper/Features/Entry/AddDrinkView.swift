@@ -1,3 +1,4 @@
+import CoreData
 import SwiftUI
 
 /// „Trinke“: Getränk erfassen oder bearbeiten (SPEC 7).

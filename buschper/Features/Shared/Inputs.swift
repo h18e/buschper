@@ -1,3 +1,4 @@
+import CoreData
 import SwiftUI
 
 /// Zahlenfeld für Gramm, kcal, cm … mit Einheit rechts.

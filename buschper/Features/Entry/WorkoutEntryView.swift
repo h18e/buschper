@@ -1,3 +1,4 @@
+import CoreData
 import SwiftUI
 
 /// „Training“: manuelles Training erfassen oder bearbeiten (SPEC 10.2).

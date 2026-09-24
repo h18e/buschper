@@ -1,3 +1,4 @@
+import CoreData
 import SwiftUI
 
 /// Ziele der Schnellerfassung.

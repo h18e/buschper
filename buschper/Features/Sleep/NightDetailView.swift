@@ -1,3 +1,4 @@
+import CoreData
 import SwiftUI
 
 /// Eine Nacht im Detail: Score, Phasen, Vortag, Notiz (SPEC 11.5, 12.2).
