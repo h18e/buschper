@@ -19,6 +19,8 @@ struct RootView: View {
     @State private var selection: TabID = .today
     @State private var showsQuickAdd = false
     @State private var showsOnboarding = false
+    @State private var importing: SharedMeal?
+    @State private var importError: String?
 
     var body: some View {
         Group {
@@ -63,10 +65,43 @@ struct RootView: View {
                 showsOnboarding = false
             }
         }
+        .onOpenURL(perform: handleOpen)
+        .sheet(item: $importing) { meal in
+            ImportMealView(meal: meal)
+        }
+        .alert("Mahlzyt übernäh", isPresented: Binding(
+            get: { importError != nil },
+            set: { if !$0 { importError = nil } }
+        )) {
+            Button("OK", role: .cancel) { importError = nil }
+        } message: {
+            Text(importError ?? "")
+        }
         .task(id: app.revision) {
             if !app.store.profile().onboardingCompleted {
                 showsOnboarding = true
             }
+        }
+    }
+}
+
+extension RootView {
+    /// Geteilte Mahlzeit: `.buschper`-Datei aus WhatsApp/iMessage oder
+    /// `buschper://import?m=…` aus einem QR-Code (SPEC 6).
+    func handleOpen(_ url: URL) {
+        do {
+            if url.isFileURL {
+                let accessing = url.startAccessingSecurityScopedResource()
+                defer { if accessing { url.stopAccessingSecurityScopedResource() } }
+                let data = try Data(contentsOf: url)
+                importing = try MealShareCodec.decode(fileData: data)
+            } else {
+                importing = try MealShareCodec.decode(url: url)
+            }
+        } catch MealShareCodec.DecodeError.unsupportedVersion {
+            importError = "Die Mahlzyt chunnt vore nöiere buschper-Version. Bitte buschper aktualisiere."
+        } catch {
+            importError = "Die Datei oder dä Link cha buschper nid läse."
         }
     }
 }

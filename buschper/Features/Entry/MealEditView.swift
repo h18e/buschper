@@ -9,6 +9,8 @@ struct MealEditView: View {
     @State private var editingEntry: FoodEntry?
     @State private var showsAddFood = false
     @State private var confirmsDelete = false
+    @State private var copying: CopyRequest?
+    @State private var sharing: SharedMeal?
 
     var body: some View {
         NavigationStack {
@@ -46,6 +48,13 @@ struct MealEditView: View {
                             }
                         }
                         .buttonStyle(.plain)
+                        .contextMenu {
+                            Button {
+                                copying = CopyRequest(entries: [entry])
+                            } label: {
+                                Label("Dä Iitrag kopiere", systemImage: "doc.on.doc")
+                            }
+                        }
                     }
                     .onDelete(perform: deleteEntries)
                     Button {
@@ -68,9 +77,36 @@ struct MealEditView: View {
             .navigationTitle(meal.displayTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Menu {
+                        Button {
+                            copying = CopyRequest(entries: meal.entryList.filter { !$0.isDeleted })
+                        } label: {
+                            Label("Ganzi Mahlzyt kopiere", systemImage: "doc.on.doc")
+                        }
+                        Button {
+                            sharing = app.store.sharedMeal(from: meal)
+                        } label: {
+                            Label("Teile", systemImage: "square.and.arrow.up")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Fertig") { dismiss() }
                 }
+            }
+            .sheet(item: $copying) { request in
+                CopyMealView(
+                    entries: request.entries,
+                    title: request.entries.count > 1 ? meal.title : nil,
+                    category: meal.category,
+                    from: meal.timestamp ?? Date()
+                )
+            }
+            .sheet(item: $sharing) { shared in
+                ShareMealView(meal: shared)
             }
             .confirmationDialog("Mahlzyt lösche?", isPresented: $confirmsDelete, titleVisibility: .visible) {
                 Button("Lösche", role: .destructive) {
@@ -86,6 +122,12 @@ struct MealEditView: View {
                 AddFoodView(existingMeal: meal)
             }
         }
+    }
+
+    /// Hülle, damit die Kopierauswahl als `sheet(item:)` aufgehen kann.
+    struct CopyRequest: Identifiable {
+        let id = UUID()
+        let entries: [FoodEntry]
     }
 
     static func amountText(_ entry: FoodEntry) -> String {

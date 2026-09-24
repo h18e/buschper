@@ -28,6 +28,9 @@ struct AddFoodView: View {
     @State private var showsBasket = false
     @State private var productDraft: ProductDraftSheet?
     @State private var scanMessage: String?
+    @State private var showsQRScanner = false
+    @State private var importing: SharedMeal?
+    @State private var yesterdayEntries: [FoodEntry] = []
 
     private enum RemoteState: Equatable {
         case idle, loading, offline, done
@@ -107,6 +110,9 @@ struct AddFoodView: View {
                 if !categoryTouched { category = MealCategory.suggested(for: newValue) }
             }
             .task { reloadLists() }
+            .task(id: YesterdayKey(category: category, day: Calendar.current.startOfDay(for: timestamp))) {
+                loadYesterday()
+            }
             .task(id: query) { await runSearch() }
             .sheet(item: $picking) { candidate in
                 AmountPickerView(candidate: candidate) { portion, count in
@@ -137,6 +143,18 @@ struct AddFoodView: View {
             .sheet(isPresented: $showsBasket) {
                 basketSheet
             }
+            .sheet(isPresented: $showsQRScanner) {
+                CodeScannerView(mode: .qrCode) { code in
+                    if let url = URL(string: code), let meal = try? MealShareCodec.decode(url: url) {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { importing = meal }
+                    } else {
+                        scanMessage = "Das isch ke QR-Code vo buschper."
+                    }
+                }
+            }
+            .sheet(item: $importing) { meal in
+                ImportMealView(meal: meal)
+            }
         }
     }
 
@@ -149,6 +167,9 @@ struct AddFoodView: View {
                 actionButton("Schnäll-Iitrag", "bolt.fill") { showsQuickEntry = true }
                 actionButton("Nöis Produkt", "plus.square.fill") {
                     productDraft = ProductDraftSheet(draft: ProductDraft(), existing: nil)
+                }
+                if existingMeal == nil {
+                    actionButton("QR-Code", "qrcode.viewfinder") { showsQRScanner = true }
                 }
             }
             .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
@@ -174,6 +195,23 @@ struct AddFoodView: View {
 
     @ViewBuilder
     private var browseSections: some View {
+        if !yesterdayEntries.isEmpty {
+            Section {
+                Button {
+                    basket += yesterdayEntries.map { app.store.basketItem(from: $0) }
+                    yesterdayEntries = []
+                } label: {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Label("Wie geschter: \(category.label)", systemImage: "arrow.uturn.backward.circle.fill")
+                            .foregroundStyle(Theme.nutrition)
+                        Text(yesterdayEntries.map(\.displayName).joined(separator: ", "))
+                            .font(.caption)
+                            .foregroundStyle(Theme.textSecondary)
+                            .lineLimit(2)
+                    }
+                }
+            }
+        }
         if !favorites.isEmpty {
             Section("Favorite") { candidateRows(favorites) }
         }
@@ -382,6 +420,21 @@ struct AddFoodView: View {
     }
 
     // MARK: - Aktionen
+
+    private struct YesterdayKey: Hashable {
+        var category: MealCategory
+        var day: Date
+    }
+
+    /// „Wie geschter“: dieselbe Kategorie vom Vortag, solange das Chörbli leer ist.
+    private func loadYesterday() {
+        guard existingMeal == nil, basket.isEmpty else {
+            yesterdayEntries = []
+            return
+        }
+        let yesterday = DayMath.previousDay(of: timestamp)
+        yesterdayEntries = app.store.entries(category: category, on: yesterday)
+    }
 
     private func reloadLists() {
         favorites = app.store.favoriteCandidates()

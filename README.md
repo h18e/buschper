@@ -83,7 +83,7 @@ mit ⌘B, die Tests laufen mit ⌘U.
 | 3 | Ernährung: Suche, Produkte, Barcode, BLV, Open Food Facts, Chörbli, Schnell-Iitrag | ✅ |
 | 4 | Trinken, Gewicht, Training | ✅ |
 | 5 | Dashboard | ✅ |
-| 6 | Rezepte, Kopieren, Teilen | |
+| 6 | Rezepte, Kopieren, Teilen | ✅ |
 | 7 | Schlaf: Score, Tab, Morgen-Einschätzung | |
 | 8 | Schlafanalyse und Muster | |
 | 9 | Widget, Erinnerungen, Export | |

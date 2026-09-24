@@ -20,10 +20,13 @@ struct MeCollectionsSection: View {
     }
 }
 
-/// Rezepte – kommen in Schritt 6.
 struct MeRecipeRow: View {
     var body: some View {
-        EmptyView()
+        NavigationLink {
+            RecipeListView()
+        } label: {
+            Label("Rezept", systemImage: "book.closed.fill")
+        }
     }
 }
 

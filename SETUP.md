@@ -7,9 +7,9 @@ beschrieben, lieber nachfragen als raten.
 **Voraussetzungen:** Mac mit Xcode 26 oder neuer, iPhone mit iOS 26 oder neuer,
 Mitgliedschaft im Apple Developer Program (hast du).
 
-> **Stand:** Schritte 1–5 von 10 sind umgesetzt: Projekt, Datenmodell,
+> **Stand:** Schritte 1–6 von 10 sind umgesetzt: Projekt, Datenmodell,
 > Rechenlogik mit Tests, Ersteinrichtung, Apple Health, Tab „Ig“, Ernährung,
-> Trinken, Gewicht, Training und das Dashboard.
+> Trinken, Gewicht, Training, Dashboard, Rezepte, Kopieren und Teilen.
 > Diese Anleitung wächst mit jedem Schritt.
 
 ---
@@ -187,6 +187,19 @@ In Apple Health (auf dem iPhone) erscheinen die Einträge unter der Quelle
 | **Wuche / Monet / 3 Mönet** | Alle Graphen wechseln den Zeitraum |
 | Im Graphen antippen oder ziehen | Hinweis mit Datum und Wert |
 | Oben rechts ⚙︎ (Schieberegler) | Karten ein-/ausblenden und mit den drei Strichen verschieben |
+
+**Rezepte, Kopieren, Teilen testen:**
+
+| Test | Erwartung |
+|---|---|
+| **Ig → Sammlige → Rezept → +**, Zutaten suchen, 4 Portionen | Nährwerte pro Portion unten |
+| **Ässe** → Rezept suchen → 1.5 Portionen | Rezept erscheint in der Mahlzeit als „1.5 Portione“ |
+| Mahlzeit öffnen → ⋯ → **Ganzi Mahlzyt kopiere** | Vorschlag: gleiche Zeit am nächsten Tag (nie in der Zukunft) |
+| Lange auf einen Eintrag drücken → **Dä Iitrag kopiere** | Nur dieser Eintrag wird kopiert |
+| **Ässe** am nächsten Tag, gleiche Kategorie | Oben „Wie geschter: Zmittag“ – ein Tipp legt alles ins Chörbli |
+| Mahlzeit → ⋯ → **Teile** | QR-Code und „Als Datei schicke“ |
+| QR-Code mit der normalen Kamera eines zweiten iPhones scannen | buschper öffnet sich mit „Mahlzyt übernäh“ |
+| Datei per WhatsApp schicken, beim Empfänger antippen → Teilen → buschper | Ebenfalls „Mahlzyt übernäh“ |
 
 Der Tab „Schlaf“ zeigt noch einen Platzhalter.
 
