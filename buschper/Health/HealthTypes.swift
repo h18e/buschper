@@ -70,7 +70,9 @@ enum HealthTypes {
     /// Typen, in denen buschper eigene Werte löschen muss. Die Mahlzeit-Korrelation
     /// selbst wird separat behandelt, siehe `HealthKitService.deleteOwnSamples`.
     static var ownWrittenTypes: [HKSampleType] {
-        [water, bodyMass, workout, activeEnergy] + nutrientMappings.map(\.type)
+        var types: [HKSampleType] = [water, bodyMass, workout, activeEnergy]
+        types.append(contentsOf: nutrientMappings.map { $0.type as HKSampleType })
+        return types
     }
 }
 

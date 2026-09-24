@@ -73,30 +73,30 @@ final class SleepService {
             calendar: calendar
         )
 
-        let record = record(for: nightDay) ?? {
-            let record = NightRecord(context: store.context)
-            record.id = UUID()
-            record.nightDate = calendar.startOfDay(for: nightDay)
-            return record
+        let nightRecord = record(for: nightDay) ?? {
+            let created = NightRecord(context: store.context)
+            created.id = UUID()
+            created.nightDate = calendar.startOfDay(for: nightDay)
+            return created
         }()
 
-        record.score = components.total
-        record.components = components
-        record.asleepMinutes = night.asleepMinutes
-        record.deepMinutes = night.deepMinutes ?? 0
-        record.remMinutes = night.remMinutes ?? 0
-        record.coreMinutes = night.coreMinutes ?? 0
-        record.awakeMinutes = night.awakeMinutes
-        record.hasStages = night.hasStages
-        record.sleepOnset = night.sleepOnset
-        record.wakeTime = night.wake
+        nightRecord.score = components.total
+        nightRecord.components = components
+        nightRecord.asleepMinutes = night.asleepMinutes
+        nightRecord.deepMinutes = night.deepMinutes ?? 0
+        nightRecord.remMinutes = night.remMinutes ?? 0
+        nightRecord.coreMinutes = night.coreMinutes ?? 0
+        nightRecord.awakeMinutes = night.awakeMinutes
+        nightRecord.hasStages = night.hasStages
+        nightRecord.sleepOnset = night.sleepOnset
+        nightRecord.wakeTime = night.wake
 
         let metrics = await dayMetrics(forNightOf: nightDay, onset: night.sleepOnset, profile: profile, stepHistory: stepHistory)
-        record.dayMetrics = metrics
-        record.factors = FactorEvaluator.factors(for: metrics, thresholds: profile.factorThresholds)
+        nightRecord.dayMetrics = metrics
+        nightRecord.factors = FactorEvaluator.factors(for: metrics, thresholds: profile.factorThresholds)
 
-        classify(record, average30: average30, rules: profile.badNightRules)
-        record.computedAt = Date()
+        classify(nightRecord, average30: average30, rules: profile.badNightRules)
+        nightRecord.computedAt = Date()
     }
 
     /// Schlecht oder nicht – auch nach einer neuen Morgen-Einschätzung aufrufen.

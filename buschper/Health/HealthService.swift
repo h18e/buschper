@@ -357,7 +357,8 @@ final class HealthKitService: HealthDataProviding {
     func deleteOwnSamples(localId: UUID) async {
         guard isAvailable else { return }
         let predicate = HKQuery.predicateForObjects(withMetadataKey: HealthTypes.localIdKey, allowedValues: [localId.uuidString])
-        let types: [HKObjectType] = [HealthTypes.food] + HealthTypes.ownWrittenTypes
+        var types: [HKObjectType] = [HealthTypes.food]
+        types.append(contentsOf: HealthTypes.ownWrittenTypes.map { $0 as HKObjectType })
         for type in types {
             await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
                 store.deleteObjects(of: type, predicate: predicate) { _, _, error in
