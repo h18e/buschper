@@ -30,7 +30,13 @@ struct FluidAndDrinkTests {
     func alcoholEnergy() {
         let totals = DrinkMath.totals(per100ml: DrinkType.wine.defaultNutrientsPer100ml, volumeMl: 100, abvPercent: 12.5)
         #expect((totals.alcohol ?? 0).isClose(to: 9.8625))
-        #expect((totals.kcal ?? 0).isClose(to: 2 + 9.8625 * 7))
+        #expect((totals.kcal ?? 0).isClose(to: 3 + 9.8625 * 7))
+    }
+
+    @Test("5 dl Bier ergeben rund 213 kcal")
+    func beerEnergy() {
+        let totals = DrinkMath.totals(per100ml: DrinkType.beer.defaultNutrientsPer100ml, volumeMl: 500, abvPercent: 5)
+        #expect((totals.kcal ?? 0).isClose(to: 75 + 19.725 * 7))
     }
 
     @Test("Alkohol zählt nicht zur Flüssigkeit, Kaffee schon")

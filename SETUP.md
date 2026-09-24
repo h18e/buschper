@@ -167,7 +167,7 @@ dort hinterlegt sind.
 
 | Test | Erwartung |
 |---|---|
-| **Trinke** → Bier → 5 dl | Unten: „Zellt nid zur Flüssigkeit · 215 kcal · 19.7 g Alkohol“ |
+| **Trinke** → Bier → 5 dl | Unten: „Zellt nid zur Flüssigkeit · 213 kcal · 19.7 g Alkohol“ |
 | **Trinke** → Kafi → **Als Vorlag spychere** | Beim nächsten Mal oben unter „Vorlage“ |
 | **Gwicht** → ±0.1-Knöpfe → **Sichere** | Wird auch in Apple Health gespeichert |
 | **Training** → Jogge, 45 min, mittu | kcal werden aus deinem Gewicht geschätzt |

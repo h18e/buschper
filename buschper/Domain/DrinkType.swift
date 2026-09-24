@@ -98,9 +98,9 @@ enum DrinkType: String, Codable, CaseIterable, Identifiable {
         case .softDrink:
             return Nutrients(kcal: 42, carbs: 10.6, sugar: 10.6, fat: 0, protein: 0)
         case .beer:
-            return Nutrients(kcal: 7, carbs: 3.1, sugar: 0, fat: 0, protein: 0.5)
+            return Nutrients(kcal: 15, carbs: 3.1, sugar: 0, fat: 0, protein: 0.5)
         case .wine:
-            return Nutrients(kcal: 2, carbs: 0.6, sugar: 0.6, fat: 0, protein: 0.1)
+            return Nutrients(kcal: 3, carbs: 0.6, sugar: 0.6, fat: 0, protein: 0.1)
         case .spirits:
             return Nutrients(kcal: 0, carbs: 0, fat: 0, protein: 0)
         case .custom:
