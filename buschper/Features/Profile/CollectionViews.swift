@@ -28,7 +28,7 @@ struct ProductListView: View {
                 ) { creating = true }
                 .listRowBackground(Color.clear)
             }
-            ForEach(filtered) { product in
+            ForEach(filtered, id: \.objectID) { product in
                 Button {
                     editing = product
                 } label: {

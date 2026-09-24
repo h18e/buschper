@@ -83,7 +83,7 @@ struct SleepView: View {
                             Text(isRefreshing ? "Wärte us …" : "No kener Nächt.")
                                 .foregroundStyle(Theme.textTertiary)
                         }
-                        ForEach(Array(nights.reversed())) { night in
+                        ForEach(Array(nights.reversed()), id: \.objectID) { night in
                             NavigationLink {
                                 NightDetailView(night: night)
                             } label: {

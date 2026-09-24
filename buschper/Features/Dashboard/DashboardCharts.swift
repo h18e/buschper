@@ -149,7 +149,7 @@ struct SleepScoreChart: View {
                 RuleMark(y: .value("Gränze", threshold))
                     .foregroundStyle(Theme.textTertiary)
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
-                ForEach(nights) { night in
+                ForEach(nights, id: \.objectID) { night in
                     if let date = night.nightDate {
                         LineMark(x: .value("Nacht", date, unit: .day), y: .value("Score", night.score))
                             .foregroundStyle(Theme.sleep)

@@ -28,7 +28,7 @@ struct AddDrinkView: View {
                     Section("Vorlage") {
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 8) {
-                                ForEach(presets) { preset in
+                                ForEach(presets, id: \.objectID) { preset in
                                     Button {
                                         draft = DrinkDraft(preset: preset, at: draft.timestamp)
                                     } label: {

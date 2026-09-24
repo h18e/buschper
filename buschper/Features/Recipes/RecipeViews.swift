@@ -21,7 +21,7 @@ struct RecipeListView: View {
                 ) { creating = true }
                 .listRowBackground(Color.clear)
             }
-            ForEach(recipes) { recipe in
+            ForEach(recipes, id: \.objectID) { recipe in
                 Button {
                     editing = recipe
                 } label: {

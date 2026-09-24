@@ -36,7 +36,7 @@ struct MealEditView: View {
                 }
 
                 Section {
-                    ForEach(meal.entryList.filter { !$0.isDeleted }) { entry in
+                    ForEach(meal.entryList.filter { !$0.isDeleted }, id: \.objectID) { entry in
                         Button {
                             editingEntry = entry
                         } label: {

@@ -223,7 +223,7 @@ struct CopyMealView: View {
         NavigationStack {
             Form {
                 Section {
-                    ForEach(entries) { entry in
+                    ForEach(entries, id: \.objectID) { entry in
                         Text(entry.displayName)
                     }
                 } header: {

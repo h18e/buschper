@@ -285,7 +285,7 @@ struct FluidDayView: View {
                     Text("A däm Tag no nüt trunke.")
                         .foregroundStyle(Theme.textTertiary)
                 }
-                ForEach(drinks) { drink in
+                ForEach(drinks, id: \.objectID) { drink in
                     Button {
                         editing = drink
                     } label: {
