@@ -42,7 +42,7 @@ struct RootView: View {
                 .tag(TabID.add)
                 .tabItem { Label("Erfasse", systemImage: "plus.circle.fill") }
 
-            SleepPlaceholderView()
+            SleepView()
                 .tag(TabID.sleep)
                 .tabItem { Label("Schlaf", systemImage: "moon.zzz.fill") }
 

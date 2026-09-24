@@ -16,6 +16,7 @@ final class AppEnvironment {
     let health: HealthDataProviding
     let healthSync: HealthSyncService
     let dayData: DayDataService
+    let sleep: SleepService
 
     private(set) var revision = 0
 
@@ -26,7 +27,9 @@ final class AppEnvironment {
         let store = DataStore(persistence: persistence, preferences: preferences)
         self.store = store
         self.healthSync = HealthSyncService(store: store, health: health)
-        self.dayData = DayDataService(store: store, health: health)
+        let dayData = DayDataService(store: store, health: health)
+        self.dayData = dayData
+        self.sleep = SleepService(store: store, health: health, dayData: dayData)
     }
 
     static let live = AppEnvironment(
@@ -48,5 +51,8 @@ final class AppEnvironment {
     func appBecameActive() async {
         revision += 1
         await healthSync.processPending()
+        // Nach dem Aufwachen: die letzten Nächte auswerten.
+        await sleep.refresh(days: 3)
+        revision += 1
     }
 }

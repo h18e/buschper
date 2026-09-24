@@ -335,10 +335,9 @@ struct FluidDayView: View {
     }
 }
 
-/// Ziel der Schlafkarte – wird in Schritt 7 der Schlaf-Tab.
+/// Ziel der Schlafkarte: die letzte Nacht im Detail, sonst die Muster.
 enum SleepDestination {
-    @ViewBuilder
     static func view() -> some View {
-        SleepPlaceholderView()
+        PatternsView()
     }
 }

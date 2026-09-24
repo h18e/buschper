@@ -84,7 +84,7 @@ mit ⌘B, die Tests laufen mit ⌘U.
 | 4 | Trinken, Gewicht, Training | ✅ |
 | 5 | Dashboard | ✅ |
 | 6 | Rezepte, Kopieren, Teilen | ✅ |
-| 7 | Schlaf: Score, Tab, Morgen-Einschätzung | |
-| 8 | Schlafanalyse und Muster | |
+| 7 | Schlaf: Score, Tab, Morgen-Einschätzung | ✅ |
+| 8 | Schlafanalyse und Muster | ✅ |
 | 9 | Widget, Erinnerungen, Export | |
 | 10 | SETUP und RELEASE vervollständigen | |

@@ -7,9 +7,8 @@ beschrieben, lieber nachfragen als raten.
 **Voraussetzungen:** Mac mit Xcode 26 oder neuer, iPhone mit iOS 26 oder neuer,
 Mitgliedschaft im Apple Developer Program (hast du).
 
-> **Stand:** Schritte 1–6 von 10 sind umgesetzt: Projekt, Datenmodell,
-> Rechenlogik mit Tests, Ersteinrichtung, Apple Health, Tab „Ig“, Ernährung,
-> Trinken, Gewicht, Training, Dashboard, Rezepte, Kopieren und Teilen.
+> **Stand:** Schritte 1–8 von 10 sind umgesetzt: alles ausser Widget,
+> Erinnerungen und Export.
 > Diese Anleitung wächst mit jedem Schritt.
 
 ---
@@ -201,7 +200,22 @@ In Apple Health (auf dem iPhone) erscheinen die Einträge unter der Quelle
 | QR-Code mit der normalen Kamera eines zweiten iPhones scannen | buschper öffnet sich mit „Mahlzyt übernäh“ |
 | Datei per WhatsApp schicken, beim Empfänger antippen → Teilen → buschper | Ebenfalls „Mahlzyt übernäh“ |
 
-Der Tab „Schlaf“ zeigt noch einen Platzhalter.
+**Schlaf testen – nur auf dem iPhone sinnvoll** (der Simulator hat keine
+Schlafdaten; man könnte sie in der Health-App des Simulators von Hand eintragen):
+
+| Test | Erwartung |
+|---|---|
+| Tab **Schlaf** zum ersten Mal öffnen | Die letzten 30 Nächte werden ausgewertet (Fortschrittsrad oben rechts) |
+| „Letschti Nacht“ | Score, Schlafzeit, Phasenbalken, Sterne für die Morgen-Einschätzung |
+| 1 oder 2 Sterne vergeben | Die Nacht wird als „Schlächti Nacht“ markiert |
+| Nacht in der Liste antippen | Zusammensetzung des Scores, Auffälliges am Vortag, Vortag in Zahlen, Notiz, Marken, Ausschluss |
+| **Muster** | Erst „No z'weni Date“ – nach einigen Wochen erscheinen Zusammenhänge |
+| **Muster → Schwälle aapasse** | Grenzen ändern, dann „Übernäh u aui Nächt nöi uswärte“ |
+| ↻ oben rechts | Die letzten 90 Nächte neu auswerten |
+
+Voraussetzung für Schlafphasen: Apple Watch in der Nacht tragen, Schlaf-Fokus
+mit Schlafplan aktiv. Ohne Uhr kommt nur die Schlafdauer vom iPhone; der Score
+rechnet dann ohne Tief- und REM-Schlaf.
 
 **Erwartungsmanagement:** Der Code wurde ohne Compiler geschrieben. Ein paar
 Fehler beim ersten Bauen sind gut möglich. Schick mir den vollständigen
