@@ -14,6 +14,36 @@ Mitgliedschaft im Apple Developer Program (hast du).
 
 ---
 
+## Kurzweg: alles im Terminal
+
+Statt in Xcode zu klicken, erledigt `tools/buschper.sh` die üblichen Schritte.
+Einmalig nötig ist nur Abschnitt 1 (Projekt holen) und in Xcode **einmal** das
+Apple-Konto unter **Xcode → Settings… (⌘,) → Accounts** – wie bei Frostify, ist
+es dort schon drin, ist nichts zu tun.
+
+```bash
+cd ~/Developer/buschper
+./tools/buschper.sh setup        # Team-ID eintragen, Xcode prüfen (einmalig)
+./tools/buschper.sh test         # alle Tests im Simulator
+./tools/buschper.sh run          # bauen und im Simulator starten
+./tools/buschper.sh device       # auf dem angeschlossenen iPhone starten
+./tools/buschper.sh blv ~/Downloads/DATEI.xlsx   # BLV-Datenbank einbauen
+./tools/buschper.sh testflight   # neue Version zu TestFlight hochladen
+./tools/buschper.sh update       # neuste Version holen (git pull)
+```
+
+Geht etwas schief, stehen die vollständigen Fehlertexte in `build/errors.txt`
+**und in der Zwischenablage** – einfach mit ⌘V an Claude schicken.
+
+**Nicht im Terminal möglich:** Apple-Konto in Xcode hinterlegen (einmal), am
+iPhone „Vertrauen“ und Entwicklermodus bestätigen, die App einmalig in App Store
+Connect anlegen und deine Partnerin einladen (Webseite, siehe RELEASE.md), das
+App-Icon liefern.
+
+Die Abschnitte unten beschreiben dieselben Schritte ausführlich und in Xcode.
+
+---
+
 ## 1. Projekt auf den Mac holen
 
 Zwei gleichwertige Wege – nimm den, bei dem du dich wohler fühlst.
