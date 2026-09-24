@@ -7,9 +7,9 @@ beschrieben, lieber nachfragen als raten.
 **Voraussetzungen:** Mac mit Xcode 26 oder neuer, iPhone mit iOS 26 oder neuer,
 Mitgliedschaft im Apple Developer Program (hast du).
 
-> **Stand:** Schritte 1–3 von 10 sind umgesetzt: Projekt, Datenmodell,
-> Rechenlogik mit Tests, Ersteinrichtung, Apple Health, Tab „Ig“ und die
-> Ernährung (Suche, Barcode, eigene Produkte, Chörbli, Schnell-Iitrag).
+> **Stand:** Schritte 1–4 von 10 sind umgesetzt: Projekt, Datenmodell,
+> Rechenlogik mit Tests, Ersteinrichtung, Apple Health, Tab „Ig“, Ernährung,
+> Trinken, Gewicht und Training.
 > Diese Anleitung wächst mit jedem Schritt.
 
 ---
@@ -163,8 +163,19 @@ dort hinterlegt sind.
 | Stern antippen | Erscheint unter „Favorite“ und in **Ig → Sammlige → Favorite** |
 | **Sichere** | Die Mahlzeit ist gespeichert (sichtbar ab Schritt 5 auf „Hüt“) |
 
-Die Tabs „Hüt“ und „Schlaf“ sowie Trinken, Gewicht und Training zeigen noch
-Platzhalter.
+**Trinken, Gewicht, Training testen:** ebenfalls über **Erfasse** (＋):
+
+| Test | Erwartung |
+|---|---|
+| **Trinke** → Bier → 5 dl | Unten: „Zellt nid zur Flüssigkeit · 215 kcal · 19.7 g Alkohol“ |
+| **Trinke** → Kafi → **Als Vorlag spychere** | Beim nächsten Mal oben unter „Vorlage“ |
+| **Gwicht** → ±0.1-Knöpfe → **Sichere** | Wird auch in Apple Health gespeichert |
+| **Training** → Jogge, 45 min, mittu | kcal werden aus deinem Gewicht geschätzt |
+
+In Apple Health (auf dem iPhone) erscheinen die Einträge unter der Quelle
+„buschper“: **Health → Profilbild → Apps → buschper → Daten anzeigen**.
+
+Die Tabs „Hüt“ und „Schlaf“ zeigen noch Platzhalter.
 
 **Erwartungsmanagement:** Der Code wurde ohne Compiler geschrieben. Ein paar
 Fehler beim ersten Bauen sind gut möglich. Schick mir den vollständigen
