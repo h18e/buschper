@@ -7,8 +7,9 @@ beschrieben, lieber nachfragen als raten.
 **Voraussetzungen:** Mac mit Xcode 26 oder neuer, iPhone mit iOS 26 oder neuer,
 Mitgliedschaft im Apple Developer Program (hast du).
 
-> **Stand:** Schritte 1–2 von 10 sind umgesetzt: Projekt, Datenmodell,
-> Rechenlogik mit Tests, Ersteinrichtung, Apple Health und der Tab „Ig“.
+> **Stand:** Schritte 1–3 von 10 sind umgesetzt: Projekt, Datenmodell,
+> Rechenlogik mit Tests, Ersteinrichtung, Apple Health, Tab „Ig“ und die
+> Ernährung (Suche, Barcode, eigene Produkte, Chörbli, Schnell-Iitrag).
 > Diese Anleitung wächst mit jedem Schritt.
 
 ---
@@ -149,7 +150,21 @@ Abschlag und Budget. Darunter lassen sich Profil, Ziel, Makros und Tagesziele
 Ersteinrichtung füllt Geburtsdatum, Geschlecht, Grösse und Gewicht vor, wenn sie
 dort hinterlegt sind.
 
-Die Tabs „Hüt“ und „Schlaf“ und das „＋“ zeigen noch Platzhalter.
+**Ernährung testen:** Tab **Erfasse** (＋) → **Ässe**:
+
+| Test | Erwartung |
+|---|---|
+| „apf“ ins Suchfeld | „Apfel“ aus den Grundnahrungsmitteln, darunter Open Food Facts |
+| Treffer antippen → Menge → **Is Chörbli** | Unten erscheint das Chörbli mit kcal |
+| **Schnäll-Iitrag** → Makros eingeben | kcal werden live berechnet |
+| **Nöis Produkt** → Portionsgrösse „Schiibe = 40 g“ | Danach lässt sich „2 × Schiibe“ wählen |
+| **Barcode** (im Simulator: Code eintippen, z. B. `7610200337477`) | Open Food Facts liefert das Produkt, oder das Formular „Nöis Produkt“ geht auf |
+| Lange auf einen fremden Treffer drücken → **Korrigiere** | Eigene Kopie; beim nächsten Scan gewinnt sie |
+| Stern antippen | Erscheint unter „Favorite“ und in **Ig → Sammlige → Favorite** |
+| **Sichere** | Die Mahlzeit ist gespeichert (sichtbar ab Schritt 5 auf „Hüt“) |
+
+Die Tabs „Hüt“ und „Schlaf“ sowie Trinken, Gewicht und Training zeigen noch
+Platzhalter.
 
 **Erwartungsmanagement:** Der Code wurde ohne Compiler geschrieben. Ein paar
 Fehler beim ersten Bauen sind gut möglich. Schick mir den vollständigen
@@ -171,6 +186,38 @@ Kontrolle: https://icloud.developer.apple.com/dashboard → Container
 
 > Der Abschnitt **Entwicklung** erscheint nur in Debug-Builds. Dort gibt es auch
 > **Ersteinrichtung neu starten**, falls du sie nochmals durchspielen willst.
+
+---
+
+## 7b. Schweizer Nährwertdatenbank einbauen (einmalig, empfohlen)
+
+buschper bringt vorerst rund 110 Grundnahrungsmittel mit **Richtwerten** mit.
+Die vollständige Schweizer Nährwertdatenbank des BLV (über 1'000 Lebensmittel)
+konnte ich nicht selbst herunterladen – die Seite ist aus meiner Umgebung
+gesperrt. So baust du sie ein:
+
+1. https://naehrwertdaten.ch öffnen → **Downloads** → die Datenbank als
+   **Excel (.xlsx)** herunterladen (landet in „Downloads“)
+2. Im Terminal:
+
+   ```bash
+   cd ~/Developer/buschper
+   python3 tools/import_blv.py ~/Downloads/DATEINAME.xlsx
+   ```
+
+   `DATEINAME` durch den echten Namen ersetzen – tippe `~/Downloads/` und
+   drücke die Tabulatortaste, dann ergänzt das Terminal den Namen.
+3. Das Skript zeigt, welche Spalten es erkannt hat, und schreibt
+   `buschper/Resources/blv_foods.json`
+4. In Xcode **⌘ + R** – die Suche kommt jetzt aus der BLV-Datenbank, und die
+   Überschrift heisst „Schwiizer Nährwärtdatebank“
+
+Meldet das Skript fehlende Spalten, schick mir die ganze Ausgabe.
+
+Die Datei `blv_foods.json` bitte **nicht** selbst committen – schick mir einfach
+Bescheid, dann nehme ich sie beim nächsten Mal auf. (Oder: `git add
+buschper/Resources/blv_foods.json && git commit -m "BLV-Daten" && git push`,
+wenn du dich sicher fühlst.)
 
 ---
 

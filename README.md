@@ -40,7 +40,7 @@ buschper/
 ├── Theme/            Farben pro Bereich, Karten, Bausteine
 └── Resources/        Asset-Katalog
 buschperTests/        Tests der Rechenlogik (Swift Testing)
-tools/                Modell-Generator, Strukturprüfung
+tools/                Modell-Generator, Strukturprüfung, BLV-Import
 Config/               Signing, Entitlements, Info.plist
 ```
 
@@ -72,7 +72,7 @@ mit ⌘B, die Tests laufen mit ⌘U.
 |---|---|---|
 | 1 | Projekt, Theme, Datenmodell, Persistenz, Rechenlogik mit Tests | ✅ |
 | 2 | Profil, Ersteinrichtung, Apple Health, Bedarfsberechnung | ✅ |
-| 3 | Ernährung: Suche, Produkte, Barcode, BLV, Open Food Facts, Chörbli, Schnell-Iitrag | |
+| 3 | Ernährung: Suche, Produkte, Barcode, BLV, Open Food Facts, Chörbli, Schnell-Iitrag | ✅ |
 | 4 | Trinken, Gewicht, Training | |
 | 5 | Dashboard | |
 | 6 | Rezepte, Kopieren, Teilen | |

@@ -32,37 +32,3 @@ struct SleepPlaceholderView: View {
     }
 }
 
-struct QuickAddPlaceholderView: View {
-    var body: some View {
-        VStack(spacing: 16) {
-            Text("Erfasse")
-                .font(.headline)
-            HStack(spacing: 12) {
-                placeholderButton("Ässe", "fork.knife", Theme.nutrition)
-                placeholderButton("Trinke", "drop.fill", Theme.fluid)
-                placeholderButton("Gwicht", "scalemass.fill", Theme.weight)
-                placeholderButton("Training", "figure.run", Theme.activity)
-            }
-            Text("D Erfassig chunnt i de Schritte 3 u 4.")
-                .font(.footnote)
-                .foregroundStyle(Theme.textSecondary)
-        }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .screenBackground()
-    }
-
-    private func placeholderButton(_ title: String, _ symbol: String, _ color: Color) -> some View {
-        VStack(spacing: 8) {
-            Image(systemName: symbol)
-                .font(.title2)
-                .foregroundStyle(Theme.background)
-                .frame(width: 56, height: 56)
-                .background(color, in: Circle())
-            Text(title)
-                .font(.caption)
-                .foregroundStyle(Theme.textPrimary)
-        }
-        .frame(maxWidth: .infinity)
-    }
-}

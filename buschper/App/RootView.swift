@@ -55,8 +55,8 @@ struct RootView: View {
             }
         }
         .sheet(isPresented: $showsQuickAdd) {
-            QuickAddPlaceholderView()
-                .presentationDetents([.medium])
+            QuickAddSheet()
+                .presentationDetents([.height(240), .medium])
         }
         .fullScreenCover(isPresented: $showsOnboarding) {
             OnboardingView(profile: app.store.profile()) {

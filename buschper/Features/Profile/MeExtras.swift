@@ -1,8 +1,27 @@
 import SwiftUI
 
 /// Sammlungen im Tab „Ig“: eigene Produkte, Rezepte, Favoriten.
-/// Wird in Schritt 3 und 6 gefüllt.
 struct MeCollectionsSection: View {
+    var body: some View {
+        Section("Sammlige") {
+            NavigationLink {
+                ProductListView()
+            } label: {
+                Label("Eigeti Produkt", systemImage: "shippingbox.fill")
+            }
+            MeRecipeRow()
+            NavigationLink {
+                FavoritesListView()
+            } label: {
+                Label("Favorite", systemImage: "star.fill")
+            }
+        }
+        .listRowBackground(Theme.surface)
+    }
+}
+
+/// Rezepte – kommen in Schritt 6.
+struct MeRecipeRow: View {
     var body: some View {
         EmptyView()
     }
