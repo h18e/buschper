@@ -7,9 +7,9 @@ beschrieben, lieber nachfragen als raten.
 **Voraussetzungen:** Mac mit Xcode 26 oder neuer, iPhone mit iOS 26 oder neuer,
 Mitgliedschaft im Apple Developer Program (hast du).
 
-> **Stand:** Schritte 1–4 von 10 sind umgesetzt: Projekt, Datenmodell,
+> **Stand:** Schritte 1–5 von 10 sind umgesetzt: Projekt, Datenmodell,
 > Rechenlogik mit Tests, Ersteinrichtung, Apple Health, Tab „Ig“, Ernährung,
-> Trinken, Gewicht und Training.
+> Trinken, Gewicht, Training und das Dashboard.
 > Diese Anleitung wächst mit jedem Schritt.
 
 ---
@@ -175,7 +175,20 @@ dort hinterlegt sind.
 In Apple Health (auf dem iPhone) erscheinen die Einträge unter der Quelle
 „buschper“: **Health → Profilbild → Apps → buschper → Daten anzeigen**.
 
-Die Tabs „Hüt“ und „Schlaf“ zeigen noch Platzhalter.
+**Dashboard testen:** Tab **Hüt**:
+
+| Test | Erwartung |
+|---|---|
+| Nach dem Erfassen einer Mahlzeit | „No übrig“ sinkt, KH/Eiwiss/Fett/Fasere füllen sich, die Mahlzeit steht in der Tagesliste |
+| Mahlzeit in der Tagesliste antippen | Bearbeiten: Zeit, Kategorie, Mengen, löschen |
+| **+250 ml Wasser** | Eine Flasche füllt sich, der Balken von heute wächst |
+| Flüssigkeitskarte antippen | Alle Getränke des Tages, wischen zum Löschen |
+| ◀ / ▶ oder über das Datum wischen | Anderer Tag; Tipp aufs Datum springt zu heute |
+| **Wuche / Monet / 3 Mönet** | Alle Graphen wechseln den Zeitraum |
+| Im Graphen antippen oder ziehen | Hinweis mit Datum und Wert |
+| Oben rechts ⚙︎ (Schieberegler) | Karten ein-/ausblenden und mit den drei Strichen verschieben |
+
+Der Tab „Schlaf“ zeigt noch einen Platzhalter.
 
 **Erwartungsmanagement:** Der Code wurde ohne Compiler geschrieben. Ein paar
 Fehler beim ersten Bauen sind gut möglich. Schick mir den vollständigen

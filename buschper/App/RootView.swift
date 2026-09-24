@@ -32,7 +32,7 @@ struct RootView: View {
 
     private var tabs: some View {
         TabView(selection: $selection) {
-            TodayPlaceholderView()
+            TodayView()
                 .tag(TabID.today)
                 .tabItem { Label("Hüt", systemImage: "sun.max.fill") }
 

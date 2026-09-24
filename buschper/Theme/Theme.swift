@@ -29,23 +29,29 @@ enum Theme {
 
     // MARK: - Bereiche
 
-    static let nutrition = Color(red: 0.400, green: 0.839, blue: 0.529)
-    static let fluid = Color(red: 0.365, green: 0.667, blue: 0.988)
-    static let activity = Color(red: 0.980, green: 0.420, blue: 0.408)
-    static let weight = Color(red: 0.992, green: 0.737, blue: 0.325)
-    static let sleep = Color(red: 0.690, green: 0.569, blue: 0.992)
+    // Geprüft mit dem Palette-Validator (dataviz) gegen die Kartenfläche #17191E:
+    // alle im Helligkeitsband für dunkle Flächen, genug Farbsättigung, und auch
+    // bei Rot-Grün-Schwäche unterscheidbar (Rot dunkler, Gelb heller gesetzt).
+    // Farbe steht nie allein: jede Karte hat Titel und Symbol.
 
-    /// Makros innerhalb der Ernährung: Abstufungen, damit die Karte ruhig bleibt.
-    static let carbs = Color(red: 0.992, green: 0.831, blue: 0.451)
-    static let protein = Color(red: 0.557, green: 0.878, blue: 0.890)
-    static let fat = Color(red: 0.980, green: 0.620, blue: 0.451)
-    static let fiber = Color(red: 0.667, green: 0.851, blue: 0.431)
+    static let nutrition = Color(red: 0.215, green: 0.673, blue: 0.374)   // #37AC5F
+    static let fluid = Color(red: 0.285, green: 0.587, blue: 0.902)       // #4996E6
+    static let activity = Color(red: 0.794, green: 0.246, blue: 0.255)    // #CA3F41
+    static let weight = Color(red: 0.774, green: 0.531, blue: 0.000)      // #C58700
+    static let sleep = Color(red: 0.608, green: 0.484, blue: 0.900)       // #9B7CE5
+
+    /// Makros innerhalb der Ernährung, ebenfalls geprüft.
+    static let carbs = Color(red: 0.702, green: 0.550, blue: 0.134)       // #B38C22
+    static let protein = Color(red: 0.000, green: 0.639, blue: 0.659)     // #00A3A8
+    static let fat = Color(red: 0.815, green: 0.469, blue: 0.304)         // #D0784D
+    static let fiber = Color(red: 0.465, green: 0.637, blue: 0.212)       // #77A336
 
     // MARK: - Zustände
 
-    static let good = Color(red: 0.400, green: 0.839, blue: 0.529)
-    static let warning = Color(red: 0.992, green: 0.737, blue: 0.325)
-    static let bad = Color(red: 0.980, green: 0.420, blue: 0.408)
+    /// Reserviert für Zustände, nie als Bereichsfarbe; immer mit Symbol und Text.
+    static let good = Color(red: 0.459, green: 0.878, blue: 0.620)
+    static let warning = Color(red: 1.000, green: 0.800, blue: 0.302)
+    static let bad = Color(red: 1.000, green: 0.478, blue: 0.478)
 
     static let cornerRadius: CGFloat = 20
     static let smallCornerRadius: CGFloat = 12
