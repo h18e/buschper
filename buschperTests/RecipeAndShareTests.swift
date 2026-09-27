@@ -143,3 +143,47 @@ struct CSVAndTextTests {
         #expect(NumberText.volume(1900) == "1.9 l")
     }
 }
+
+@Suite("Rezept teilen")
+struct RecipeShareTests {
+    let recipe = SharedMeal(
+        title: "Lasagne",
+        category: .dinner,
+        entries: [
+            .init(name: "Teigwaren", amount: 250, unitLabel: "g", grams: 250, nutrients: Nutrients(kcal: 887.5)),
+            .init(name: "Hackfleisch", amount: 400, unitLabel: "g", grams: 400, nutrients: Nutrients(kcal: 920))
+        ],
+        servings: 4
+    )
+
+    @Test("Portionen überleben Datei und QR-Link")
+    func roundTrip() throws {
+        let data = try MealShareCodec.fileData(for: recipe)
+        #expect(try MealShareCodec.decode(fileData: data).servings == 4)
+        let url = try #require(MealShareCodec.qrLink(for: recipe))
+        #expect(try MealShareCodec.decode(url: url) == recipe)
+    }
+
+    @Test("Ältere Dateien ohne Portionen sind Mahlzeiten")
+    func olderFile() throws {
+        let json = #"{"version":1,"title":"Zmittag","category":"lunch","entries":[]}"#
+        let meal = try MealShareCodec.decode(fileData: Data(json.utf8))
+        #expect(!meal.isRecipe)
+        #expect(meal.servings == nil)
+    }
+
+    @Test("Eine Portion ist ein Viertel von vier")
+    func onePortion() {
+        let one = recipe.scaled(toServings: 1)
+        #expect(one.total.kcal == (887.5 + 920) / 4)
+        #expect(one.entries[0].grams == 62.5)
+        #expect(one.servings == 1)
+    }
+
+    @Test("Als Rezept übernommen behält es die Portionen")
+    func asRecipe() {
+        let draft = RecipeDraft(sharedMeal: recipe)
+        #expect(draft.servings == 4)
+        #expect(draft.perServing.kcal == (887.5 + 920) / 4)
+    }
+}

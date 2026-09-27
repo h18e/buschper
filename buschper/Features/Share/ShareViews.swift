@@ -56,7 +56,8 @@ struct ShareMealView: View {
                 VStack(spacing: 18) {
                     VStack(spacing: 4) {
                         Text(meal.title).font(.title3.weight(.semibold))
-                        Text("\(meal.entries.count) \(meal.entries.count == 1 ? "Iitrag" : "Iiträg") · \(NutrientLine.text(meal.total))")
+                        Text(meal.servings.map { "\(meal.entries.count) Zuetate · \(NumberText.amount($0)) Portione · pro Portion \(NutrientLine.text(meal.scaled(toServings: 1).total))" }
+                             ?? "\(meal.entries.count) \(meal.entries.count == 1 ? "Iitrag" : "Iiträg") · \(NutrientLine.text(meal.total))")
                             .font(.caption)
                             .foregroundStyle(Theme.textSecondary)
                             .multilineTextAlignment(.center)
@@ -74,7 +75,7 @@ struct ShareMealView: View {
                                 .multilineTextAlignment(.center)
                         }
                     } else {
-                        Label("Die Mahlzyt isch z gross für e QR-Code. Schick se als Datei.", systemImage: "qrcode")
+                        Label("\(meal.isRecipe ? "Ds Rezept" : "Die Mahlzyt") isch z gross für e QR-Code. Schick's als Datei.", systemImage: "qrcode")
                             .font(.footnote)
                             .foregroundStyle(Theme.textSecondary)
                             .card()
@@ -89,7 +90,9 @@ struct ShareMealView: View {
                         .tint(Theme.accent)
                     }
 
-                    Text("D Empfängerin bruucht o buschper. Si cha d Mahlzyt i ihre Tag iifüege oder als Vorlag spychere. Mitgschickt wärde nume Name, Zuetate, Mängi u Nährwärt – kes Datum.")
+                    Text(meal.isRecipe
+                         ? "D Empfängerin bruucht o buschper. Si cha ds Rezept spychere oder grad Portione dervo i ihre Tag iifüege. Mitgschickt wärde Name, Zuetate, Mängi, Portione u Nährwärt."
+                         : "D Empfängerin bruucht o buschper. Si cha d Mahlzyt i ihre Tag iifüege oder als Vorlag spychere. Mitgschickt wärde nume Name, Zuetate, Mängi u Nährwärt – kes Datum.")
                         .font(.caption)
                         .foregroundStyle(Theme.textTertiary)
                         .multilineTextAlignment(.center)
@@ -132,14 +135,21 @@ struct ImportMealView: View {
         var id: String { rawValue }
     }
 
-    @State private var mode: Mode = .day
+    @State private var mode: Mode
     @State private var timestamp = Date()
     @State private var category: MealCategory
-    @State private var done = false
+    @State private var portions: Double = 1
 
     init(meal: SharedMeal) {
         self.meal = meal
-        _category = State(initialValue: meal.category)
+        _category = State(initialValue: meal.isRecipe ? MealCategory.suggested(for: Date()) : meal.category)
+        // Ein geteiltes Rezept will man meist behalten, eine Mahlzeit meist eintragen.
+        _mode = State(initialValue: meal.isRecipe ? .template : .day)
+    }
+
+    /// Was im Tag landet: bei Rezepten die gewählten Portionen, sonst alles.
+    private var mealForDay: SharedMeal {
+        meal.isRecipe ? meal.scaled(toServings: portions) : meal
     }
 
     var body: some View {
@@ -153,7 +163,7 @@ struct ImportMealView: View {
                         }
                     }
                 } header: {
-                    Text(meal.title)
+                    Text(meal.servings.map { "\(meal.title) · \(NumberText.amount($0)) Portione" } ?? meal.title)
                 } footer: {
                     NutrientLine(nutrients: meal.total)
                 }
@@ -161,23 +171,33 @@ struct ImportMealView: View {
                 Section {
                     Picker("Was mache?", selection: $mode) {
                         Text("I mym Tag iifüege").tag(Mode.day)
-                        Text("Als Vorlag spychere").tag(Mode.template)
+                        Text(meal.isRecipe ? "Als Rezept spychere" : "Als Vorlag spychere").tag(Mode.template)
                     }
                     .pickerStyle(.segmented)
                     if mode == .day {
+                        if meal.isRecipe {
+                            Stepper(value: $portions, in: 0.25...20, step: 0.25) {
+                                LabeledValueRow(label: "Portione") {
+                                    Text(NumberText.amount(portions)).monospacedDigit()
+                                }
+                            }
+                            NutrientLine(nutrients: mealForDay.total)
+                        }
                         DatePicker("Zyt", selection: $timestamp)
                         Picker("Mahlzyt", selection: $category) {
                             ForEach(MealCategory.allCases) { Text($0.label).tag($0) }
                         }
                     } else {
-                        Text("Wird es Rezept mit 1 Portion. Das chasch speter ände u i Portione erfasse.")
+                        Text(meal.isRecipe
+                             ? "Wird es Rezept mit \(NumberText.amount(meal.servings ?? 1)) Portione. Speter erfasssch es i Portione."
+                             : "Wird es Rezept mit 1 Portion. Das chasch speter ände u i Portione erfasse.")
                             .font(.footnote)
                             .foregroundStyle(Theme.textSecondary)
                     }
                 }
             }
             .themedList()
-            .navigationTitle("Mahlzyt übernäh")
+            .navigationTitle(meal.isRecipe ? "Rezept übernäh" : "Mahlzyt übernäh")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -187,7 +207,7 @@ struct ImportMealView: View {
                     Button("Übernäh") {
                         switch mode {
                         case .day:
-                            app.store.importMeal(meal, at: timestamp, category: category)
+                            app.store.importMeal(mealForDay, at: timestamp, category: category)
                         case .template:
                             app.store.saveRecipe(RecipeDraft(sharedMeal: meal))
                         }

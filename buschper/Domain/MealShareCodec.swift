@@ -18,9 +18,30 @@ struct SharedMeal: Codable, Equatable {
     var title: String
     var category: MealCategory
     var entries: [Entry]
+    /// Gesetzt, wenn ein **Rezept** geteilt wird: für so viele Portionen gelten
+    /// die Einträge. Ältere Dateien ohne dieses Feld sind Mahlzeiten.
+    var servings: Double? = nil
+
+    var isRecipe: Bool { servings != nil }
 
     var total: Nutrients {
         NutrientSum(entries.map(\.nutrients)).values
+    }
+
+    /// Dieselbe Zusammenstellung für eine andere Anzahl Portionen.
+    func scaled(toServings wanted: Double) -> SharedMeal {
+        guard let servings, servings > 0 else { return self }
+        let factor = wanted / servings
+        var copy = self
+        copy.entries = entries.map { entry in
+            var scaled = entry
+            scaled.amount *= factor
+            scaled.grams *= factor
+            scaled.nutrients = entry.nutrients.scaled(by: factor)
+            return scaled
+        }
+        copy.servings = wanted
+        return copy
     }
 }
 

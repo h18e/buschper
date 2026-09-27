@@ -9,6 +9,7 @@ struct RecipeListView: View {
 
     @State private var editing: Recipe?
     @State private var creating = false
+    @State private var sharing: SharedMeal?
 
     var body: some View {
         List {
@@ -54,6 +55,19 @@ struct RecipeListView: View {
                         Label("Favorit", systemImage: "star")
                     }
                     .tint(Theme.warning)
+                    Button {
+                        sharing = app.store.sharedRecipe(from: recipe)
+                    } label: {
+                        Label("Teile", systemImage: "square.and.arrow.up")
+                    }
+                    .tint(Theme.accent)
+                }
+                .contextMenu {
+                    Button {
+                        sharing = app.store.sharedRecipe(from: recipe)
+                    } label: {
+                        Label("Teile", systemImage: "square.and.arrow.up")
+                    }
                 }
             }
             .onDelete { offsets in
@@ -74,6 +88,9 @@ struct RecipeListView: View {
         .sheet(isPresented: $creating) {
             RecipeEditorView()
         }
+        .sheet(item: $sharing) { shared in
+            ShareMealView(meal: shared)
+        }
     }
 }
 
@@ -86,6 +103,7 @@ struct RecipeEditorView: View {
     @State private var addingIngredient = false
     @State private var editingIngredient: RecipeDraft.Ingredient?
     @State private var confirmsDelete = false
+    @State private var sharing: SharedMeal?
 
     init(existing: Recipe? = nil, draft: RecipeDraft = RecipeDraft()) {
         self.existing = existing
@@ -173,6 +191,18 @@ struct RecipeEditorView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Abbräche") { dismiss() }
                 }
+                if let existing {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button {
+                            // Zuerst sichern, damit geteilt wird, was auf dem Bildschirm steht.
+                            if draft.isValid { app.store.saveRecipe(draft, editing: existing) }
+                            sharing = app.store.sharedRecipe(from: existing)
+                        } label: {
+                            Image(systemName: "square.and.arrow.up")
+                        }
+                        .accessibilityLabel("Rezept teile")
+                    }
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Sichere") {
                         app.store.saveRecipe(draft, editing: existing)
@@ -184,6 +214,9 @@ struct RecipeEditorView: View {
             }
             .sheet(isPresented: $addingIngredient) {
                 IngredientPickerView { draft.ingredients.append($0) }
+            }
+            .sheet(item: $sharing) { shared in
+                ShareMealView(meal: shared)
             }
             .sheet(item: $editingIngredient) { ingredient in
                 AmountPickerView(

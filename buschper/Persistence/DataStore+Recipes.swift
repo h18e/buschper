@@ -55,7 +55,7 @@ struct RecipeDraft: Equatable {
     /// mit ihren Gesamtwerten übernommen, damit die Summe stimmt.
     init(sharedMeal: SharedMeal) {
         name = sharedMeal.title
-        servings = 1
+        servings = sharedMeal.servings ?? 1
         ingredients = sharedMeal.entries.map { entry in
             let grams = entry.grams > 0 ? entry.grams : 100
             return Ingredient(
@@ -179,6 +179,24 @@ extension DataStore {
                     nutrients: entry.total
                 )
             }
+        )
+    }
+
+    /// Ein Rezept zum Teilen: alle Zutaten mit Menge und Nährwerten, dazu die Portionen.
+    func sharedRecipe(from recipe: Recipe) -> SharedMeal {
+        SharedMeal(
+            title: recipe.displayName,
+            category: .dinner,
+            entries: recipe.ingredientList.map { item in
+                SharedMeal.Entry(
+                    name: item.name ?? "",
+                    amount: item.amountG,
+                    unitLabel: item.isLiquid ? "ml" : "g",
+                    grams: item.amountG,
+                    nutrients: item.per100.forAmount(item.amountG)
+                )
+            },
+            servings: recipe.servings
         )
     }
 
