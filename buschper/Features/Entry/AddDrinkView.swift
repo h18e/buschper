@@ -62,14 +62,15 @@ struct AddDrinkView: View {
                 }
 
                 Section {
-                    HStack(spacing: 8) {
-                        ForEach([150.0, 250, 330, 500], id: \.self) { ml in
-                            Button(NumberText.volume(ml)) { draft.volumeMl = ml }
-                                .buttonStyle(.bordered)
-                                .tint(draft.volumeMl == ml ? Theme.fluid : Theme.textSecondary)
-                        }
-                    }
-                    NumberField(title: "Mängi", value: $draft.volumeMl, unit: "ml", fractionDigits: 0)
+                    AmountInput(
+                        value: $draft.volumeMl,
+                        unit: "ml",
+                        sliderMax: 1000,
+                        step: 10,
+                        quickValues: [150, 250, 330, 500],
+                        tint: Theme.fluid
+                    )
+                    .padding(.vertical, 6)
                     if draft.drinkType.isAlcoholic || draft.abvPercent > 0 {
                         NumberField(title: "Alkohol", value: $draft.abvPercent, unit: "Vol-%")
                     }

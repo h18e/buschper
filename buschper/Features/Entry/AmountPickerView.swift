@@ -75,6 +75,18 @@ struct AmountPickerView: View {
         per100.forAmount(portion.grams(for: count))
     }
 
+    /// Gramm und Milliliter in 5er- bzw. 10er-Schritten, Portionen in halben.
+    private var sliderStep: Double {
+        if isRecipe { return 0.25 }
+        if portion.name != nil { return 0.5 }
+        return isLiquid ? 10 : 5
+    }
+
+    private var sliderMax: Double {
+        if isRecipe || portion.name != nil { return 6 }
+        return isLiquid ? 1000 : 500
+    }
+
     private var quickCounts: [Double] {
         if isRecipe || portion.name != nil { return [0.5, 1, 1.5, 2] }
         return isLiquid ? [100, 200, 250, 330, 500] : [50, 100, 150, 200, 250]
@@ -109,16 +121,18 @@ struct AmountPickerView: View {
                             count = newValue.name == nil ? 100 : 1
                         }
                     }
-                    NumberField(title: "Mängi", value: $count, unit: unit, fractionDigits: 2)
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack {
-                            ForEach(quickCounts, id: \.self) { value in
-                                Button(NumberText.amount(value)) { count = value }
-                                    .buttonStyle(.bordered)
-                                    .tint(count == value ? Theme.accent : Theme.textSecondary)
-                            }
-                        }
-                    }
+                }
+
+                Section {
+                    AmountInput(
+                        value: $count,
+                        unit: unit,
+                        sliderMax: sliderMax,
+                        step: sliderStep,
+                        quickValues: quickCounts,
+                        tint: Theme.nutrition
+                    )
+                    .padding(.vertical, 6)
                 }
 
                 Section {
