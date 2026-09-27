@@ -5,6 +5,7 @@ import SwiftUI
 struct TodayView: View {
     @Environment(AppEnvironment.self) private var app
     @EnvironmentObject private var preferences: AppPreferences
+    @Environment(\.scenePhase) private var scenePhase
 
     @State private var day = Calendar.current.startOfDay(for: Date())
     @State private var range: ChartRange = .month
@@ -86,6 +87,23 @@ struct TodayView: View {
             }
             .refreshable { await load() }
             .task(id: LoadKey(day: day, range: range, revision: app.revision)) { await load() }
+            // Zurück in der App oder Mitternacht vorbei: immer auf heute springen.
+            // Sonst bliebe ein über Nacht offenes Dashboard auf gestern stehen, und
+            // neue Einträge landeten unbemerkt auf dem alten Tag.
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active { jumpToToday() }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in
+                jumpToToday()
+            }
+            .onChange(of: range) { _, newRange in
+                // Für 3 Monate braucht es ältere Nächte, als beim ersten Öffnen
+                // ausgewertet wurden.
+                Task {
+                    await app.sleep.ensureEvaluated(days: newRange.days)
+                    await load()
+                }
+            }
             .sheet(item: $sheet) { sheet in
                 sheetView(sheet)
             }
@@ -140,6 +158,13 @@ struct TodayView: View {
             .pickerStyle(.segmented)
         }
         .padding(.top, 4)
+    }
+
+    private func jumpToToday() {
+        let today = Calendar.current.startOfDay(for: Date())
+        if day != today {
+            day = today
+        }
     }
 
     private func shiftDay(_ delta: Int) {

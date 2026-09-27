@@ -15,9 +15,9 @@ struct DrinkDraft: Equatable {
 
     init() {}
 
-    init(type: DrinkType, at date: Date = Date()) {
+    init(type: DrinkType, at date: Date = Date(), remembered: DrinkDefault? = nil) {
         timestamp = date
-        apply(type: type)
+        apply(type: type, remembered: remembered)
     }
 
     init(preset: DrinkPreset, at date: Date = Date()) {
@@ -49,12 +49,17 @@ struct DrinkDraft: Equatable {
         presetId = entry.presetId
     }
 
-    mutating func apply(type: DrinkType) {
+    /// Werte eines Typs übernehmen: die zuletzt verwendeten, sonst die Richtwerte.
+    mutating func apply(type: DrinkType, remembered: DrinkDefault? = nil) {
         drinkType = type
-        volumeMl = type.defaultVolumeMl
-        abvPercent = type.defaultABV
-        countsAsFluid = type.countsAsFluidByDefault
-        per100ml = type.defaultNutrientsPer100ml
+        volumeMl = remembered?.volumeMl ?? type.defaultVolumeMl
+        abvPercent = remembered?.abvPercent ?? type.defaultABV
+        countsAsFluid = remembered?.countsAsFluid ?? type.countsAsFluidByDefault
+        per100ml = remembered?.per100ml ?? type.defaultNutrientsPer100ml
+    }
+
+    var asDefault: DrinkDefault {
+        DrinkDefault(volumeMl: volumeMl, abvPercent: abvPercent, countsAsFluid: countsAsFluid, per100ml: per100ml)
     }
 
     var total: Nutrients {

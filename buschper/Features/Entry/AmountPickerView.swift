@@ -11,6 +11,9 @@ struct AmountPickerView: View {
     let per100: Nutrients
     let portions: [PortionChoice]
     var confirmTitle = "Is Chörbli"
+    /// Wenn gesetzt, erscheint ein Knopf zum Anpassen von Name und Nährwerten.
+    var editTitle: String?
+    var onEdit: (() -> Void)?
     let onConfirm: (PortionChoice, Double) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -42,7 +45,7 @@ struct AmountPickerView: View {
     }
 
     /// Kandidat aus der Suche: vorgeschlagene Menge ist eine Portion oder 100 g.
-    init(candidate: FoodCandidate, onConfirm: @escaping (PortionChoice, Double) -> Void) {
+    init(candidate: FoodCandidate, onEdit: (() -> Void)? = nil, onConfirm: @escaping (PortionChoice, Double) -> Void) {
         let choice = candidate.defaultChoice
         self.init(
             title: candidate.name,
@@ -55,6 +58,12 @@ struct AmountPickerView: View {
             initialCount: choice.count,
             onConfirm: onConfirm
         )
+        self.onEdit = onEdit
+        switch candidate.source {
+        case .product: editTitle = "Produkt bearbeite"
+        case .catalog, .openFoodFacts: editTitle = "Name u Nährwärt aapasse"
+        case .recipe: editTitle = nil
+        }
     }
 
     private var unit: String {
@@ -79,6 +88,14 @@ struct AmountPickerView: View {
                         Text(subtitle)
                             .font(.footnote)
                             .foregroundStyle(Theme.textSecondary)
+                    }
+                    if let onEdit, let editTitle {
+                        Button {
+                            dismiss()
+                            onEdit()
+                        } label: {
+                            Label(editTitle, systemImage: "pencil")
+                        }
                     }
                     if !isRecipe && portions.count > 1 {
                         Picker("Einheit", selection: $portion) {

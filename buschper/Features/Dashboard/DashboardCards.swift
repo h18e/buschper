@@ -12,37 +12,31 @@ struct EnergyCard: View {
     private var incomplete: Set<Nutrients.Field> { snapshot.eaten.incompleteFields }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .firstTextBaseline) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(snapshot.kcalLeft >= 0 ? "No übrig" : "Drüber")
-                        .font(.subheadline)
-                        .foregroundStyle(Theme.textSecondary)
-                    Text("\(NumberText.kcal(abs(snapshot.kcalLeft))) kcal")
-                        .font(.system(size: 34, weight: .bold, design: .rounded))
-                        .monospacedDigit()
-                        .foregroundStyle(Theme.textPrimary)
-                }
-                Spacer()
-                Image(systemName: "flame.fill")
+        VStack(alignment: .leading, spacing: 10) {
+            // Eine Zeile: gegessen / Budget links, übrig rechts.
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text(NumberText.kcal(snapshot.eaten.kcal))
+                    .font(.title2.weight(.bold))
+                    .monospacedDigit()
+                Text("/ \(NumberText.kcal(budget.total)) kcal")
+                    .font(.subheadline)
+                    .monospacedDigit()
+                    .foregroundStyle(Theme.textSecondary)
+                Spacer(minLength: 8)
+                Text(snapshot.kcalLeft >= 0
+                     ? "no \(NumberText.kcal(snapshot.kcalLeft)) übrig"
+                     : "\(NumberText.kcal(-snapshot.kcalLeft)) drüber")
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Theme.background)
-                    .frame(width: 36, height: 36)
-                    .background(Theme.nutrition, in: Circle())
-                    .accessibilityHidden(true)
+                    .monospacedDigit()
+                    .foregroundStyle(snapshot.kcalLeft >= 0 ? Theme.textPrimary : Theme.warning)
             }
+            ProgressBar(fraction: budget.total > 0 ? snapshot.eaten.kcal / budget.total : 0, color: Theme.nutrition, height: 6)
 
-            TargetTile(title: "Kalorie", value: snapshot.eaten.kcal, target: budget.total, color: Theme.nutrition)
-
-            HStack(spacing: 8) {
-                TargetTile(title: "KH", value: eaten.carbs ?? 0, target: macros.carbsG, unit: "g",
-                           color: Theme.carbs, incomplete: incomplete.contains(.carbs))
-                TargetTile(title: "Eiwiss", value: eaten.protein ?? 0, target: macros.proteinG, unit: "g",
-                           color: Theme.protein, incomplete: incomplete.contains(.protein))
-                TargetTile(title: "Fett", value: eaten.fat ?? 0, target: macros.fatG, unit: "g",
-                           color: Theme.fat, incomplete: incomplete.contains(.fat))
-                TargetTile(title: "Fasere", value: eaten.fiber ?? 0, target: macros.fiberMinG, unit: "g",
-                           color: Theme.fiber, incomplete: incomplete.contains(.fiber))
+            HStack(spacing: 6) {
+                macroTile("KH", eaten.carbs, macros.carbsG, Theme.carbs, .carbs)
+                macroTile("Eiwiss", eaten.protein, macros.proteinG, Theme.protein, .protein)
+                macroTile("Fett", eaten.fat, macros.fatG, Theme.fat, .fat)
+                macroTile("Fasere", eaten.fiber, macros.fiberMinG, Theme.fiber, .fiber)
             }
 
             HStack(spacing: 6) {
@@ -50,6 +44,8 @@ struct EnergyCard: View {
                     .font(.caption2)
                     .monospacedDigit()
                     .foregroundStyle(Theme.textTertiary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
                 if budget.activeIsEstimate {
                     BadgeView(text: "Schätzig", color: Theme.warning, systemImage: "applewatch.slash")
                 }
@@ -58,7 +54,31 @@ struct EnergyCard: View {
                 }
             }
         }
-        .card(tint: Theme.nutrition)
+        .card(tint: Theme.nutrition, padding: 14)
+    }
+
+    /// Kleine Kachel: Name, Ist/Ziel in g und ein dünner Balken.
+    private func macroTile(_ title: String, _ value: Double?, _ target: Double, _ color: Color, _ field: Nutrients.Field) -> some View {
+        let amount = value ?? 0
+        return VStack(alignment: .leading, spacing: 3) {
+            Text(title)
+                .font(.caption2)
+                .foregroundStyle(Theme.textSecondary)
+            HStack(alignment: .firstTextBaseline, spacing: 1) {
+                Text((incomplete.contains(field) ? "≥" : "") + NumberText.kcal(amount))
+                    .font(.subheadline.weight(.semibold))
+                    .monospacedDigit()
+                Text("/\(NumberText.kcal(target))")
+                    .font(.caption2)
+                    .monospacedDigit()
+                    .foregroundStyle(Theme.textTertiary)
+            }
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+            ProgressBar(fraction: target > 0 ? amount / target : 0, color: color, height: 4)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -320,7 +340,7 @@ struct WeightCard: View {
                     StatValue(value: WeightMath.change(snapshot.weightDaily).map { ($0 > 0 ? "+" : "") + NumberText.oneDecimal($0) } ?? "–",
                               caption: "Veränderig", alignment: .trailing)
                 }
-                WeightChart(daily: snapshot.weightDaily, average: snapshot.weightAverage, days: range.days, target: target)
+                WeightChart(daily: snapshot.weightDaily, range: range, target: target)
             }
         }
         .card(tint: Theme.weight)

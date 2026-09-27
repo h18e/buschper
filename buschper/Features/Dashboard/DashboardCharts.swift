@@ -64,17 +64,19 @@ private func sameDay(_ a: Date, _ b: Date) -> Bool {
 
 // MARK: - Gewicht
 
-/// Gewicht: Tageswerte als Punkte, 7-Tage-Schnitt als Linie.
+/// Gewicht: alle Messwerte als geschwungene Linie mit Punkten und Farbverlauf
+/// darunter; der Schnitt des gezeigten Zeitraums als feine gestrichelte Waagrechte.
 struct WeightChart: View {
     let daily: [DailyWeight]
-    let average: [DailyWeight]
-    let days: Int
+    let range: ChartRange
     var target: Double?
 
     @State private var selected: Date?
 
+    private var average: Double? { DayMath.average(daily.map(\.kg)) }
+
     private var domain: ClosedRange<Double> {
-        let values = daily.map(\.kg) + average.map(\.kg) + (target.map { [$0] } ?? [])
+        let values = daily.map(\.kg) + (target.map { [$0] } ?? [])
         guard let low = values.min(), let high = values.max() else { return 60...80 }
         return (low - 0.8)...(high + 0.8)
     }
@@ -82,21 +84,33 @@ struct WeightChart: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Chart {
-                ForEach(average) { point in
-                    LineMark(x: .value("Tag", point.day, unit: .day), y: .value("Schnitt", point.kg))
+                ForEach(daily) { point in
+                    AreaMark(
+                        x: .value("Tag", point.day, unit: .day),
+                        yStart: .value("Basis", domain.lowerBound),
+                        yEnd: .value("Gwicht", point.kg)
+                    )
+                    .foregroundStyle(areaGradient(Theme.weight))
+                    .interpolationMethod(.catmullRom)
+
+                    LineMark(x: .value("Tag", point.day, unit: .day), y: .value("Gwicht", point.kg))
                         .foregroundStyle(Theme.weight)
                         .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
-                        .interpolationMethod(.monotone)
-                }
-                ForEach(daily) { point in
+                        .interpolationMethod(.catmullRom)
+
                     PointMark(x: .value("Tag", point.day, unit: .day), y: .value("Gwicht", point.kg))
-                        .foregroundStyle(Theme.weight.opacity(0.55))
-                        .symbolSize(40)
+                        .foregroundStyle(Theme.weight)
+                        .symbolSize(daily.count > 40 ? 12 : 30)
+                }
+                if let average {
+                    RuleMark(y: .value("Schnitt", average))
+                        .foregroundStyle(Theme.textSecondary)
+                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
                 }
                 if let target {
                     RuleMark(y: .value("Ziel", target))
                         .foregroundStyle(Theme.textTertiary)
-                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
+                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [1, 3]))
                         .annotation(position: .top, alignment: .leading) {
                             Text("Ziel").font(.caption2).foregroundStyle(Theme.textTertiary)
                         }
@@ -108,20 +122,21 @@ struct WeightChart: View {
                             ChartTooltip(
                                 title: point.day.formatted(dayFormat),
                                 value: "\(NumberText.oneDecimal(point.kg)) kg",
-                                detail: average.first(where: { sameDay($0.day, point.day) })
-                                    .map { "Schnitt \(NumberText.oneDecimal($0.kg)) kg" }
+                                detail: average.map { "Schnitt \(NumberText.oneDecimal($0)) kg" }
                             )
                         }
                 }
             }
             .chartYScale(domain: domain)
             .chartXSelection(value: $selected)
-            .modifier(QuietAxes(days: days))
+            .modifier(QuietAxes(days: range.days))
             .frame(height: 150)
 
             HStack(spacing: 14) {
-                legendDot("Tageswärt", Theme.weight.opacity(0.55))
-                legendLine("7-Tage-Schnitt", Theme.weight)
+                legendLine("Mässwärt", Theme.weight)
+                if let average {
+                    legendDash("Schnitt \(range.spanLabel): \(NumberText.oneDecimal(average)) kg", Theme.textSecondary)
+                }
             }
             .font(.caption2)
             .foregroundStyle(Theme.textSecondary)
@@ -130,6 +145,11 @@ struct WeightChart: View {
         .accessibilityLabel("Gwichtsverlouf")
         .accessibilityValue(daily.last.map { "Zletscht \(NumberText.oneDecimal($0.kg)) Kilo" } ?? "Kener Wärt")
     }
+}
+
+/// Farbverlauf unter einer Linie: an der Linie volle Farbe, an der x-Achse durchsichtig.
+func areaGradient(_ color: Color) -> LinearGradient {
+    LinearGradient(colors: [color.opacity(1), color.opacity(0)], startPoint: .top, endPoint: .bottom)
 }
 
 // MARK: - Schlaf
@@ -151,6 +171,13 @@ struct SleepScoreChart: View {
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
                 ForEach(nights, id: \.objectID) { night in
                     if let date = night.nightDate {
+                        AreaMark(
+                            x: .value("Nacht", date, unit: .day),
+                            yStart: .value("Basis", 0),
+                            yEnd: .value("Score", night.score)
+                        )
+                        .foregroundStyle(areaGradient(Theme.sleep))
+                        .interpolationMethod(.monotone)
                         LineMark(x: .value("Nacht", date, unit: .day), y: .value("Score", night.score))
                             .foregroundStyle(Theme.sleep)
                             .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
@@ -240,6 +267,18 @@ struct FluidChart: View {
 func legendDot(_ label: String, _ color: Color) -> some View {
     HStack(spacing: 4) {
         Circle().fill(color).frame(width: 8, height: 8)
+        Text(label)
+    }
+}
+
+func legendDash(_ label: String, _ color: Color) -> some View {
+    HStack(spacing: 4) {
+        Path { path in
+            path.move(to: CGPoint(x: 0, y: 1))
+            path.addLine(to: CGPoint(x: 14, y: 1))
+        }
+        .stroke(color, style: StrokeStyle(lineWidth: 1, dash: [3, 2]))
+        .frame(width: 14, height: 2)
         Text(label)
     }
 }

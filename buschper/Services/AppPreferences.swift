@@ -23,6 +23,7 @@ final class AppPreferences: ObservableObject {
         static let morningCheckInMinute = "buschper.morningCheckInMinute"
         static let quickWaterMl = "buschper.quickWaterMl"
         static let lastKnownBMR = "buschper.lastKnownBMR"
+        static let drinkDefaults = "buschper.drinkDefaults"
     }
 
     private let defaults: UserDefaults
@@ -110,9 +111,46 @@ final class AppPreferences: ObservableObject {
         set { set(min(2000, max(50, newValue)), for: Key.quickWaterMl) }
     }
 
+    /// Zuletzt verwendete Werte pro Getränketyp – z. B. dein Kaffee mit 2 dl und
+    /// eigenen Nährwerten. Ersetzen die Richtwerte beim nächsten Mal.
+    func drinkDefault(for type: DrinkType) -> DrinkDefault? {
+        storedDrinkDefaults()[type.rawValue]
+    }
+
+    func setDrinkDefault(_ value: DrinkDefault, for type: DrinkType) {
+        var all = storedDrinkDefaults()
+        all[type.rawValue] = value
+        if let data = try? JSONEncoder().encode(all) {
+            set(data, for: Key.drinkDefaults)
+        }
+    }
+
+    func resetDrinkDefault(for type: DrinkType) {
+        var all = storedDrinkDefaults()
+        all[type.rawValue] = nil
+        if let data = try? JSONEncoder().encode(all) {
+            set(data, for: Key.drinkDefaults)
+        }
+    }
+
+    private func storedDrinkDefaults() -> [String: DrinkDefault] {
+        guard let data = defaults.data(forKey: Key.drinkDefaults),
+              let decoded = try? JSONDecoder().decode([String: DrinkDefault].self, from: data)
+        else { return [:] }
+        return decoded
+    }
+
     /// Zuletzt angezeigter Grundumsatz – für den Hinweis „Bedarf nöi berächnet“.
     var lastKnownBMR: Double {
         get { defaults.double(forKey: Key.lastKnownBMR) }
         set { set(newValue, for: Key.lastKnownBMR) }
     }
+}
+
+/// Gemerkte Werte eines Getränketyps.
+struct DrinkDefault: Codable, Equatable {
+    var volumeMl: Double
+    var abvPercent: Double
+    var countsAsFluid: Bool
+    var per100ml: Nutrients
 }

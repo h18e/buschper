@@ -24,6 +24,9 @@ struct BuschperApp: App {
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
                 Task { await environment.appBecameActive() }
+            } else if newPhase == .background {
+                // Sicherheitsnetz: vor dem Wegwischen alles Offene speichern.
+                environment.store.save()
             }
         }
     }

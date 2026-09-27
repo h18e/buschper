@@ -116,7 +116,7 @@ struct AddFoodView: View {
             }
             .task(id: query) { await runSearch() }
             .sheet(item: $picking) { candidate in
-                AmountPickerView(candidate: candidate) { portion, count in
+                AmountPickerView(candidate: candidate, onEdit: { edit(candidate) }) { portion, count in
                     app.store.rememberExternal(candidate)
                     basket.append(BasketItem.from(candidate, portion: portion, count: count))
                 }
@@ -287,7 +287,36 @@ struct AddFoodView: View {
             }
             .buttonStyle(.plain)
             .contextMenu { candidateMenu(candidate) }
+            .swipeActions {
+                if case .product(let id) = candidate.source {
+                    Button("Lösche", role: .destructive) { deleteProduct(id) }
+                }
+            }
         }
+    }
+
+    /// Anpassen beim Erfassen: eigene Produkte direkt, fremde als eigene Kopie.
+    /// Nach dem Sichern geht die Mengenwahl mit dem angepassten Produkt weiter.
+    private func edit(_ candidate: FoodCandidate) {
+        let sheet: ProductDraftSheet
+        switch candidate.source {
+        case .product(let id):
+            guard let product = app.store.object(FoodProduct.self, id: id) else { return }
+            sheet = ProductDraftSheet(draft: ProductDraft(product: product), existing: product)
+        case .catalog, .openFoodFacts:
+            sheet = ProductDraftSheet(draft: ProductDraft(copying: candidate), existing: nil)
+        case .recipe:
+            return
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { productDraft = sheet }
+    }
+
+    private func deleteProduct(_ id: UUID) {
+        guard let product = app.store.object(FoodProduct.self, id: id) else { return }
+        app.store.deleteProduct(product)
+        app.dataDidChange()
+        reloadLists()
+        Task { await runSearch(debounce: false) }
     }
 
     @ViewBuilder
@@ -299,6 +328,11 @@ struct AddFoodView: View {
                     productDraft = ProductDraftSheet(draft: ProductDraft(product: product), existing: product)
                 } label: {
                     Label("Bearbeite", systemImage: "pencil")
+                }
+                Button(role: .destructive) {
+                    deleteProduct(id)
+                } label: {
+                    Label("Lösche", systemImage: "trash")
                 }
             }
         case .catalog, .openFoodFacts:

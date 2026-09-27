@@ -125,6 +125,14 @@ struct SleepView: View {
                 didInitialRefresh = true
                 await refresh(days: 30)
             }
+            .onChange(of: range) { _, newRange in
+                Task {
+                    isRefreshing = true
+                    await app.sleep.ensureEvaluated(days: newRange.days)
+                    isRefreshing = false
+                    load()
+                }
+            }
         }
     }
 

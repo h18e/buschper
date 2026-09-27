@@ -125,8 +125,17 @@ enum ChartRange: String, CaseIterable, Identifiable {
     var label: String {
         switch self {
         case .week: return "Wuche"
-        case .month: return "Monet"
+        case .month: return "30 Täg"
         case .quarter: return "3 Mönet"
+        }
+    }
+
+    /// Für Beschriftungen wie „Schnitt 30 Täg“.
+    var spanLabel: String {
+        switch self {
+        case .week: return "7 Täg"
+        case .month: return "30 Täg"
+        case .quarter: return "90 Täg"
         }
     }
 }

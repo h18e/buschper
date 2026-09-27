@@ -15,6 +15,8 @@ final class SleepService {
     private let dayData: DayDataService
     private let calendar: Calendar
     private var isRunning = false
+    /// Wie viele Nächte in dieser Sitzung schon ausgewertet wurden.
+    private var evaluatedDays = 0
     private static let logger = Logger(subsystem: "ch.hebera.buschper", category: "Sleep")
 
     init(store: DataStore, health: HealthDataProviding, dayData: DayDataService, calendar: Calendar = .current) {
@@ -35,10 +37,19 @@ final class SleepService {
 
     /// Die letzten `days` Nächte neu auswerten, älteste zuerst – so stehen Median
     /// der Einschlafzeit und 30-Tage-Schnitt für die jüngeren schon bereit.
+    /// Wertet so viele Nächte aus, wie ein Graph braucht – aber nur einmal pro Sitzung.
+    func ensureEvaluated(days: Int) async {
+        guard days > evaluatedDays else { return }
+        await refresh(days: days)
+    }
+
     func refresh(days: Int = 14) async {
         guard !isRunning else { return }
         isRunning = true
-        defer { isRunning = false }
+        defer {
+            isRunning = false
+            evaluatedDays = max(evaluatedDays, days)
+        }
 
         let today = calendar.startOfDay(for: Date())
         let profile = store.profile()

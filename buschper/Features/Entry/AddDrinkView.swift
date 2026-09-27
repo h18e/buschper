@@ -16,7 +16,8 @@ struct AddDrinkView: View {
 
     init(existing: DrinkEntry? = nil, date: Date = Date()) {
         self.existing = existing
-        _draft = State(initialValue: existing.map(DrinkDraft.init(entry:)) ?? DrinkDraft(type: .water, at: date))
+        _draft = State(initialValue: existing.map(DrinkDraft.init(entry:))
+                       ?? DrinkDraft(type: .water, at: date, remembered: AppPreferences.shared.drinkDefault(for: .water)))
     }
 
     private let columns = [GridItem(.adaptive(minimum: 72), spacing: 10)]
@@ -85,9 +86,15 @@ struct AddDrinkView: View {
                         Toggle("Zellt zur Flüssigkeit", isOn: $draft.countsAsFluid)
                         TextField("Name", text: $draft.name)
                         NutrientInputs(nutrients: $draft.per100ml, isLiquid: true)
-                        Text("Wärt pro 100 ml, ohni Alkohol – dä wird us de Vol-% berächnet. D Vorgabe sy Richtwärt.")
+                        Text("Wärt pro 100 ml, ohni Alkohol – dä wird us de Vol-% berächnet. buschper merkt sech pro Getränk dyni letschte Wärt.")
                             .font(.caption)
                             .foregroundStyle(Theme.textTertiary)
+                        if app.preferences.drinkDefault(for: draft.drinkType) != nil {
+                            Button("Uf Richtwärt zrügg") {
+                                app.preferences.resetDrinkDefault(for: draft.drinkType)
+                                draft.apply(type: draft.drinkType)
+                            }
+                        }
                     }
                 }
 
@@ -116,6 +123,10 @@ struct AddDrinkView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Sichere") {
+                        // Beim nächsten Mal mit denselben Werten vorbelegen.
+                        if draft.drinkType != .custom && draft.presetId == nil {
+                            app.preferences.setDrinkDefault(draft.asDefault, for: draft.drinkType)
+                        }
                         app.store.saveDrink(draft, editing: existing)
                         app.dataDidChange()
                         dismiss()
@@ -148,7 +159,7 @@ struct AddDrinkView: View {
         let selected = draft.drinkType == type
         return Button {
             let keepVolume = draft.volumeMl
-            draft.apply(type: type)
+            draft.apply(type: type, remembered: app.preferences.drinkDefault(for: type))
             // Beim Wechsel zwischen ähnlichen Getränken bleibt die Menge, wenn sie
             // schon angepasst war.
             if existing != nil { draft.volumeMl = keepVolume }
