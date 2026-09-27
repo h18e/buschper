@@ -86,7 +86,25 @@ extension ExternalFoodRef {
     }
 }
 
+/// Rezept oder gespeicherte ganze Mahlzeit (SPEC 5.10). Beide nutzen dieselbe
+/// Entität, erscheinen aber getrennt.
+enum RecipeKind: String {
+    case recipe
+    case meal
+
+    /// Nur echte Rezepte – ältere Datensätze ohne Wert zählen dazu.
+    static let recipesOnly = NSPredicate(format: "kindRaw == nil OR kindRaw != %@", RecipeKind.meal.rawValue)
+    static let mealsOnly = NSPredicate(format: "kindRaw == %@", RecipeKind.meal.rawValue)
+}
+
 extension Recipe {
+    var kind: RecipeKind {
+        get { RecipeKind(rawValue: kindRaw ?? "") ?? .recipe }
+        set { kindRaw = newValue.rawValue }
+    }
+
+    var isMealTemplate: Bool { kind == .meal }
+
     var displayName: String {
         let trimmed = (name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? "Rezept ohni Name" : trimmed

@@ -196,9 +196,9 @@ vorgeschlagen und lässt sich ändern:
 
 1. Zeitpunkt (Vorgabe: jetzt) und Kategorie (Vorschlag)
 2. Oben: **Suchfeld** und **Barcode-Knopf**
-3. Darunter, ohne Suche: **Favoriten**, **Zletscht bruucht** (automatisch),
-   **Eigeni Produkt**, **Rezept**
-4. Knöpfe **„Schnäll-Iitrag“** (Kantine, siehe 5.6) und **„Nöis Produkt“**
+3. Darunter, ohne Suche: **Mahlzyte** (5.10), **Favoriten**, **Zletscht bruucht**
+   (automatisch), **Eigeni Produkt**, **Rezept**
+4. Knöpfe **„Ganzi Mahlzyt“** (Kantine, siehe 5.6) und **„Nöis Produkt“**
 5. Ein Produkt antippen → Menge wählen → es landet im **Chörbli** der Mahlzeit.
    Mehrere Produkte nacheinander, am Schluss einmal sichern.
 
@@ -238,7 +238,9 @@ Abfrage ist in den Einstellungen abschaltbar, wie bei Frostify.
 - Wird ein fremdes Produkt geloggt, merkt sich buschper es lokal
   (für „Zletscht bruucht“), ohne es zu einem eigenen Produkt zu machen.
 
-### 5.6 Schnell-Iitrag (Kantine) (Q16)
+### 5.6 Ganzi Mahlzyt (Kantine) (Q16)
+
+*Hiess anfangs „Schnäll-Iitrag“; umbenannt in der Testrunde 1.*
 
 Für ein ganzes Gericht, dessen Zutaten du nicht kennst:
 
@@ -248,7 +250,9 @@ Für ein ganzes Gericht, dessen Zutaten du nicht kennst:
 - **Variante nur kcal:** Makros bleiben leer
 
 Wird **nicht** als eigenes Produkt oder Rezept gespeichert, sondern lebt nur als
-Eintrag in der Mahlzeit. Beim Kopieren einer Mahlzeit kommt er mit.
+Eintrag in der Mahlzeit. Beim Kopieren einer Mahlzeit kommt er mit. Mit dem
+Schalter **„Für speter spychere“** wird er zusätzlich als gespeicherte Mahlzeit
+abgelegt (5.10).
 
 ### 5.7 Rezepte (Q17)
 
@@ -277,6 +281,18 @@ keine Änderungen zulässt.
 Kopie. Änderst du später ein Produkt oder Rezept, bleibt die Vergangenheit, wie sie
 war. Beim Bearbeiten eines Eintrags kannst du ihn mit „Wärt nöi lade“ auf den
 aktuellen Stand des Produkts bringen.
+
+### 5.10 Gespeicherte Mahlzeiten „Mahlzyte“ (Testrunde 1, Punkt 8)
+
+- Eigene Rubrik, **getrennt** von eigenen Produkten und Rezepten. Erscheint in
+  „Ässe“ zuoberst (zuletzt verwendete zuerst) und in der Suche.
+- Entsteht auf zwei Wegen: „Ganzi Mahlzyt“ mit **„Für speter spychere“**, oder
+  im Chörbli **„Chörbli als Mahlzyt spychere“** (z. B. „Mys Zmorge“).
+- Ein Tipp legt **alle Einträge** mit ihren Mengen ins Chörbli; dort lassen sie
+  sich wie gewohnt anpassen oder entfernen.
+- Verwalten (ansehen, umbenennen, löschen) unter **Ig → Sammlige → Mahlzyte**.
+- Technisch eine `Recipe` mit `kind = meal` und einer Portion; Einträge mit festen
+  Werten werden als 100 g mit ihren Gesamtwerten abgelegt.
 
 ---
 
@@ -595,7 +611,7 @@ abgekürzt.
 | **FoodProduct** | id, name, brand?, barcode?, isLiquid, origin (own / offCopy / blvCopy), **[N] pro 100**, isFavorite, useCount, lastUsedAt → portions |
 | **PortionSize** | id, name, grams → product |
 | **ExternalFoodRef** | id, source (off / blv), externalId, name, **[N] pro 100**, isFavorite, lastUsedAt. Merkt sich fremde Produkte für Favoriten und „Zletscht bruucht“ |
-| **Recipe** | id, name, servings, isFavorite, lastUsedAt → ingredients |
+| **Recipe** | id, name, servings, kind (recipe / meal, ab Modell 2), isFavorite, lastUsedAt → ingredients |
 | **RecipeIngredient** | id, name, amountG, **[N] pro 100** (Snapshot), sourceKind, sourceId → recipe |
 | **Meal** | id, timestamp, category, title? → entries |
 | **FoodEntry** | id, name, amount, unitLabel, **[N] Summe** (Snapshot), kind (product / external / recipe / quick), sourceId?, servings? → meal |
@@ -612,6 +628,9 @@ Profil), weil jedes Gerät seine Mitteilungen selbst plant.
 
 Das Modell wird mit `tools/generate_model.py` aus einer einzigen Definition
 erzeugt (Modell-XML und Entitätsklassen), damit beide nie auseinanderlaufen.
+Jede Änderung ist eine **neue Modellversion** (`buschper 2.xcdatamodel` …);
+ältere Versionen bleiben unverändert liegen, damit Core Data bestehende Daten
+automatisch übernimmt.
 
 Gesundheitsdaten aus Health (Schritte, Aktivkalorien, fremde Gewichte, Schlafphasen)
 werden **nicht** in Core Data kopiert, sondern bei Bedarf gelesen. Ausnahme ist

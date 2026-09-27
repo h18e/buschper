@@ -74,8 +74,9 @@ extension DataStore {
 
     // MARK: - Rezepte
 
+    /// Nur echte Rezepte, ohne gespeicherte Mahlzeiten.
     func allRecipes() -> [Recipe] {
-        fetch(Recipe.self, sort: [NSSortDescriptor(key: "name", ascending: true)])
+        fetch(Recipe.self, predicate: RecipeKind.recipesOnly, sort: [NSSortDescriptor(key: "name", ascending: true)])
     }
 
     @discardableResult
@@ -84,6 +85,7 @@ extension DataStore {
             let recipe = Recipe(context: context)
             recipe.id = UUID()
             recipe.createdAt = Date()
+            recipe.kind = .recipe
             return recipe
         }()
         recipe.name = draft.name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -111,6 +113,85 @@ extension DataStore {
     func deleteRecipe(_ recipe: Recipe) {
         context.delete(recipe)
         save()
+    }
+
+    // MARK: - Gespeicherte Mahlzeiten (SPEC 5.10)
+
+    /// Zuletzt verwendete zuerst, dann nach Name.
+    func mealTemplates() -> [Recipe] {
+        fetch(Recipe.self, predicate: RecipeKind.mealsOnly, sort: [
+            NSSortDescriptor(key: "lastUsedAt", ascending: false),
+            NSSortDescriptor(key: "name", ascending: true),
+        ])
+    }
+
+    /// Speichert Chörbli-Einträge als ganze Mahlzeit.
+    ///
+    /// Jeder Eintrag wird eine Zutat mit Gramm und Werten pro 100 g – bei Rezepten
+    /// wie im Chörbli: 100 „Gramm“ je Portion, Werte pro Portion. Einträge mit
+    /// festen Werten (Ganzi Mahlzyt, Schnäll-Iitrag) werden als 100 g mit ihren
+    /// Gesamtwerten abgelegt, damit die Summe stimmt.
+    @discardableResult
+    func saveMealTemplate(name: String, items: [BasketItem]) -> Recipe {
+        let template = Recipe(context: context)
+        template.id = UUID()
+        template.createdAt = Date()
+        template.updatedAt = Date()
+        template.kind = .meal
+        template.servings = 1
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        template.name = trimmed.isEmpty ? (items.first?.name ?? "Mahlzyt") : trimmed
+
+        for (index, basketItem) in items.enumerated() {
+            let item = RecipeIngredient(context: context)
+            item.id = UUID()
+            item.name = basketItem.name
+            item.isLiquid = basketItem.isLiquid
+            item.sortIndex = Int32(index)
+            if let per100 = basketItem.per100, basketItem.fixedTotal == nil, basketItem.grams > 0 {
+                item.amountG = basketItem.grams
+                item.per100 = per100
+                item.sourceKindRaw = basketItem.kind.rawValue
+                item.sourceId = basketItem.sourceId ?? ""
+            } else {
+                item.amountG = 100
+                item.per100 = basketItem.total
+                item.sourceKindRaw = FoodEntryKind.quick.rawValue
+                item.sourceId = ""
+            }
+            item.recipe = template
+        }
+        save()
+        return template
+    }
+
+    /// Die Einträge einer gespeicherten Mahlzeit fürs Chörbli. Vermerkt die Nutzung.
+    func basketItems(fromTemplate template: Recipe) -> [BasketItem] {
+        template.markUsed()
+        save()
+        return template.ingredientList.map { item in
+            let name = item.name ?? ""
+            let kind = FoodEntryKind(rawValue: item.sourceKindRaw ?? "") ?? .external
+            let sourceId = (item.sourceId ?? "").isEmpty ? nil : item.sourceId
+            switch kind {
+            case .quick:
+                return BasketItem(
+                    name: name, count: 1, portion: PortionChoice(name: nil, gramsPerUnit: 1),
+                    isLiquid: item.isLiquid, per100: nil, fixedTotal: item.per100.forAmount(item.amountG),
+                    kind: .quick, sourceId: nil
+                )
+            case .recipe:
+                return BasketItem(
+                    name: name, count: item.amountG / 100, portion: PortionChoice(name: "Portion", gramsPerUnit: 100),
+                    isLiquid: false, per100: item.per100, fixedTotal: nil, kind: .recipe, sourceId: sourceId
+                )
+            case .product, .external:
+                return BasketItem(
+                    name: name, count: item.amountG, portion: PortionChoice(name: nil, gramsPerUnit: 1),
+                    isLiquid: item.isLiquid, per100: item.per100, fixedTotal: nil, kind: kind, sourceId: sourceId
+                )
+            }
+        }
     }
 
     // MARK: - Einträge zurück ins Chörbli

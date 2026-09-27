@@ -67,7 +67,7 @@ struct BasketTests {
         let item = BasketItem.quick(name: "", carbs: nil, protein: nil, fat: nil, fiber: nil, alcohol: nil, kcalOnly: 750)
         #expect(item.total.kcal == 750)
         #expect(item.total.carbs == nil)
-        #expect(item.name == "Schnäll-Iitrag")
+        #expect(item.name == "Mahlzyt")
     }
 
     @Test("Rezept in Portionen: Werte pro Portion mal Anzahl, ohne Gewicht")

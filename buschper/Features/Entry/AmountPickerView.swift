@@ -164,6 +164,8 @@ struct AmountPickerView: View {
 /// gespeichert, sondern lebt nur in der Mahlzeit.
 struct QuickEntryView: View {
     var initial: BasketItem?
+    /// Wenn gesetzt, erscheint der Schalter „Für speter spychere“ (SPEC 5.10).
+    var onSaveTemplate: ((BasketItem) -> Void)? = nil
     let onConfirm: (BasketItem) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -176,6 +178,11 @@ struct QuickEntryView: View {
     @State private var alcohol: Double?
     @State private var kcal: Double?
     @State private var loaded = false
+    @State private var savesTemplate = false
+
+    private var hasName: Bool {
+        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
 
     private var item: BasketItem {
         BasketItem.quick(
@@ -186,7 +193,8 @@ struct QuickEntryView: View {
     }
 
     private var isValid: Bool {
-        kcalOnly ? (kcal ?? 0) > 0 : ((carbs ?? 0) + (protein ?? 0) + (fat ?? 0) + (alcohol ?? 0)) > 0
+        let hasValues = kcalOnly ? (kcal ?? 0) > 0 : ((carbs ?? 0) + (protein ?? 0) + (fat ?? 0) + (alcohol ?? 0)) > 0
+        return hasValues && (!savesTemplate || hasName)
     }
 
     var body: some View {
@@ -194,6 +202,7 @@ struct QuickEntryView: View {
             Form {
                 Section {
                     TextField("Name, z. B. Pasta Kantine", text: $name)
+                        .textInputAutocapitalization(.sentences)
                     Picker("Aagabe", selection: $kcalOnly) {
                         Text("Makros").tag(false)
                         Text("Nume kcal").tag(true)
@@ -215,14 +224,24 @@ struct QuickEntryView: View {
                         Text("Energie wird usgrächnet: \(NumberText.kcal(item.total.kcal ?? 0)) kcal (4 kcal pro g KH u Eiwiss, 9 pro g Fett, 7 pro g Alkohol).")
                     }
                 }
-                Section {
-                    Text("Dä Iitrag wird nume i dr Mahlzyt gspycheret, nid als eigets Produkt.")
-                        .font(.footnote)
-                        .foregroundStyle(Theme.textSecondary)
+                if onSaveTemplate != nil {
+                    Section {
+                        Toggle("Für speter spychere", isOn: $savesTemplate)
+                    } footer: {
+                        Text(savesTemplate
+                             ? (hasName ? "Erschint unter „Mahlzyte“ – nid bi de eigete Produkt." : "Bitte e Name iigäh, dass du se wieder findsch.")
+                             : "Dä Iitrag wird nume i dere Mahlzyt gspycheret, nid als eigets Produkt.")
+                    }
+                } else {
+                    Section {
+                        Text("Dä Iitrag wird nume i dere Mahlzyt gspycheret, nid als eigets Produkt.")
+                            .font(.footnote)
+                            .foregroundStyle(Theme.textSecondary)
+                    }
                 }
             }
             .themedList()
-            .navigationTitle("Schnäll-Iitrag")
+            .navigationTitle("Ganzi Mahlzyt")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -232,6 +251,7 @@ struct QuickEntryView: View {
                     Button("Übernäh") {
                         var result = item
                         if let initial { result.id = initial.id }
+                        if savesTemplate { onSaveTemplate?(result) }
                         onConfirm(result)
                         dismiss()
                     }

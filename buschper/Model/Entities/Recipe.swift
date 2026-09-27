@@ -4,7 +4,7 @@ import Foundation
 // Erzeugt von tools/generate_model.py – nicht von Hand aendern.
 // Bequeme Zugriffe stehen in Model/EntityExtensions/.
 
-/// Rezept mit Zutaten und Portionen (SPEC 5.7).
+/// Rezept mit Zutaten und Portionen (SPEC 5.7) oder gespeicherte Mahlzeit (SPEC 5.10).
 @objc(Recipe)
 final class Recipe: NSManagedObject {
     @nonobjc class func fetchRequest() -> NSFetchRequest<Recipe> {
@@ -20,6 +20,7 @@ final class Recipe: NSManagedObject {
     @NSManaged var lastUsedAt: Date?
     @NSManaged var createdAt: Date?
     @NSManaged var updatedAt: Date?
+    @NSManaged var kindRaw: String?
     @NSManaged var ingredients: NSSet?
 }
 

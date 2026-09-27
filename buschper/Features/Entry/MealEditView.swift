@@ -134,7 +134,7 @@ struct MealEditView: View {
     static func amountText(_ entry: FoodEntry) -> String {
         switch entry.kind {
         case .quick:
-            return "Schnäll-Iitrag"
+            return "Ganzi Mahlzyt"
         case .recipe:
             return "\(NumberText.amount(entry.servings)) \(entry.servings == 1 ? "Portion" : "Portione")"
         case .product, .external:

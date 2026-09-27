@@ -4,7 +4,7 @@ import SwiftUI
 /// Rezepte verwalten (SPEC 5.7).
 struct RecipeListView: View {
     @Environment(AppEnvironment.self) private var app
-    @FetchRequest(sortDescriptors: [NSSortDescriptor(key: "name", ascending: true)])
+    @FetchRequest(sortDescriptors: [NSSortDescriptor(key: "name", ascending: true)], predicate: RecipeKind.recipesOnly)
     private var recipes: FetchedResults<Recipe>
 
     @State private var editing: Recipe?

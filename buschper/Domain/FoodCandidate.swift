@@ -95,7 +95,7 @@ struct BasketItem: Identifiable, Equatable {
     var amountLabel: String {
         switch kind {
         case .quick:
-            return "Schnäll-Iitrag"
+            return "Ganzi Mahlzyt"
         case .recipe:
             return "\(NumberText.amount(count)) \(count == 1 ? "Portion" : "Portione")"
         case .product, .external:
@@ -147,7 +147,7 @@ struct BasketItem: Identifiable, Equatable {
         }
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         return BasketItem(
-            name: trimmed.isEmpty ? "Schnäll-Iitrag" : trimmed,
+            name: trimmed.isEmpty ? "Mahlzyt" : trimmed,
             count: 1,
             portion: PortionChoice(name: nil, gramsPerUnit: 1),
             isLiquid: false,

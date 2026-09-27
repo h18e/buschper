@@ -21,6 +21,10 @@ struct AddFoodView: View {
     @State private var favorites: [FoodCandidate] = []
     @State private var recents: [FoodCandidate] = []
     @State private var ownProducts: [FoodCandidate] = []
+    @State private var mealTemplates: [Recipe] = []
+    @State private var askingTemplateName = false
+    @State private var templateName = ""
+    @State private var savedTemplateName: String?
 
     @State private var picking: FoodCandidate?
     @State private var editingBasketItem: BasketItem?
@@ -125,7 +129,10 @@ struct AddFoodView: View {
                 basketItemEditor(item)
             }
             .sheet(isPresented: $showsQuickEntry) {
-                QuickEntryView { basket.append($0) }
+                QuickEntryView(onSaveTemplate: { item in
+                    app.store.saveMealTemplate(name: item.name, items: [item])
+                    reloadLists()
+                }) { basket.append($0) }
             }
             .sheet(isPresented: $showsScanner) {
                 CodeScannerView(mode: .barcode) { code in
@@ -165,7 +172,7 @@ struct AddFoodView: View {
         Section {
             HStack(spacing: 10) {
                 actionButton("Barcode", "barcode.viewfinder") { showsScanner = true }
-                actionButton("Schnäll-Iitrag", "bolt.fill") { showsQuickEntry = true }
+                actionButton("Ganzi Mahlzyt", "fork.knife.circle.fill") { showsQuickEntry = true }
                 actionButton("Nöis Produkt", "plus.square.fill") {
                     productDraft = ProductDraftSheet(draft: ProductDraft(), existing: nil)
                 }
@@ -213,6 +220,9 @@ struct AddFoodView: View {
                 }
             }
         }
+        if !mealTemplates.isEmpty {
+            Section("Mahlzyte") { templateRows(mealTemplates) }
+        }
         if !favorites.isEmpty {
             Section("Favorite") { candidateRows(favorites) }
         }
@@ -222,9 +232,9 @@ struct AddFoodView: View {
         if !ownProducts.isEmpty {
             Section("Eigeti Produkt") { candidateRows(ownProducts) }
         }
-        if favorites.isEmpty && recents.isEmpty && ownProducts.isEmpty {
+        if mealTemplates.isEmpty && favorites.isEmpty && recents.isEmpty && ownProducts.isEmpty {
             Section {
-                Text("Obe sueche, en Barcode scanne oder e Schnäll-Iitrag mache. Was du bruuchsch, erschint speter hie.")
+                Text("Obe sueche, en Barcode scanne oder e ganzi Mahlzyt erfasse. Was du bruuchsch, erschint speter hie.")
                     .font(.footnote)
                     .foregroundStyle(Theme.textSecondary)
             }
@@ -233,6 +243,10 @@ struct AddFoodView: View {
 
     @ViewBuilder
     private var resultSections: some View {
+        let templateHits = FoodSearchRanking.rank(mealTemplates, query: query, name: \.displayName, limit: 10)
+        if !templateHits.isEmpty {
+            Section("Mahlzyte") { templateRows(templateHits) }
+        }
         if let local {
             if !local.own.isEmpty {
                 Section("Eigeti Produkt") { candidateRows(local.own) }
@@ -293,6 +307,34 @@ struct AddFoodView: View {
                 }
             }
         }
+    }
+
+    /// Gespeicherte ganze Mahlzeiten: ein Tipp legt alles ins Chörbli (SPEC 5.10).
+    private func templateRows(_ templates: [Recipe]) -> some View {
+        ForEach(templates, id: \.objectID) { template in
+            Button {
+                basket += app.store.basketItems(fromTemplate: template)
+                yesterdayEntries = []
+            } label: {
+                MealTemplateRow(template: template)
+            }
+            .buttonStyle(.plain)
+            .swipeActions {
+                Button("Lösche", role: .destructive) { deleteTemplate(template) }
+            }
+            .contextMenu {
+                Button(role: .destructive) {
+                    deleteTemplate(template)
+                } label: {
+                    Label("Lösche", systemImage: "trash")
+                }
+            }
+        }
+    }
+
+    private func deleteTemplate(_ template: Recipe) {
+        app.store.deleteRecipe(template)
+        reloadLists()
     }
 
     /// Anpassen beim Erfassen: eigene Produkte direkt, fremde als eigene Kopie.
@@ -404,8 +446,32 @@ struct AddFoodView: View {
                 } footer: {
                     NutrientLine(nutrients: basketTotal)
                 }
+                Section {
+                    Button {
+                        templateName = ""
+                        askingTemplateName = true
+                    } label: {
+                        Label("Chörbli als Mahlzyt spychere", systemImage: "square.and.arrow.down.on.square")
+                            .foregroundStyle(Theme.nutrition)
+                    }
+                    .disabled(basket.isEmpty)
+                } footer: {
+                    if let savedTemplateName {
+                        Text("Gspycheret als „\(savedTemplateName)“. Du findsch se unter „Mahlzyte“.")
+                    } else {
+                        Text("Z. B. „Mys Zmorge“ – speter mit eim Tipp wieder im Chörbli.")
+                    }
+                }
             }
             .themedList()
+            .alert("Mahlzyt spychere", isPresented: $askingTemplateName) {
+                TextField("Name, z. B. Mys Zmorge", text: $templateName)
+                Button("Spychere") { saveBasketAsTemplate() }
+                    .disabled(templateName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                Button("Abbräche", role: .cancel) {}
+            } message: {
+                Text("Aui \(basket.count) Iiträg mit ihrne Mängine.")
+            }
             .navigationTitle("Chörbli")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -448,6 +514,14 @@ struct AddFoodView: View {
         return [PortionChoice(name: nil, gramsPerUnit: 1)]
     }
 
+    private func saveBasketAsTemplate() {
+        let name = templateName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty, !basket.isEmpty else { return }
+        app.store.saveMealTemplate(name: name, items: basket)
+        savedTemplateName = name
+        reloadLists()
+    }
+
     private func replace(_ item: BasketItem) {
         if let index = basket.firstIndex(where: { $0.id == item.id }) {
             basket[index] = item
@@ -475,6 +549,7 @@ struct AddFoodView: View {
         favorites = app.store.favoriteCandidates()
         recents = app.store.recentCandidates()
         ownProducts = app.store.allProducts().prefix(20).compactMap { app.store.candidate(for: $0) }
+        mealTemplates = app.store.mealTemplates()
     }
 
     private func runSearch(debounce: Bool = true) async {
@@ -525,5 +600,30 @@ struct AddFoodView: View {
         app.store.saveMeal(items: basket, timestamp: timestamp, category: category, into: existingMeal)
         app.dataDidChange()
         dismiss()
+    }
+}
+
+/// Zeile einer gespeicherten Mahlzeit: Name, Inhalt, Energie.
+struct MealTemplateRow: View {
+    let template: Recipe
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(template.displayName).foregroundStyle(Theme.textPrimary)
+                let names = template.ingredientList.compactMap(\.name)
+                if names.count > 1 {
+                    Text(names.joined(separator: ", "))
+                        .font(.caption)
+                        .foregroundStyle(Theme.textSecondary)
+                        .lineLimit(2)
+                }
+            }
+            Spacer()
+            Text("\(NumberText.kcal(template.totalNutrients.kcal ?? 0)) kcal")
+                .font(.subheadline.monospacedDigit())
+                .foregroundStyle(Theme.textSecondary)
+        }
+        .contentShape(Rectangle())
     }
 }

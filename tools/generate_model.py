@@ -8,7 +8,7 @@ die einzige Quelle. Nach einer Aenderung:
     python3 tools/generate_model.py
 
 Erzeugt:
-  buschper/Model/buschper.xcdatamodeld/…            (Modell)
+  buschper/Model/buschper.xcdatamodeld/<MODEL_VERSION>  (nur die aktuelle Version)
   buschper/Model/Entities/<Entitaet>.swift           (nur @NSManaged, nicht von Hand aendern)
 
 Bequeme Zugriffe gehoeren nach buschper/Model/EntityExtensions/.
@@ -22,6 +22,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 MODEL_DIR = ROOT / "buschper" / "Model" / "buschper.xcdatamodeld"
 ENTITY_DIR = ROOT / "buschper" / "Model" / "Entities"
+
+# Aktuelle Modellversion. Aeltere Versionen im .xcdatamodeld NIE veraendern:
+# Core Data braucht sie, um bestehende Daten leichtgewichtig zu migrieren.
+# Neue Attribute -> neue Version anlegen (Nummer erhoehen), nie eine alte anpassen.
+#   1: buschper.xcdatamodel    (Erstversion)
+#   2: buschper 2.xcdatamodel  (Recipe.kindRaw: Rezept oder gespeicherte Mahlzeit)
+MODEL_VERSION = "buschper 2.xcdatamodel"
 
 # Typ -> (Core-Data-Typ, Swift-Typ, Standardwert oder None, skalar)
 TYPES = {
@@ -83,11 +90,13 @@ ENTITIES = {
         "relationships": [],
     },
     "Recipe": {
-        "doc": "Rezept mit Zutaten und Portionen (SPEC 5.7).",
+        "doc": "Rezept mit Zutaten und Portionen (SPEC 5.7) oder gespeicherte Mahlzeit (SPEC 5.10).",
         "attributes": [
             ("id", "uuid"), ("name", "string"), ("servings", "double", "1.0"), ("note", "string"),
             ("isFavorite", "bool"), ("useCount", "int32"), ("lastUsedAt", "date"),
             ("createdAt", "date"), ("updatedAt", "date"),
+            # "recipe" oder "meal" (gespeicherte ganze Mahlzeit, SPEC 5.10). Ab Modell 2.
+            ("kindRaw", "string", "recipe"),
         ],
         "relationships": [("ingredients", "RecipeIngredient", "recipe", True, "Cascade")],
     },
@@ -254,14 +263,14 @@ def ENTITIES_REL_TYPE(rel_name: str, owner: str) -> str:  # noqa: N802
 
 
 def main() -> None:
-    model_path = MODEL_DIR / "buschper.xcdatamodel"
+    model_path = MODEL_DIR / MODEL_VERSION
     model_path.mkdir(parents=True, exist_ok=True)
     (model_path / "contents").write_text(model_xml(), encoding="utf-8")
     (MODEL_DIR / ".xccurrentversion").write_text(
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n'
         '<plist version="1.0">\n<dict>\n\t<key>_XCCurrentVersionName</key>\n'
-        '\t<string>buschper.xcdatamodel</string>\n</dict>\n</plist>\n',
+        f'\t<string>{MODEL_VERSION}</string>\n</dict>\n</plist>\n',
         encoding="utf-8",
     )
     ENTITY_DIR.mkdir(parents=True, exist_ok=True)

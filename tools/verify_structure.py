@@ -365,11 +365,18 @@ def check_info_plist() -> None:
 # ------------------------------------------------------------------- Core Data
 
 def load_model() -> dict[str, dict]:
-    contents = list(ROOT.glob("buschper/**/*.xcdatamodeld/*.xcdatamodel/contents"))
-    if not contents:
+    bundles = list(ROOT.glob("buschper/**/*.xcdatamodeld"))
+    if not bundles:
         problem("Core-Data-Modell nicht gefunden.")
         return {}
-    document = xml.dom.minidom.parse(str(contents[0]))
+    # Die aktuelle Version zaehlt – aeltere bleiben fuer die Migration liegen.
+    current = xml.dom.minidom.parse(str(bundles[0] / ".xccurrentversion"))
+    version = current.getElementsByTagName("string")[0].firstChild.data
+    path = bundles[0] / version / "contents"
+    if not path.is_file():
+        problem(f"Aktuelle Modellversion {version} fehlt.")
+        return {}
+    document = xml.dom.minidom.parse(str(path))
     entities: dict[str, dict] = {}
     for entity in document.getElementsByTagName("entity"):
         name = entity.getAttribute("name")

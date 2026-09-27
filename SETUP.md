@@ -286,6 +286,18 @@ Kontrolle: https://icloud.developer.apple.com/dashboard → Container
 `iCloud.ch.hebera.buschper` → **Schema → Record Types**. Dort müssen Typen wie
 `CD_Profile`, `CD_Meal`, `CD_FoodEntry` und `CD_NightRecord` auftauchen.
 
+### Schema für TestFlight freigeben (nach jeder Modelländerung)
+
+Apps aus TestFlight nutzen die **Production**-Umgebung von iCloud. Neue Felder
+landen zuerst nur in **Development**. Deshalb nach jeder neuen Modellversion
+(zuletzt: Modell 2, gespeicherte Mahlzeiten):
+
+1. App mit `./tools/buschper.sh run` oder `device` starten → Tab **Ig** →
+   **Entwicklung** → **CloudKit-Schema anlegen**
+2. https://icloud.developer.apple.com/dashboard → Container
+   `iCloud.ch.hebera.buschper` → links **Deploy Schema Changes…** → bestätigen
+3. Erst danach mit `./tools/buschper.sh testflight` hochladen
+
 > Der Abschnitt **Entwicklung** erscheint nur in Debug-Builds. Dort gibt es auch
 > **Ersteinrichtung neu starten**, falls du sie nochmals durchspielen willst.
 

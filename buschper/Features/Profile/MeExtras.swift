@@ -1,7 +1,7 @@
 import CoreData
 import SwiftUI
 
-/// Sammlungen im Tab „Ig“: eigene Produkte, Rezepte, Favoriten.
+/// Sammlungen im Tab „Ig“: eigene Produkte, Rezepte, gespeicherte Mahlzeiten, Favoriten.
 struct MeCollectionsSection: View {
     var body: some View {
         Section("Sammlige") {
@@ -11,6 +11,11 @@ struct MeCollectionsSection: View {
                 Label("Eigeti Produkt", systemImage: "shippingbox.fill")
             }
             MeRecipeRow()
+            NavigationLink {
+                MealTemplatesView()
+            } label: {
+                Label("Mahlzyte", systemImage: "fork.knife")
+            }
             NavigationLink {
                 FavoritesListView()
             } label: {

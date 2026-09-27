@@ -83,7 +83,7 @@ final class ExportService {
         case .product: return "Eigets Produkt"
         case .external: return "Datebank"
         case .recipe: return "Rezept"
-        case .quick: return "Schnell-Iitrag"
+        case .quick: return "Ganzi Mahlzyt"
         }
     }
 

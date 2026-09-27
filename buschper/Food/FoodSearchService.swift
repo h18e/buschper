@@ -33,7 +33,7 @@ final class FoodSearchService {
             limit: 20
         )
         let recipes = FoodSearchRanking.rank(
-            store.fetch(Recipe.self).compactMap { store.candidate(for: $0) },
+            store.allRecipes().compactMap { store.candidate(for: $0) },
             query: query,
             name: \.name,
             limit: 10

@@ -211,7 +211,9 @@ extension DataStore {
             .compactMap { candidate(for: $0) }
         let externals = fetch(ExternalFoodRef.self, predicate: NSPredicate(format: "isFavorite == YES"))
             .compactMap { candidate(for: $0) }
-        let recipes = fetch(Recipe.self, predicate: NSPredicate(format: "isFavorite == YES"))
+        let recipes = fetch(Recipe.self, predicate: NSCompoundPredicate(andPredicateWithSubpredicates: [
+            NSPredicate(format: "isFavorite == YES"), RecipeKind.recipesOnly,
+        ]))
             .compactMap { candidate(for: $0) }
         return (products + recipes + externals).sorted { $0.name.localizedCompare($1.name) == .orderedAscending }
     }
@@ -223,7 +225,9 @@ extension DataStore {
             .map { ($0.lastUsedAt ?? .distantPast, candidate(for: $0)) }
         let externals = fetch(ExternalFoodRef.self, predicate: predicate, sort: sort, limit: limit)
             .map { ($0.lastUsedAt ?? .distantPast, candidate(for: $0)) }
-        let recipes = fetch(Recipe.self, predicate: predicate, sort: sort, limit: limit)
+        let recipes = fetch(Recipe.self, predicate: NSCompoundPredicate(andPredicateWithSubpredicates: [
+            predicate, RecipeKind.recipesOnly,
+        ]), sort: sort, limit: limit)
             .map { ($0.lastUsedAt ?? .distantPast, candidate(for: $0)) }
         return (products + externals + recipes)
             .sorted { $0.0 > $1.0 }
