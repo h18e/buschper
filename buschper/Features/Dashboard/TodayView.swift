@@ -43,8 +43,18 @@ struct TodayView: View {
     }
 
     private var isToday: Bool { Calendar.current.isDateInToday(day) }
+    private var isFuture: Bool { day > Calendar.current.startOfDay(for: Date()) }
 
-    /// Neue Einträge auf einem vergangenen Tag: dieser Tag, aktuelle Uhrzeit.
+    private static var futureLimit: Date {
+        Calendar.current.date(byAdding: .year, value: 1, to: Calendar.current.startOfDay(for: Date())) ?? Date()
+    }
+
+    private var isAtFutureLimit: Bool {
+        guard let next = Calendar.current.date(byAdding: .day, value: 1, to: day) else { return true }
+        return next > Self.futureLimit
+    }
+
+    /// Neue Einträge auf einem anderen Tag (vergangen oder geplant): dieser Tag, aktuelle Uhrzeit.
     private var entryDate: Date {
         guard !isToday else { return Date() }
         let calendar = Calendar.current
@@ -114,6 +124,7 @@ struct TodayView: View {
         let calendar = Calendar.current
         if calendar.isDateInToday(day) { return "Hüt" }
         if calendar.isDateInYesterday(day) { return "Geschter" }
+        if calendar.isDateInTomorrow(day) { return "Morn" }
         return day.formatted(.dateTime.weekday(.wide).day().month(.wide))
     }
 
@@ -139,7 +150,7 @@ struct TodayView: View {
                 Button { shiftDay(1) } label: {
                     Image(systemName: "chevron.right").frame(width: 36, height: 36)
                 }
-                .disabled(isToday)
+                .disabled(isAtFutureLimit)
                 .accessibilityLabel("Nächschte Tag")
             }
             .contentShape(Rectangle())
@@ -152,6 +163,9 @@ struct TodayView: View {
                         shiftDay(value.translation.width < 0 ? 1 : -1)
                     }
             )
+            if isFuture {
+                BadgeView(text: "Vorusplant – zellt ersch a däm Tag", color: Theme.accent, systemImage: "calendar.badge.clock")
+            }
             Picker("Zytruum vo de Graphe", selection: $range) {
                 ForEach(ChartRange.allCases) { Text($0.label).tag($0) }
             }
@@ -169,7 +183,8 @@ struct TodayView: View {
 
     private func shiftDay(_ delta: Int) {
         guard let next = Calendar.current.date(byAdding: .day, value: delta, to: day) else { return }
-        if next > Date() { return }
+        // Vorausplanen geht bis ein Jahr in die Zukunft.
+        if next > Self.futureLimit { return }
         withAnimation { day = Calendar.current.startOfDay(for: next) }
     }
 

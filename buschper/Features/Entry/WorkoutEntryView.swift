@@ -32,7 +32,7 @@ struct WorkoutEntryView: View {
                 }
 
                 Section {
-                    DatePicker("Start", selection: $draft.start, in: ...Date())
+                    DatePicker("Start", selection: $draft.start)
                     Stepper(value: $draft.durationMinutes, in: 5...600, step: 5) {
                         LabeledValueRow(label: "Duur") {
                             Text(OnboardingView.hoursText(Int(draft.durationMinutes)))

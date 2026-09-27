@@ -196,8 +196,11 @@ struct DayLogCard: View {
             .accessibilityHidden(true)
     }
 
+    /// Uhrzeit; Einträge, die noch bevorstehen, sind als „gplant“ markiert.
     private func time(_ date: Date?) -> String {
-        date?.formatted(date: .omitted, time: .shortened) ?? ""
+        guard let date else { return "" }
+        let text = date.formatted(date: .omitted, time: .shortened)
+        return date > Date() ? "\(text) · gplant" : text
     }
 }
 

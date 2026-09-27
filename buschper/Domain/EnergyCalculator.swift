@@ -175,10 +175,13 @@ enum EnergyCalculator {
         )
     }
 
-    /// Ab 12:00 des Tages – oder für jeden vergangenen Tag – springt das
-    /// Bewegungsprofil ein, wenn keine Aktivdaten da sind.
+    /// Ab 12:00 des Tages, für jeden vergangenen Tag und für geplante Tage in
+    /// der Zukunft springt das Bewegungsprofil ein, wenn keine Aktivdaten da sind.
     static func fallbackApplies(dayStart: Date, now: Date, calendar: Calendar = .current) -> Bool {
         let startOfDay = calendar.startOfDay(for: dayStart)
+        if startOfDay > calendar.startOfDay(for: now) {
+            return true
+        }
         guard let noon = calendar.date(byAdding: .hour, value: fallbackHour, to: startOfDay) else {
             return false
         }

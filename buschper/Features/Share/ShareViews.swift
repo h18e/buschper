@@ -213,9 +213,9 @@ struct CopyMealView: View {
     init(entries: [FoodEntry], title: String?, category: MealCategory, from date: Date) {
         self.entries = entries
         self.title = title
-        // Vorschlag: gleiche Uhrzeit am nächsten Tag, aber nie in der Zukunft.
+        // Vorschlag: gleiche Uhrzeit am nächsten Tag – auch in der Zukunft (vorausplanen).
         let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: date) ?? date
-        _timestamp = State(initialValue: min(tomorrow, Date()))
+        _timestamp = State(initialValue: tomorrow)
         _category = State(initialValue: category)
     }
 

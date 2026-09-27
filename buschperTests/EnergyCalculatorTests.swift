@@ -72,6 +72,17 @@ struct EnergyCalculatorTests {
         #expect(budget.activeKcal.isClose(to: 300))
     }
 
+    @Test("Geplanter Tag in der Zukunft rechnet mit dem Bewegungsprofil")
+    func futureDay() {
+        let day = TestCalendar.date(2026, 9, 30)
+        let budget = EnergyCalculator.budget(
+            bmr: 1700, measuredActiveKcal: nil, activityProfile: .moderate, goalOffset: 0,
+            sex: .male, dayStart: day, now: TestCalendar.date(2026, 9, 27, 8), calendar: calendar
+        )
+        #expect(budget.activeIsEstimate)
+        #expect(budget.activeKcal.isClose(to: 935))
+    }
+
     @Test("Untergrenze greift, wenn der Abschlag zu gross ist")
     func minimum() {
         let day = TestCalendar.date(2026, 9, 24)

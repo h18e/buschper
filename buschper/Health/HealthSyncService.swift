@@ -34,6 +34,12 @@ final class HealthSyncService {
                 continue
             }
 
+            // Geplante Einträge (Zukunft) kommen erst nach Health, wenn ihre Zeit
+            // da ist. Bis dahin bleibt der Auftrag offen.
+            if link.pendingWrite, let date = entryDate(kind: kind, localId: localId), date > Date() {
+                continue
+            }
+
             await health.deleteOwnSamples(localId: localId)
 
             if link.pendingDelete {
@@ -51,6 +57,15 @@ final class HealthSyncService {
                 Self.logger.error("Health-Schreiben fehlgeschlagen: \(error.localizedDescription)")
             }
             store.save()
+        }
+    }
+
+    private func entryDate(kind: HealthSampleKind, localId: UUID) -> Date? {
+        switch kind {
+        case .meal: return store.object(Meal.self, id: localId)?.timestamp
+        case .water: return store.object(DrinkEntry.self, id: localId)?.timestamp
+        case .weight: return store.object(WeightEntry.self, id: localId)?.timestamp
+        case .workout: return store.object(WorkoutEntry.self, id: localId)?.end
         }
     }
 
