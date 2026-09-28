@@ -74,6 +74,9 @@ final class FoodSearchService {
         /// Eigenes Produkt – deine Version gewinnt (Q29).
         case own(FoodCandidate)
         case openFoodFacts(FoodCandidate)
+        /// Open Food Facts kennt den Code, aber nicht alle nötigen Werte:
+        /// Formular mit allem, was da ist.
+        case incomplete(ProductDraft)
         /// Niemand kennt den Code: Formular „Nöis Produkt“ mit Barcode.
         case unknown(String)
         /// Kein Netz, und der Code ist nicht bei den eigenen Produkten.
@@ -93,6 +96,8 @@ final class FoodSearchService {
         case .found(let product):
             let isFavorite = store.externalRef(source: .off, externalId: product.code)?.isFavorite ?? false
             return .openFoodFacts(product.candidate(isFavorite: isFavorite))
+        case .incomplete(let product):
+            return .incomplete(product.draft)
         case .notFound:
             return .unknown(code)
         case .unavailable:

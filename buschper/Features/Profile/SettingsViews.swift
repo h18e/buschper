@@ -74,6 +74,7 @@ struct FoodSourcesSettingsView: View {
                 Label("Schwiizer Nährwärtdatebank (BLV)", systemImage: "4.circle.fill")
                 Label("Open Food Facts", systemImage: "5.circle.fill")
             }
+            OpenFoodFactsContributionSection()
         }
         .listRowBackground(Theme.surface)
         .themedList()

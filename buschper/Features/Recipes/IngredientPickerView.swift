@@ -17,6 +17,7 @@ struct IngredientPickerView: View {
     @State private var picking: FoodCandidate?
     @State private var showsScanner = false
     @State private var creating = false
+    @State private var newDraft = ProductDraft()
     @State private var message: String?
 
     private var search: FoodSearchService {
@@ -35,6 +36,7 @@ struct IngredientPickerView: View {
                         }
                         Spacer()
                         Button {
+                            newDraft = ProductDraft()
                             creating = true
                         } label: {
                             Label("Nöis Produkt", systemImage: "plus.square")
@@ -102,6 +104,10 @@ struct IngredientPickerView: View {
                         switch await search.lookup(barcode: code) {
                         case .own(let candidate), .openFoodFacts(let candidate):
                             picking = candidate
+                        case .incomplete(let draft):
+                            message = "Open Food Facts kennt nid aui Wärt. Ergänz, was fehlt."
+                            newDraft = draft
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { creating = true }
                         case .unknown, .offline:
                             message = "Dä Barcode isch unbekannt. Erfass ds Produkt mit „Nöis Produkt“."
                         }
@@ -109,7 +115,7 @@ struct IngredientPickerView: View {
                 }
             }
             .sheet(isPresented: $creating) {
-                ProductEditorView { product in
+                ProductEditorView(draft: newDraft) { product in
                     if let candidate = app.store.candidate(for: product) {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { picking = candidate }
                     }

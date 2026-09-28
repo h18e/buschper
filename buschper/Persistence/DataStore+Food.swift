@@ -11,6 +11,10 @@ struct ProductDraft: Equatable {
     var portions: [PortionDraft] = []
     var origin: ProductOrigin = .own
     var originExternalId: String?
+    /// Ergänzt ein Produkt, das Open Food Facts nur unvollständig kennt.
+    /// Nicht gespeichert – nur für Formular und Beitrag an Open Food Facts.
+    var completesOpenFoodFacts = false
+    var openFoodFactsHadName = false
 
     struct PortionDraft: Equatable, Identifiable {
         var id = UUID()

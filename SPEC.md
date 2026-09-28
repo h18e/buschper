@@ -227,6 +227,19 @@ nicht erlauben, melde ich mich, bevor ich etwas anderes mache.
 **Open Food Facts:** Übertragen wird nur der Barcode bzw. der Suchbegriff. Die
 Abfrage ist in den Einstellungen abschaltbar, wie bei Frostify.
 
+**Open Food Facts vollständig auswerten** (Testrunde 2): Name in jeder Sprache
+(de, Standard, fr, it, en, Sachbezeichnung); Energie aus kcal, sonst kJ, sonst aus
+den Makros (auch wenn kcal unmöglich hoch ist); Werte nur pro Portion werden mit
+`serving_quantity` auf 100 g umgerechnet; die Packungsportion wird als Portionsgrösse
+angeboten. Fehlen Name oder Energie, öffnet der Scan das Formular **vorausgefüllt**
+(„Produkt ergänze“) statt eines leeren. In der Textsuche erscheinen nur Produkte,
+die sich direkt erfassen lassen.
+
+**Nährwerttabelle fotografieren** (Testrunde 2): Im Produktformular Foto machen
+oder aus den Fotos wählen. Apple Vision liest den Text auf dem Gerät; buschper nimmt
+pro Zeile die erste Zahl (Spalte pro 100 g/ml), erkennt Deutsch, Französisch,
+Italienisch und Englisch und füllt nur erkannte Felder. Das Foto wird nicht gespeichert.
+
 ### 5.5 Eigene Produkte, Favoriten, Korrekturen (Q29)
 
 - Eigene Produkte: Name, Marke (optional), Barcode (optional), fest oder flüssig,
@@ -237,6 +250,21 @@ Abfrage ist in den Einstellungen abschaltbar, wie bei Frostify.
   eine eigene Kopie. Beim nächsten Scan desselben Barcodes gewinnt deine Version.
 - Wird ein fremdes Produkt geloggt, merkt sich buschper es lokal
   (für „Zletscht bruucht“), ohne es zu einem eigenen Produkt zu machen.
+
+### 5.11 Open Food Facts mithelfen (Testrunde 2, freiwillig)
+
+- **Pro Gerät** unter Ig → Datebanke → „Mithälfe“ ein- und ausschaltbar,
+  Standard **aus**. Jede Person nutzt ihr eigenes, kostenloses Open-Food-Facts-Konto;
+  der Benutzername liegt in den Geräte-Einstellungen, das Passwort im Schlüsselbund
+  (nur dieses Gerät).
+- Angeboten wird es nur für **neue Produkte mit Barcode** und für **Ergänzungen**
+  unvollständiger Open-Food-Facts-Einträge; im Formular pro Produkt abwählbar.
+  Korrekturen vollständiger Einträge bleiben privat.
+- Geschickt werden Barcode, bei neuen Produkten Name und Marke, und die Nährwerte
+  pro 100 g/ml (ohne Alkohol und Koffein) – dazu `app_name`, `app_version` und eine
+  zufällige `app_uuid`, wie Open Food Facts es verlangt. Nichts über die Person.
+- Ergebnis des letzten Beitrags steht in den Einstellungen. Ohne Netz wird nicht
+  erneut versucht.
 
 ### 5.6 Ganzi Mahlzyt (Kantine) (Q16)
 

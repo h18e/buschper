@@ -583,6 +583,9 @@ struct AddFoodView: View {
         switch await search.lookup(barcode: code) {
         case .own(let candidate), .openFoodFacts(let candidate):
             picking = candidate
+        case .incomplete(let draft):
+            scanMessage = "Open Food Facts kennt das Produkt, aber nid aui Wärt. Ergänz, was fehlt – am schnällschte mit emne Foti vo dr Nährwärttabelle."
+            productDraft = ProductDraftSheet(draft: draft, existing: nil)
         case .unknown(let code):
             scanMessage = "Dä Barcode kennt no niemer. Erfass ds Produkt einisch – ab em nächschte Scan isch es da."
             var draft = ProductDraft()

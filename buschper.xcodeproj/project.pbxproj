@@ -361,7 +361,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Config/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = buschper;
-				INFOPLIST_KEY_NSCameraUsageDescription = "buschper bruucht d Kamera nume, zum Barcodes u QR-Codes z laese. Es wärde kener Bilder gspycheret.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "buschper bruucht d Kamera nume, zum Barcodes, QR-Codes u Nährwärttabelle z laese. Es wärde kener Bilder gspycheret.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "buschper list Aktivkalorie, Schritt, Trainings, Gwicht, Schlaf u dyni Profilaagabe, zum dy Bedarf z berächne u dy Schlaf uszwärte.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "buschper schrybt dyni Mahlzyte, Wasser, Gwicht u Trainings i Health, damit aues a eim Ort isch.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -395,7 +395,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Config/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = buschper;
-				INFOPLIST_KEY_NSCameraUsageDescription = "buschper bruucht d Kamera nume, zum Barcodes u QR-Codes z laese. Es wärde kener Bilder gspycheret.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "buschper bruucht d Kamera nume, zum Barcodes, QR-Codes u Nährwärttabelle z laese. Es wärde kener Bilder gspycheret.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "buschper list Aktivkalorie, Schritt, Trainings, Gwicht, Schlaf u dyni Profilaagabe, zum dy Bedarf z berächne u dy Schlaf uszwärte.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "buschper schrybt dyni Mahlzyte, Wasser, Gwicht u Trainings i Health, damit aues a eim Ort isch.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

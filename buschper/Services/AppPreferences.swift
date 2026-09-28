@@ -24,6 +24,10 @@ final class AppPreferences: ObservableObject {
         static let quickWaterMl = "buschper.quickWaterMl"
         static let lastKnownBMR = "buschper.lastKnownBMR"
         static let drinkDefaults = "buschper.drinkDefaults"
+        static let contributesToOpenFoodFacts = "buschper.contributesToOpenFoodFacts"
+        static let openFoodFactsUserId = "buschper.openFoodFactsUserId"
+        static let openFoodFactsAppUUID = "buschper.openFoodFactsAppUUID"
+        static let openFoodFactsLastResult = "buschper.openFoodFactsLastResult"
     }
 
     private let defaults: UserDefaults
@@ -144,6 +148,39 @@ final class AppPreferences: ObservableObject {
     var lastKnownBMR: Double {
         get { defaults.double(forKey: Key.lastKnownBMR) }
         set { set(newValue, for: Key.lastKnownBMR) }
+    }
+
+    // MARK: - Open Food Facts mithelfen (freiwillig, pro Gerät)
+
+    /// Neue und ergänzte Produkte mit Barcode an Open Food Facts schicken.
+    /// Standard aus – jede Person entscheidet selbst.
+    var contributesToOpenFoodFacts: Bool {
+        get { defaults.bool(forKey: Key.contributesToOpenFoodFacts) }
+        set { set(newValue, for: Key.contributesToOpenFoodFacts) }
+    }
+
+    /// Benutzername bei Open Food Facts (nicht die E-Mail). Das Passwort liegt
+    /// im Schlüsselbund, nicht hier.
+    var openFoodFactsUserId: String {
+        get { defaults.string(forKey: Key.openFoodFactsUserId) ?? "" }
+        set { set(newValue.trimmingCharacters(in: .whitespacesAndNewlines), for: Key.openFoodFactsUserId) }
+    }
+
+    /// Zufällige Kennung dieser Installation, von Open Food Facts erbeten, damit
+    /// Moderatoren einzelne Beiträge zuordnen können. Enthält nichts über dich.
+    var openFoodFactsAppUUID: String {
+        if let existing = defaults.string(forKey: Key.openFoodFactsAppUUID), !existing.isEmpty {
+            return existing
+        }
+        let new = UUID().uuidString
+        defaults.set(new, forKey: Key.openFoodFactsAppUUID)
+        return new
+    }
+
+    /// Ergebnis des letzten Beitrags, für die Anzeige in den Einstellungen.
+    var openFoodFactsLastResult: String {
+        get { defaults.string(forKey: Key.openFoodFactsLastResult) ?? "" }
+        set { set(newValue, for: Key.openFoodFactsLastResult) }
     }
 }
 
