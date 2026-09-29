@@ -52,6 +52,57 @@ struct CardHeader: View {
     }
 }
 
+/// Kompakter Kopf: kleines Symbol, Titel und Zeitraum links, die wichtigste
+/// Zahl rechts – spart die eigene Zeile für Kennzahlen.
+struct CompactCardHeader: View {
+    let title: String
+    var subtitle: String?
+    let symbol: String
+    let color: Color
+    var value: String?
+    var detail: String?
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 10) {
+            Image(systemName: symbol)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(Theme.background)
+                .frame(width: 26, height: 26)
+                .background(color, in: Circle())
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 0) {
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Theme.textPrimary)
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.caption2)
+                        .foregroundStyle(color)
+                }
+            }
+            Spacer(minLength: 8)
+            VStack(alignment: .trailing, spacing: 0) {
+                if let value {
+                    Text(value)
+                        .font(.title3.weight(.semibold))
+                        .monospacedDigit()
+                        .foregroundStyle(Theme.textPrimary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
+                if let detail {
+                    Text(detail)
+                        .font(.caption2)
+                        .monospacedDigit()
+                        .foregroundStyle(Theme.textSecondary)
+                        .lineLimit(1)
+                }
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
 /// Grosse Zahl mit kleiner Beschriftung darunter, wie „68.8 / Kilogramm“.
 struct StatValue: View {
     let value: String

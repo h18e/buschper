@@ -188,13 +188,14 @@ struct GoalEditView: View {
                         title: goal.label,
                         value: Binding(get: { profile.offset(for: goal) }, set: { profile.setOffset($0, for: goal) }),
                         unit: "kcal",
-                        fractionDigits: 0
+                        fractionDigits: 0,
+                        allowsNegative: true
                     )
                 }
             } header: {
                 Text("Abschlag pro Tag")
             } footer: {
-                Text("Wird zum Grundumsatz u de Aktivkalorie drzuezellt. S Budget faut nie under \(NumberText.kcal(EnergyCalculator.minimumBudget(for: profile.sex))) kcal.")
+                Text("Minus (Knopf ±) heisst weniger ässe als verbrucht. Wird zum Grundumsatz u de Aktivkalorie drzuezellt. S Budget faut nie under \(NumberText.kcal(EnergyCalculator.minimumBudget(for: profile.sex))) kcal.")
             }
             Section {
                 Picker("Bewegigsprofil", selection: Binding(get: { profile.activityProfile }, set: { profile.activityProfile = $0 })) {

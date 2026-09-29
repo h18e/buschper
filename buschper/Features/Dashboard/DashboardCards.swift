@@ -218,45 +218,45 @@ struct FluidCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            CardHeader(title: "Flüssigkeit", subtitle: "\(snapshot.drinkCount) \(snapshot.drinkCount == 1 ? "Getränk" : "Getränk")",
-                       symbol: "drop.fill", color: Theme.fluid)
-            HStack(alignment: .bottom) {
-                BottleRow(fraction: fraction)
-                Spacer(minLength: 12)
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text(NumberText.volume(snapshot.fluidMl))
-                        .font(.system(size: 32, weight: .semibold, design: .rounded))
-                        .monospacedDigit()
-                    Text("\(Int((fraction * 100).rounded())) % vo \(NumberText.volume(snapshot.targets.fluidGoalMl))")
-                        .font(.caption)
-                        .monospacedDigit()
-                        .foregroundStyle(Theme.textSecondary)
-                }
-            }
-            HStack {
+        VStack(alignment: .leading, spacing: 8) {
+            CompactCardHeader(
+                title: "Flüssigkeit",
+                subtitle: "\(snapshot.drinkCount) Getränk",
+                symbol: "drop.fill",
+                color: Theme.fluid,
+                value: NumberText.volume(snapshot.fluidMl),
+                detail: "\(Int((fraction * 100).rounded())) % vo \(NumberText.volume(snapshot.targets.fluidGoalMl))"
+            )
+            HStack(spacing: 8) {
+                BottleRow(fraction: fraction, height: 24)
+                Spacer(minLength: 8)
                 Button(action: onQuickAdd) {
-                    Label("+\(NumberText.volume(quickMl)) Wasser", systemImage: "drop.fill")
-                        .font(.subheadline.weight(.semibold))
+                    Label("+\(NumberText.volume(quickMl))", systemImage: "drop.fill")
+                        .font(.caption.weight(.semibold))
                 }
                 .buttonStyle(.borderedProminent)
+                .controlSize(.small)
                 .tint(Theme.fluid)
+                .accessibilityLabel("\(NumberText.volume(quickMl)) Wasser drzue")
                 Button(action: onAdd) {
-                    Label("Angers", systemImage: "cup.and.saucer.fill")
-                        .font(.subheadline)
+                    Image(systemName: "cup.and.saucer.fill")
+                        .font(.caption)
                 }
                 .buttonStyle(.bordered)
+                .controlSize(.small)
                 .tint(Theme.fluid)
+                .accessibilityLabel("Angers Getränk")
             }
-            FluidChart(history: snapshot.fluidHistory, goalMl: snapshot.targets.fluidGoalMl, days: range.days)
+            FluidChart(history: snapshot.fluidHistory, goalMl: snapshot.targets.fluidGoalMl, days: range.days, height: 64)
         }
-        .card(tint: Theme.fluid)
+        .card(tint: Theme.fluid, padding: 12)
     }
 }
 
 /// Acht Flaschen, gefüllt nach Anteil am Ziel – wie im Vorbild-Screenshot.
 struct BottleRow: View {
     let fraction: Double
+    var height: CGFloat = 38
     private let count = 8
 
     var body: some View {
@@ -264,13 +264,13 @@ struct BottleRow: View {
             ForEach(0..<count, id: \.self) { index in
                 let fill = min(1, max(0, fraction * Double(count) - Double(index)))
                 ZStack(alignment: .bottom) {
-                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                    RoundedRectangle(cornerRadius: 3, style: .continuous)
                         .fill(Theme.track)
-                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                    RoundedRectangle(cornerRadius: 3, style: .continuous)
                         .fill(Theme.fluid)
-                        .frame(height: 38 * fill)
+                        .frame(height: height * fill)
                 }
-                .frame(width: 13, height: 38)
+                .frame(width: height * 0.34, height: height)
                 .overlay(alignment: .top) {
                     Capsule().fill(fill >= 1 ? Theme.fluid : Theme.track).frame(width: 6, height: 3).offset(y: -4)
                 }
@@ -328,25 +328,27 @@ struct WeightCard: View {
     let range: ChartRange
     var target: Double?
 
+    private var latest: String? {
+        WeightMath.latest(snapshot.weightDaily).map { "\(NumberText.oneDecimal($0.kg)) kg" }
+    }
+
+    private var change: String? {
+        WeightMath.change(snapshot.weightDaily).map { ($0 > 0 ? "+" : "") + NumberText.oneDecimal($0) + " kg" }
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            CardHeader(title: "Gwicht", subtitle: range.label, symbol: "scalemass.fill", color: Theme.weight)
+        VStack(alignment: .leading, spacing: 8) {
+            CompactCardHeader(title: "Gwicht", subtitle: range.label, symbol: "scalemass.fill", color: Theme.weight,
+                              value: latest, detail: change)
             if snapshot.weightDaily.isEmpty {
                 Text("I däm Zytruum kener Wärt. Tipp uf d Charte, zum eis z erfasse.")
-                    .font(.subheadline)
+                    .font(.caption)
                     .foregroundStyle(Theme.textTertiary)
             } else {
-                HStack(alignment: .bottom) {
-                    StatValue(value: WeightMath.latest(snapshot.weightDaily).map { NumberText.oneDecimal($0.kg) } ?? "–",
-                              caption: "Kilo")
-                    Spacer()
-                    StatValue(value: WeightMath.change(snapshot.weightDaily).map { ($0 > 0 ? "+" : "") + NumberText.oneDecimal($0) } ?? "–",
-                              caption: "Veränderig", alignment: .trailing)
-                }
-                WeightChart(daily: snapshot.weightDaily, range: range, target: target)
+                WeightChart(daily: snapshot.weightDaily, range: range, target: target, height: 96)
             }
         }
-        .card(tint: Theme.weight)
+        .card(tint: Theme.weight, padding: 12)
     }
 }
 
@@ -358,27 +360,24 @@ struct SleepCard: View {
     let threshold: Double
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            CardHeader(title: "Schlaf", subtitle: range.label, symbol: "moon.zzz.fill", color: Theme.sleep)
-            if let night = snapshot.lastNight {
-                HStack(alignment: .bottom) {
-                    StatValue(value: "\(Int(night.score.rounded()))", caption: "Score letschti Nacht")
-                    Spacer()
-                    StatValue(value: OnboardingView.hoursText(Int(night.asleepMinutes)), caption: "gschlafe", alignment: .trailing)
-                }
-                if night.isBad {
-                    BadgeView(text: "Schlächti Nacht", color: Theme.bad, systemImage: "exclamationmark.triangle.fill")
-                }
-            }
+        VStack(alignment: .leading, spacing: 8) {
+            CompactCardHeader(
+                title: "Schlaf",
+                subtitle: snapshot.lastNight?.isBad == true ? "⚠︎ Schlächti Nacht" : range.label,
+                symbol: "moon.zzz.fill",
+                color: snapshot.lastNight?.isBad == true ? Theme.bad : Theme.sleep,
+                value: snapshot.lastNight.map { "Score \(Int($0.score.rounded()))" },
+                detail: snapshot.lastNight.map { "\(OnboardingView.hoursText(Int($0.asleepMinutes))) gschlafe" }
+            )
             if snapshot.sleepHistory.isEmpty {
                 Text("No kener Schlafdate. Si chöme us Apple Health, sobald d Uhr i dr Nacht treit wird.")
-                    .font(.subheadline)
+                    .font(.caption)
                     .foregroundStyle(Theme.textTertiary)
             } else {
-                SleepScoreChart(nights: snapshot.sleepHistory, days: range.days, threshold: threshold)
+                SleepScoreChart(nights: snapshot.sleepHistory, days: range.days, threshold: threshold, height: 96)
             }
         }
-        .card(tint: Theme.sleep)
+        .card(tint: Theme.sleep, padding: 12)
     }
 }
 

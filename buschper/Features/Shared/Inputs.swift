@@ -10,6 +10,8 @@ struct OptionalNumberField: View {
     @Binding var value: Double?
     var unit: String = ""
     var fractionDigits = 1
+    /// Das Zahlen-Tastenfeld hat kein Minus – dafür gibt es einen ±-Knopf.
+    var allowsNegative = false
 
     @State private var text = ""
     @FocusState private var focused: Bool
@@ -19,6 +21,18 @@ struct OptionalNumberField: View {
             Text(title)
                 .foregroundStyle(Theme.textPrimary)
             Spacer(minLength: 12)
+            if allowsNegative {
+                Button {
+                    value = -(value ?? 0)
+                } label: {
+                    Image(systemName: "plus.forwardslash.minus")
+                        .font(.subheadline.weight(.semibold))
+                        .frame(width: 32, height: 28)
+                        .background(Theme.surfaceElevated, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel("Vorzeiche wächsle")
+            }
             TextField("–", text: $text)
                 .keyboardType(.decimalPad)
                 .multilineTextAlignment(.trailing)
@@ -51,6 +65,7 @@ struct OptionalNumberField: View {
             .replacingOccurrences(of: "'", with: "")
             .replacingOccurrences(of: "’", with: "")
             .replacingOccurrences(of: ",", with: ".")
+            .replacingOccurrences(of: "−", with: "-")
             .trimmingCharacters(in: .whitespaces)
         guard !cleaned.isEmpty else { return nil }
         return Double(cleaned)
@@ -71,6 +86,7 @@ struct NumberField: View {
     @Binding var value: Double
     var unit: String = ""
     var fractionDigits = 1
+    var allowsNegative = false
 
     var body: some View {
         OptionalNumberField(
@@ -80,7 +96,8 @@ struct NumberField: View {
                 set: { if let newValue = $0 { value = newValue } }
             ),
             unit: unit,
-            fractionDigits: fractionDigits
+            fractionDigits: fractionDigits,
+            allowsNegative: allowsNegative
         )
     }
 }

@@ -70,6 +70,7 @@ struct WeightChart: View {
     let daily: [DailyWeight]
     let range: ChartRange
     var target: Double?
+    var height: CGFloat = 150
 
     @State private var selected: Date?
 
@@ -130,7 +131,7 @@ struct WeightChart: View {
             .chartYScale(domain: domain)
             .chartXSelection(value: $selected)
             .modifier(QuietAxes(days: range.days))
-            .frame(height: 150)
+            .frame(height: height)
 
             HStack(spacing: 14) {
                 legendLine("Mässwärt", Theme.weight)
@@ -160,6 +161,7 @@ struct SleepScoreChart: View {
     let nights: [NightRecord]
     let days: Int
     var threshold: Double = 60
+    var height: CGFloat = 150
 
     @State private var selected: Date?
 
@@ -204,7 +206,7 @@ struct SleepScoreChart: View {
             .chartYScale(domain: 0...100)
             .chartXSelection(value: $selected)
             .modifier(QuietAxes(days: days))
-            .frame(height: 150)
+            .frame(height: height)
 
             HStack(spacing: 14) {
                 legendLine("Score", Theme.sleep)
@@ -233,6 +235,7 @@ struct FluidChart: View {
     let history: [DailyValue]
     let goalMl: Double
     let days: Int
+    var height: CGFloat = 110
 
     @State private var selected: Date?
 
@@ -256,7 +259,7 @@ struct FluidChart: View {
         }
         .chartXSelection(value: $selected)
         .modifier(QuietAxes(days: days))
-        .frame(height: 110)
+        .frame(height: height)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Flüssigkeit pro Tag")
     }

@@ -177,9 +177,10 @@ struct OnboardingView: View {
                         set: { profile.setOffset($0, for: profile.goal) }
                     ),
                     unit: "kcal",
-                    fractionDigits: 0
+                    fractionDigits: 0,
+                    allowsNegative: true
                 )
-                Text("Minus heisst weniger ässe als verbrucht. Abnäh −500, haute 0, zuenäh +300 sy d Vorgabe.")
+                Text("Minus (Knopf ±) heisst weniger ässe als verbrucht. Abnäh −500, haute 0, zuenäh +300 sy d Vorgabe.")
                     .font(.caption)
                     .foregroundStyle(Theme.textTertiary)
             }
