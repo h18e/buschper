@@ -30,6 +30,7 @@ struct AddFoodView: View {
     @State private var editingBasketItem: BasketItem?
     @State private var showsScanner = false
     @State private var showsQuickEntry = false
+    @State private var showsKcalEntry = false
     @State private var showsBasket = false
     @State private var productDraft: ProductDraftSheet?
     @State private var scanMessage: String?
@@ -134,6 +135,9 @@ struct AddFoodView: View {
                     reloadLists()
                 }) { basket.append($0) }
             }
+            .sheet(isPresented: $showsKcalEntry) {
+                KcalEntryView { basket.append($0) }
+            }
             .sheet(isPresented: $showsScanner) {
                 CodeScannerView(mode: .barcode) { code in
                     Task { await handleBarcode(code) }
@@ -170,7 +174,8 @@ struct AddFoodView: View {
 
     private var actionsSection: some View {
         Section {
-            HStack(spacing: 10) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
+                actionButton("Nume kcal", "flame.fill") { showsKcalEntry = true }
                 actionButton("Barcode", "barcode.viewfinder") { showsScanner = true }
                 actionButton("Ganzi Mahlzyt", "fork.knife.circle.fill") { showsQuickEntry = true }
                 actionButton("Nöis Produkt", "plus.square.fill") {

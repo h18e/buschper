@@ -282,6 +282,10 @@ Eintrag in der Mahlzeit. Beim Kopieren einer Mahlzeit kommt er mit. Mit dem
 Schalter **„Für speter spychere“** wird er zusätzlich als gespeicherte Mahlzeit
 abgelegt (5.10).
 
+**Nume kcal** (Testrunde 3): eigener Knopf in „Ässe“ für eine reine Kalorienzahl,
+ohne Titel und ohne Makros. Grosse Zahl, Schieber bis 1500 kcal, Schnelltasten
+100/200/300/500/800. Der Eintrag heisst „Kalorie“; Makros bleiben unbekannt.
+
 ### 5.7 Rezepte (Q17)
 
 - Name, **Anzahl Portionen**, Zutaten mit Menge. Zutaten kommen aus allen Quellen
