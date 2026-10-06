@@ -284,7 +284,7 @@ abgelegt (5.10).
 
 **Nume kcal** (Testrunde 3): eigener Knopf in „Ässe“ für eine reine Kalorienzahl,
 ohne Titel und ohne Makros. Grosse Zahl, Schieber bis 1500 kcal, Schnelltasten
-100/200/300/500/800. Der Eintrag heisst „Kalorie“; Makros bleiben unbekannt. Wird **direkt gesichert** (Zeit und Kategorie aus „Ässe“), ohne Chörbli; liegt schon etwas im Chörbli, kommt es mit.
+100/200/300/500/800. Der Eintrag heisst „Kalorie“; Makros bleiben unbekannt. Wird **direkt gesichert** (Zeit aus „Ässe“, Kategorie als sechs Kacheln im Fenster, vorgewählt wie in „Ässe“), ohne Chörbli; liegt schon etwas im Chörbli, kommt es mit.
 
 ### 5.7 Rezepte (Q17)
 

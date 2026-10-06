@@ -136,11 +136,15 @@ struct AddFoodView: View {
                 }) { basket.append($0) }
             }
             .sheet(isPresented: $showsKcalEntry) {
-                KcalEntryView(saveHint: kcalSaveHint) { item in
+                KcalEntryView(
+                    initialCategory: category,
+                    choosesCategory: existingMeal == nil,
+                    saveHint: kcalSaveHint
+                ) { item, chosenCategory in
                     // Direkt sichern, ohne Umweg übers Chörbli. Liegt schon etwas
                     // im Chörbli, kommt es mit, damit nichts verloren geht.
                     basket.append(item)
-                    app.store.saveMeal(items: basket, timestamp: timestamp, category: category, into: existingMeal)
+                    app.store.saveMeal(items: basket, timestamp: timestamp, category: chosenCategory, into: existingMeal)
                     app.dataDidChange()
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { dismiss() }
                 }
@@ -614,9 +618,9 @@ struct AddFoodView: View {
     /// Wohin „Nume kcal“ direkt sichert.
     private var kcalSaveHint: String {
         let target = existingMeal.map { "i „\($0.displayTitle)“" }
-            ?? "als \(category.label) um \(timestamp.formatted(date: .omitted, time: .shortened))"
-        let extra = basket.isEmpty ? "" : " Was scho im Chörbli isch (\(basket.count)), chunnt mit."
-        return "Wird direkt gspycheret \(target).\(extra)"
+            ?? "um \(timestamp.formatted(date: .omitted, time: .shortened))"
+        let extra = basket.isEmpty ? "" : " (mit de \(basket.count) Iiträg us em Chörbli)"
+        return target + extra
     }
 
     private func saveMeal() {
