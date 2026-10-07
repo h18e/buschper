@@ -13,6 +13,9 @@ struct AddFoodView: View {
     @State private var category: MealCategory
     @State private var categoryTouched = false
     @State private var query = ""
+    /// Suche aktiv (Tastatur, Abbrechen-Knopf). Solange sie läuft, blendet iOS
+    /// die Knöpfe oben aus – darum endet sie, sobald etwas im Chörbli liegt.
+    @State private var isSearching = false
     @State private var basket: [BasketItem] = []
 
     @State private var local: FoodSearchService.LocalResults?
@@ -99,7 +102,7 @@ struct AddFoodView: View {
                 }
             }
             .themedList()
-            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Lebensmittu sueche")
+            .searchable(text: $query, isPresented: $isSearching, placement: .navigationBarDrawer(displayMode: .always), prompt: "Lebensmittu sueche")
             .navigationTitle(existingMeal == nil ? "Ässe" : "Drzue tue")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -124,6 +127,7 @@ struct AddFoodView: View {
                 AmountPickerView(candidate: candidate, onEdit: { edit(candidate) }) { portion, count in
                     app.store.rememberExternal(candidate)
                     basket.append(BasketItem.from(candidate, portion: portion, count: count))
+                    endSearch()
                 }
             }
             .sheet(item: $editingBasketItem) { item in
@@ -186,14 +190,14 @@ struct AddFoodView: View {
     private var actionsSection: some View {
         Section {
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
-                actionButton("Nume kcal", "flame.fill") { showsKcalEntry = true }
                 actionButton("Barcode", "barcode.viewfinder") { showsScanner = true }
+                if existingMeal == nil {
+                    actionButton("QR-Code", "qrcode.viewfinder") { showsQRScanner = true }
+                }
+                actionButton("Nume kcal", "flame.fill") { showsKcalEntry = true }
                 actionButton("Ganzi Mahlzyt", "fork.knife.circle.fill") { showsQuickEntry = true }
                 actionButton("Nöis Produkt", "plus.square.fill") {
                     productDraft = ProductDraftSheet(draft: ProductDraft(), existing: nil)
-                }
-                if existingMeal == nil {
-                    actionButton("QR-Code", "qrcode.viewfinder") { showsQRScanner = true }
                 }
             }
             .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
@@ -331,6 +335,7 @@ struct AddFoodView: View {
             Button {
                 basket += app.store.basketItems(fromTemplate: template)
                 yesterdayEntries = []
+                endSearch()
             } label: {
                 MealTemplateRow(template: template)
             }
@@ -536,6 +541,13 @@ struct AddFoodView: View {
         app.store.saveMealTemplate(name: name, items: basket)
         savedTemplateName = name
         reloadLists()
+    }
+
+    /// Nach dem Hinzufügen: Suchbegriff leeren und Suche schliessen, damit
+    /// „Sichere“ wieder sichtbar ist. Für das nächste Produkt neu suchen.
+    private func endSearch() {
+        query = ""
+        isSearching = false
     }
 
     private func replace(_ item: BasketItem) {
