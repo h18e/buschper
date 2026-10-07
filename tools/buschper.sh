@@ -8,7 +8,8 @@
 #   ./tools/buschper.sh build          Für den Simulator bauen
 #   ./tools/buschper.sh test           Alle Tests im Simulator laufen lassen
 #   ./tools/buschper.sh run            Bauen und im Simulator starten
-#   ./tools/buschper.sh device         Bauen und auf dem angeschlossenen iPhone starten
+#   ./tools/buschper.sh device         Bauen und auf dem iPhone am Kabel starten
+#   ./tools/buschper.sh device "Gini"  … auf einem bestimmten iPhone (Name oder Teil davon)
 #   ./tools/buschper.sh blv DATEI      Schweizer Nährwertdatenbank importieren
 #   ./tools/buschper.sh testflight     Neue Version bauen und zu TestFlight hochladen
 #   ./tools/buschper.sh update         Neuste Version von GitHub holen
@@ -212,15 +213,34 @@ cmd_run() {
 cmd_device() {
     require_setup
     say "Suche angeschlossenes iPhone"
-    local list device
+    local list device line phones name wanted="${1:-}"
     list=$(xcrun devicectl list devices 2>/dev/null)
-    device=$(echo "$list" | awk '/connected|available \(paired\)/ && /iPhone/ {for (i=1;i<=NF;i++) if ($i ~ /^[0-9A-F]{8}-[0-9A-F]{4}-/) {print $i; exit}}')
+    # Nur iPhones (Uhren und iPads weg). Reihenfolge der Wahl:
+    # 1. Name als Argument, z. B. ./tools/buschper.sh device "Gini"
+    # 2. per Kabel verbunden („connected“)
+    # 3. sonst ein gekoppeltes iPhone im WLAN
+    phones=$(echo "$list" | grep -E "iPhone[0-9]+,[0-9]+")
+    if [ -n "$wanted" ]; then
+        line=$(echo "$phones" | grep -i -F -- "$wanted" | head -n 1)
+    else
+        line=$(echo "$phones" | grep -E "[[:space:]]connected[[:space:]]" | head -n 1)
+        [ -z "$line" ] && line=$(echo "$phones" | grep "available (paired)" | head -n 1)
+    fi
+    device=$(echo "$line" | grep -o -E "[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}" | head -n 1)
     if [ -z "$device" ]; then
-        fail "Kein iPhone gefunden. Per Kabel anschliessen, entsperren, „Vertrauen“ bestätigen."
+        if [ -n "$wanted" ]; then
+            fail "Kein iPhone mit „$wanted“ im Namen gefunden."
+        else
+            fail "Kein iPhone gefunden. Per Kabel anschliessen, entsperren, „Vertrauen“ bestätigen."
+        fi
         echo "$list"
         exit 1
     fi
-    ok "iPhone gefunden: $device"
+    name=$(echo "$line" | sed -E 's/[[:space:]]{2,}.*//')
+    ok "iPhone gefunden: $name ($device)"
+    if [ -z "$wanted" ] && [ "$(echo "$phones" | grep -c .)" -gt 1 ]; then
+        echo "  Mehrere iPhones in Reichweite. Ein anderes wählen: ./tools/buschper.sh device \"Name\""
+    fi
 
     say "Baue für das iPhone"
     if ! run_xcodebuild -project "$PROJECT" -scheme "$SCHEME" \
@@ -322,7 +342,7 @@ case "${1:-}" in
     build) cmd_build ;;
     test) cmd_test ;;
     run) cmd_run ;;
-    device) cmd_device ;;
+    device) shift; cmd_device "$@" ;;
     blv) shift; cmd_blv "$@" ;;
     testflight) cmd_testflight ;;
     update) cmd_update ;;
