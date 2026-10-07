@@ -103,7 +103,7 @@ final class DashboardLoader {
         let stepsStart = calendar.date(byAdding: .day, value: -30, to: start) ?? start
         let stepHistory = await app.health.dailySteps(from: stepsStart, to: calendar.date(byAdding: .day, value: -1, to: start) ?? start)
         let stepsAverage = DayMath.average(Array(stepHistory.values).filter { $0 > 0 })
-        let active = await app.health.activeEnergy(on: day)
+        let active = await app.dayData.activeEnergy(on: day)
         let exercise = await app.health.exerciseMinutes(on: day)
 
         // Gewicht

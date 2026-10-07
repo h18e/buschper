@@ -16,7 +16,10 @@ final class DemoHealthSource: HealthDataProviding {
         )
     }
 
-    func activeEnergy(on day: Date) async -> Double? { 430 }
+    func foreignActiveEnergy(from start: Date, to end: Date) async -> Double? {
+        // Rund 430 kcal über den ganzen Tag verteilt.
+        430 * min(1, max(0, end.timeIntervalSince(start)) / 86_400)
+    }
     func steps(on day: Date) async -> Double? { 6319 }
 
     func dailySteps(from start: Date, to end: Date) async -> [Date: Double] {

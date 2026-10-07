@@ -175,17 +175,55 @@ enum EnergyCalculator {
         )
     }
 
-    /// Ab 12:00 des Tages, für jeden vergangenen Tag und für geplante Tage in
-    /// der Zukunft springt das Bewegungsprofil ein, wenn keine Aktivdaten da sind.
+    /// Ab 12:00 des Tages und für jeden vergangenen Tag springt das
+    /// Bewegungsprofil ein, wenn keine Aktivdaten da sind. Für Tage in der
+    /// Zukunft nie: dort zählt nur, was sicher ist (Grundumsatz und Abschlag).
     static func fallbackApplies(dayStart: Date, now: Date, calendar: Calendar = .current) -> Bool {
         let startOfDay = calendar.startOfDay(for: dayStart)
         if startOfDay > calendar.startOfDay(for: now) {
-            return true
+            return false
         }
         guard let noon = calendar.date(byAdding: .hour, value: fallbackHour, to: startOfDay) else {
             return false
         }
         return now >= noon
+    }
+
+    // MARK: - Aktivkalorien mit manuellen Trainings
+
+    /// Ein in buschper erfasstes Training und was fremde Quellen (z. B. die Uhr)
+    /// im selben Zeitraum schon gemessen haben.
+    struct ManualWorkoutEnergy: Equatable {
+        var kcal: Double
+        var start: Date
+        var end: Date
+        /// Fremde Aktivkalorien zwischen Start und jetzt bzw. Ende.
+        var foreignInWindow: Double
+    }
+
+    /// Wie viel eines Trainings bis jetzt zählt: vorbei → alles, läuft → anteilig,
+    /// noch nicht begonnen (auch geplant in der Zukunft) → nichts.
+    static func countedKcal(_ kcal: Double, start: Date, end: Date, now: Date) -> Double {
+        guard kcal > 0, now > start else { return 0 }
+        guard end > start, now < end else { return kcal }
+        return kcal * now.timeIntervalSince(start) / end.timeIntervalSince(start)
+    }
+
+    /// Aktivkalorien eines Tages: fremde Messwerte plus manuelle Trainings.
+    ///
+    /// Während eines manuellen Trainings gilt der grössere Wert: was buschper dafür
+    /// berechnet hat, oder was die Uhr in dieser Zeit gemessen hat. So zählt ein
+    /// Training ohne Uhr voll, und eines mit Uhr nicht doppelt.
+    ///
+    /// `nil`, wenn weder fremde Werte noch zählende Trainings da sind – dann darf
+    /// das Bewegungsprofil einspringen.
+    static func activeEnergy(foreignDay: Double?, workouts: [ManualWorkoutEnergy], now: Date) -> Double? {
+        let extra = workouts.reduce(0.0) { sum, workout in
+            let counted = countedKcal(workout.kcal, start: workout.start, end: workout.end, now: now)
+            return sum + max(0, counted - max(0, workout.foreignInWindow))
+        }
+        guard foreignDay != nil || extra > 0 else { return nil }
+        return (foreignDay ?? 0) + extra
     }
 
     /// Hat sich der Grundumsatz so stark verändert, dass ein Hinweis angebracht ist?

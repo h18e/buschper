@@ -58,7 +58,10 @@ protocol HealthDataProviding: AnyObject {
     func requestAuthorization() async -> Bool
 
     func profileData() async -> HealthProfileData
-    func activeEnergy(on day: Date) async -> Double?
+    /// Aktivkalorien aus **fremden** Quellen (Uhr, iPhone, andere Apps) – ohne das,
+    /// was buschper für manuelle Trainings selbst geschrieben hat. Diese rechnet
+    /// buschper direkt aus seinen eigenen Einträgen an (SPEC 4.2).
+    func foreignActiveEnergy(from start: Date, to end: Date) async -> Double?
     func steps(on day: Date) async -> Double?
     func dailySteps(from start: Date, to end: Date) async -> [Date: Double]
     func exerciseMinutes(on day: Date) async -> Double?
@@ -135,8 +138,8 @@ final class HealthKitService: HealthDataProviding {
 
     // MARK: Aktivität
 
-    func activeEnergy(on day: Date) async -> Double? {
-        await daySum(HealthTypes.activeEnergy, unit: .kilocalorie(), day: day)
+    func foreignActiveEnergy(from start: Date, to end: Date) async -> Double? {
+        await sum(HealthTypes.activeEnergy, unit: .kilocalorie(), from: start, to: end, excludeOwn: true)
     }
 
     func steps(on day: Date) async -> Double? {
@@ -150,10 +153,14 @@ final class HealthKitService: HealthDataProviding {
     /// Summe eines Tages. `HKStatistics` entfernt Überschneidungen zwischen
     /// iPhone und Uhr selbst – eine einfache Addition der Werte würde doppelt zählen.
     private func daySum(_ type: HKQuantityType, unit: HKUnit, day: Date) async -> Double? {
-        guard isAvailable else { return nil }
         let start = calendar.startOfDay(for: day)
-        let end = DayMath.nextDay(of: start, calendar: calendar)
-        let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: .strictStartDate)
+        return await sum(type, unit: unit, from: start, to: DayMath.nextDay(of: start, calendar: calendar), excludeOwn: false)
+    }
+
+    private func sum(_ type: HKQuantityType, unit: HKUnit, from start: Date, to end: Date, excludeOwn: Bool) async -> Double? {
+        guard isAvailable, end > start else { return nil }
+        let range = HKQuery.predicateForSamples(withStart: start, end: end, options: .strictStartDate)
+        let predicate = excludeOwn ? NSCompoundPredicate(andPredicateWithSubpredicates: [range, notOwnSource]) : range
         let descriptor = HKStatisticsQueryDescriptor(
             predicate: .quantitySample(type: type, predicate: predicate),
             options: .cumulativeSum

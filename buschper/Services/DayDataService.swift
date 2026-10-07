@@ -143,13 +143,39 @@ final class DayDataService {
         return (manual + foreign).sorted { $0.start < $1.start }
     }
 
+    // MARK: - Aktivkalorien
+
+    /// Fremde Aktivkalorien aus Health plus manuelle Trainings aus buschper.
+    ///
+    /// Die eigenen Trainings werden nicht über Health gezählt: Health verwirft
+    /// Werte, die sich zeitlich mit der Uhr überschneiden, und ein noch nicht
+    /// geschriebenes Training fehlte ganz. Siehe `EnergyCalculator.activeEnergy`.
+    func activeEnergy(on day: Date, now: Date = Date()) async -> Double? {
+        let start = calendar.startOfDay(for: day)
+        let end = DayMath.nextDay(of: start, calendar: calendar)
+        let foreignDay = await health.foreignActiveEnergy(from: start, to: end)
+
+        var workouts: [EnergyCalculator.ManualWorkoutEnergy] = []
+        let entries = store.fetch(WorkoutEntry.self, predicate: DataStore.rangePredicate("start", from: start, to: end))
+        for entry in entries {
+            guard let begin = entry.start, let finish = entry.end, entry.kcal > 0, begin < now else { continue }
+            let windowEnd = min(finish, now)
+            var measured = 0.0
+            if windowEnd > begin {
+                measured = await health.foreignActiveEnergy(from: begin, to: windowEnd) ?? 0
+            }
+            workouts.append(.init(kcal: entry.kcal, start: begin, end: finish, foreignInWindow: measured))
+        }
+        return EnergyCalculator.activeEnergy(foreignDay: foreignDay, workouts: workouts, now: now)
+    }
+
     // MARK: - Ziele
 
     func targets(for day: Date, now: Date = Date()) async -> DailyTargets {
         let profile = store.profile()
         let weight = await referenceWeight(for: day)
         let bmr = profile.basalMetabolicRate(weightKg: weight.kg, on: day)
-        let active = await health.activeEnergy(on: day)
+        let active = await activeEnergy(on: day, now: now)
 
         let budget = EnergyCalculator.budget(
             bmr: bmr,

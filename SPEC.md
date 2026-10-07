@@ -93,9 +93,13 @@ Tagesbudget = Grundumsatz + bisher verbrannte Aktivkalorien (Apple Health) + Zie
 - Das Gewicht für die Formel ist der **Durchschnitt der letzten 7 Tage** (Q12).
   Ändert sich der berechnete Grundumsatz um mehr als 20 kcal, zeigt buschper
   einmalig einen Hinweis „Bedarf nöi berächnet“.
-- Manuelle Trainings werden nach Health geschrieben (siehe 8) und kommen von dort
-  als Aktivkalorien zurück. Sie werden nicht zusätzlich addiert, es gibt also keine
-  Doppelzählung.
+- **Manuelle Trainings** (geändert in Testrunde 4): buschper rechnet sie direkt aus
+  seinen eigenen Einträgen an, nicht mehr über den Umweg Health. Health verwarf
+  ihre Kalorien, wenn sich die Zeit mit Messwerten der Uhr überschnitt.
+  `Aktivkalorien = fremde Aktivkalorien (ohne buschpers eigene) + Σ max(0, Training − Uhr im selben Zeitraum)`.
+  Pro Training gilt also der grössere Wert, ohne Doppelzählung. Ein laufendes
+  Training zählt anteilig, ein geplantes erst ab seinem Start. Nach Health
+  geschrieben werden die Trainings weiterhin (siehe 8).
 
 ### 4.3 Rückfall ohne Aktivdaten (Q37)
 
@@ -114,6 +118,10 @@ Berechtigung verweigert), rechnet buschper mit dem Bewegungsprofil:
 
 Die Karte zeigt dann den Hinweis **„Schätzig“**. Treffen später echte Daten ein,
 gelten wieder diese.
+
+**Tage in der Zukunft** (Testrunde 4): nie eine Schätzung. Das Budget ist dort
+Grundumsatz + Abschlag (mindestens die Untergrenze); Aktivkalorien kommen erst dazu,
+wenn der Tag da ist.
 
 ### 4.4 Ziel-Abschlag (Q11, Q25)
 

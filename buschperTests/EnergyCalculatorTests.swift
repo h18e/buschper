@@ -72,15 +72,65 @@ struct EnergyCalculatorTests {
         #expect(budget.activeKcal.isClose(to: 300))
     }
 
-    @Test("Geplanter Tag in der Zukunft rechnet mit dem Bewegungsprofil")
+    @Test("Tag in der Zukunft: keine Schätzung, nur Grundumsatz und Abschlag")
     func futureDay() {
         let day = TestCalendar.date(2026, 9, 30)
         let budget = EnergyCalculator.budget(
-            bmr: 1700, measuredActiveKcal: nil, activityProfile: .moderate, goalOffset: 0,
-            sex: .male, dayStart: day, now: TestCalendar.date(2026, 9, 27, 8), calendar: calendar
+            bmr: 1700, measuredActiveKcal: nil, activityProfile: .moderate, goalOffset: -200,
+            sex: .male, dayStart: day, now: TestCalendar.date(2026, 9, 27, 20), calendar: calendar
         )
-        #expect(budget.activeIsEstimate)
-        #expect(budget.activeKcal.isClose(to: 935))
+        #expect(!budget.activeIsEstimate)
+        #expect(budget.activeKcal == 0)
+        #expect(budget.total == 1500)
+    }
+
+    // MARK: Manuelle Trainings
+
+    @Test("Training ohne Uhr zählt voll zu den Aktivkalorien")
+    func manualWorkoutWithoutWatch() {
+        let workout = EnergyCalculator.ManualWorkoutEnergy(
+            kcal: 400, start: TestCalendar.date(2026, 9, 24, 7), end: TestCalendar.date(2026, 9, 24, 8), foreignInWindow: 0
+        )
+        let active = EnergyCalculator.activeEnergy(foreignDay: 300, workouts: [workout], now: TestCalendar.date(2026, 9, 24, 12))
+        #expect(active == 700)
+    }
+
+    @Test("Training mit Uhr zählt nicht doppelt: der grössere Wert gilt")
+    func manualWorkoutWithWatch() {
+        let start = TestCalendar.date(2026, 9, 24, 7)
+        let end = TestCalendar.date(2026, 9, 24, 8)
+        let now = TestCalendar.date(2026, 9, 24, 12)
+        let partly = EnergyCalculator.ManualWorkoutEnergy(kcal: 400, start: start, end: end, foreignInWindow: 150)
+        #expect(EnergyCalculator.activeEnergy(foreignDay: 500, workouts: [partly], now: now) == 750)
+        let fully = EnergyCalculator.ManualWorkoutEnergy(kcal: 400, start: start, end: end, foreignInWindow: 450)
+        #expect(EnergyCalculator.activeEnergy(foreignDay: 900, workouts: [fully], now: now) == 900)
+    }
+
+    @Test("Laufendes Training zählt anteilig, geplantes noch gar nicht")
+    func runningAndPlannedWorkouts() {
+        let start = TestCalendar.date(2026, 9, 24, 18)
+        let end = TestCalendar.date(2026, 9, 24, 19)
+        #expect(EnergyCalculator.countedKcal(600, start: start, end: end, now: TestCalendar.date(2026, 9, 24, 18, 30)) == 300)
+        #expect(EnergyCalculator.countedKcal(600, start: start, end: end, now: TestCalendar.date(2026, 9, 24, 17)) == 0)
+        #expect(EnergyCalculator.countedKcal(600, start: start, end: end, now: TestCalendar.date(2026, 9, 24, 20)) == 600)
+        let planned = EnergyCalculator.ManualWorkoutEnergy(kcal: 600, start: start, end: end, foreignInWindow: 0)
+        #expect(EnergyCalculator.activeEnergy(foreignDay: nil, workouts: [planned], now: TestCalendar.date(2026, 9, 24, 9)) == nil)
+    }
+
+    @Test("Nur ein manuelles Training, keine Uhr: kein Bewegungsprofil obendrauf")
+    func manualOnlyBlocksFallback() {
+        let day = TestCalendar.date(2026, 9, 24)
+        let workout = EnergyCalculator.ManualWorkoutEnergy(
+            kcal: 350, start: TestCalendar.date(2026, 9, 24, 7), end: TestCalendar.date(2026, 9, 24, 8), foreignInWindow: 0
+        )
+        let now = TestCalendar.date(2026, 9, 24, 14)
+        let active = EnergyCalculator.activeEnergy(foreignDay: nil, workouts: [workout], now: now)
+        let budget = EnergyCalculator.budget(
+            bmr: 1700, measuredActiveKcal: active, activityProfile: .moderate, goalOffset: -500,
+            sex: .male, dayStart: day, now: now, calendar: calendar
+        )
+        #expect(!budget.activeIsEstimate)
+        #expect(budget.total == 1550)
     }
 
     @Test("Untergrenze greift, wenn der Abschlag zu gross ist")
