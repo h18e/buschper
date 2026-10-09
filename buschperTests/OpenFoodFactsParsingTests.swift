@@ -87,4 +87,39 @@ struct OpenFoodFactsParsingTests {
         let results = OpenFoodFactsClient.searchResults(from: Data(json.utf8))
         #expect(results.map(\.name) == ["Voll"])
     }
+
+    @Test("Alte Suche: Schweizer Produkte zuerst, sonst Reihenfolge behalten")
+    func legacySwissFirst() {
+        let json = #"{"products":[{"code":"1","product_name":"A","countries_tags":["en:france"],"nutriments":{"energy-kcal_100g":50}},{"code":"2","product_name":"B","countries_tags":["en:switzerland"],"nutriments":{"energy-kcal_100g":60}},{"code":"3","product_name":"C","nutriments":{"energy-kcal_100g":70}}]}"#
+        let results = OpenFoodFactsClient.searchResults(from: Data(json.utf8))
+        #expect(results.map(\.name) == ["B", "A", "C"])
+    }
+
+    @Test("Neue Suche: Namen als Text oder pro Sprache, Marken als Liste")
+    func searchALicious() throws {
+        let json = #"""
+        {"hits":[
+          {"code":"7610000000001","product_name":{"main":"Lait entier","de":"Vollmilch"},"brands":["Migros","M-Classic"],
+           "countries":["en:switzerland"],"nutriments":{"energy-kcal_100g":64,"proteins_100g":3.3},"quantity":"1 l"},
+          {"code":"3000000000002","product_name":"Biscuits","brands":"Lu","countries":["en:france"],
+           "nutriments":{"energy-kcal_100g":480},"serving_quantity":"25"},
+          {"code":"3000000000003","product_name":"Ohne Werte","nutriments":{}},
+          {"product_name":"Ohne Barcode","nutriments":{"energy-kcal_100g":10}},
+          {"code":"3000000000004","product_name":12,"brands":{"x":1},"nutriments":{"energy-kcal_100g":"55"}}
+        ],"count":5}
+        """#
+        let results = try #require(OpenFoodFactsClient.searchALiciousResults(from: Data(json.utf8)))
+        #expect(results.map(\.code) == ["7610000000001", "3000000000002"])
+        #expect(results[0].name == "Vollmilch")
+        #expect(results[0].brand == "Migros")
+        #expect(results[0].isSwiss)
+        #expect(results[0].isLiquid)
+        #expect(results[1].servingGrams == 25)
+    }
+
+    @Test("Unlesbare Antwort der neuen Suche: zurück zur alten")
+    func searchALiciousUnreadable() {
+        #expect(OpenFoodFactsClient.searchALiciousResults(from: Data(#"{"errors":["boom"]}"#.utf8)) == nil)
+        #expect(OpenFoodFactsClient.searchALiciousResults(from: Data("<html>".utf8)) == nil)
+    }
 }

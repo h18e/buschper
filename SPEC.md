@@ -248,6 +248,12 @@ oder aus den Fotos wählen. Apple Vision liest den Text auf dem Gerät; buschper
 pro Zeile die erste Zahl (Spalte pro 100 g/ml), erkennt Deutsch, Französisch,
 Italienisch und Englisch und füllt nur erkannte Felder. Das Foto wird nicht gespeichert.
 
+**Textsuche Open Food Facts** (Testrunde 5): sucht über alle Produkte, nicht nur
+die als „in der Schweiz verkauft“ markierten, Schweizer Produkte zuerst. Zuerst die
+neue Suche (search.openfoodfacts.org), bei Fehler die alte auf der Weltseite.
+Jedes per Barcode gefundene Produkt wird lokal gemerkt und ist danach über die
+Suche auffindbar, auch ohne Netz.
+
 ### 5.5 Eigene Produkte, Favoriten, Korrekturen (Q29)
 
 - Eigene Produkte: Name, Marke (optional), Barcode (optional), fest oder flüssig,
@@ -614,6 +620,12 @@ Warteschlange und passt die Anzeige sofort an; die App übernimmt es beim nächs
 gleichzeitig in Core Data und iCloud.
 
 ---
+
+**Aktualität** (Testrunde 5): Am Morgen startet das Widget mit dem Startbudget
+(Grundumsatz + Abschlag, mindestens Untergrenze), nicht mit dem Budget vom Vorabend
+samt dessen Aktivkalorien; die Makroziele schrumpfen im selben Verhältnis. Ausserdem
+weckt Apple Health die App bei neuen Aktivkalorien im Hintergrund (etwa stündlich,
+von iOS gesteuert, nur entsperrt) und das Widget wird nachgerechnet.
 
 ## 15. Erinnerungen (Q23)
 

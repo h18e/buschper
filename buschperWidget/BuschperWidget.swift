@@ -38,10 +38,16 @@ struct SnapshotProvider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<SnapshotEntry>) -> Void) {
         let now = Date()
-        let entry = SnapshotEntry(date: now, snapshot: WidgetBridge.loadSnapshot(now: now))
-        // Um Mitternacht neu, damit der neue Tag bei 0 beginnt.
-        let midnight = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: now)) ?? now
-        completion(Timeline(entries: [entry], policy: .after(midnight)))
+        let calendar = Calendar.current
+        let midnight = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now)) ?? now
+        // Zwei Einträge: jetzt, und ab Mitternacht schon der neue Tag mit dem
+        // Startbudget (ohne Aktivkalorien von gestern). Sobald Health neue
+        // Aktivkalorien meldet, rechnet die App im Hintergrund nach und lädt neu.
+        let entries = [
+            SnapshotEntry(date: now, snapshot: WidgetBridge.loadSnapshot(now: now)),
+            SnapshotEntry(date: midnight, snapshot: WidgetBridge.loadSnapshot(now: midnight)),
+        ]
+        completion(Timeline(entries: entries, policy: .after(midnight.addingTimeInterval(60))))
     }
 }
 

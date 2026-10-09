@@ -19,11 +19,21 @@ struct WidgetSnapshot: Codable, Equatable {
     var fluidGoalMl: Double
     var quickWaterMl: Double
     var updatedAt: Date
+    /// Budget eines Tages ohne Aktivkalorien: Grundumsatz + Abschlag, mindestens
+    /// die Untergrenze. Damit startet der neue Tag, bevor die App wieder rechnet.
+    /// Fehlt in Zusammenfassungen älterer Versionen.
+    var baseBudget: Double? = nil
+    /// Flüssigkeitsziel ohne Training, aus demselben Grund.
+    var baseFluidGoalMl: Double? = nil
 
     var kcalLeft: Double { kcalBudget - kcalEaten }
     var fluidFraction: Double { fluidGoalMl > 0 ? fluidMl / fluidGoalMl : 0 }
 
-    /// Leerer Zustand für einen neuen Tag, bevor die App wieder offen war.
+    /// Leerer Zustand für einen neuen Tag, bevor die App wieder rechnen konnte.
+    ///
+    /// Das Budget vom Vorabend enthielt die Aktivkalorien von gestern – am Morgen
+    /// zählt wieder nur Grundumsatz + Abschlag. Die Makroziele schrumpfen im selben
+    /// Verhältnis.
     func resetForNewDay(_ day: Date) -> WidgetSnapshot {
         var copy = self
         copy.day = day
@@ -32,6 +42,17 @@ struct WidgetSnapshot: Codable, Equatable {
         copy.protein = 0
         copy.fat = 0
         copy.fluidMl = 0
+        if let baseBudget, baseBudget > 0 {
+            let factor = kcalBudget > 0 ? baseBudget / kcalBudget : 1
+            copy.kcalBudget = baseBudget
+            copy.carbsTarget = carbsTarget * factor
+            copy.proteinTarget = proteinTarget * factor
+            copy.fatTarget = fatTarget * factor
+        }
+        if let baseFluidGoalMl, baseFluidGoalMl > 0 {
+            copy.fluidGoalMl = baseFluidGoalMl
+        }
+        copy.updatedAt = day
         return copy
     }
 

@@ -148,7 +148,8 @@ extension DataStore {
         ).first
     }
 
-    /// Ein fremder Treffer wird gemerkt, sobald er geloggt oder zum Favoriten wird.
+    /// Ein fremder Treffer wird gemerkt, sobald er gescannt, geloggt oder zum
+    /// Favoriten wird.
     @discardableResult
     func rememberExternal(_ candidate: FoodCandidate) -> ExternalFoodRef? {
         let key: (ExternalFoodSource, String)

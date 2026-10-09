@@ -14,6 +14,22 @@ struct WidgetBridgeTests {
         #expect(today.fluidGoalMl == yesterday.fluidGoalMl)
     }
 
+    @Test("Am Morgen gilt das Startbudget, nicht das Budget vom Vorabend")
+    func newDayUsesBaseBudget() {
+        var evening = WidgetSnapshot.placeholder
+        evening.kcalBudget = 2800          // inkl. 900 kcal Aktivität von gestern
+        evening.carbsTarget = 280
+        evening.fluidGoalMl = 3100         // inkl. Training
+        evening.baseBudget = 1400          // Grundumsatz 1900 − 500 Abschlag
+        evening.baseFluidGoalMl = 2600
+        let morning = evening.resetForNewDay(Date().addingTimeInterval(86_400))
+        #expect(morning.kcalBudget == 1400)
+        #expect(morning.kcalLeft == 1400)
+        #expect(morning.carbsTarget == 140)
+        #expect(morning.fluidGoalMl == 2600)
+        #expect(morning.fluidMl == 0)
+    }
+
     @Test("Übrige kcal und Anteil Flüssigkeit")
     func derived() {
         let snapshot = WidgetSnapshot.placeholder

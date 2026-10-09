@@ -95,7 +95,12 @@ final class FoodSearchService {
         switch await OpenFoodFactsClient.lookup(barcode: code) {
         case .found(let product):
             let isFavorite = store.externalRef(source: .off, externalId: product.code)?.isFavorite ?? false
-            return .openFoodFacts(product.candidate(isFavorite: isFavorite))
+            let candidate = product.candidate(isFavorite: isFavorite)
+            // Gescannt heisst gemerkt: Das Produkt ist danach auch über die Suche
+            // zu finden – ohne Netz und auch, wenn Open Food Facts es dort nicht zeigt.
+            store.rememberExternal(candidate)
+            store.save()
+            return .openFoodFacts(candidate)
         case .incomplete(let product):
             return .incomplete(product.draft)
         case .notFound:

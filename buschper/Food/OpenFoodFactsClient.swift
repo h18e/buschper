@@ -17,6 +17,8 @@ enum OpenFoodFactsClient {
         var per100: Nutrients
         /// Portion laut Packung, z. B. 30 g.
         var servingGrams: Double? = nil
+        /// In Open Food Facts als „in der Schweiz verkauft“ markiert.
+        var isSwiss = false
 
         /// Genug, um direkt zu erfassen: Name und Energie.
         var isComplete: Bool {
@@ -34,11 +36,11 @@ enum OpenFoodFactsClient {
     }
 
     private static let logger = Logger(subsystem: "ch.hebera.buschper", category: "OpenFoodFacts")
-    private static let timeout: TimeInterval = 8
+    private static let barcodeTimeout: TimeInterval = 8
     private static let fields = [
         "code", "product_name", "product_name_de", "product_name_fr", "product_name_it", "product_name_en",
         "generic_name", "generic_name_de", "brands", "quantity",
-        "nutriments", "nutrition_data_per", "serving_size", "serving_quantity"
+        "nutriments", "nutrition_data_per", "serving_size", "serving_quantity", "countries_tags"
     ].joined(separator: ",")
 
     // MARK: - Barcode
@@ -72,26 +74,26 @@ enum OpenFoodFactsClient {
 
     // MARK: - Suche
 
-    /// Sucht auf der Schweizer Seite von Open Food Facts, damit Produkte aus
-    /// Schweizer Läden zuerst kommen.
+    /// Textsuche über **alle** Produkte von Open Food Facts, Schweizer zuerst.
+    ///
+    /// Früher wurde nur die Schweizer Seite durchsucht. Die zeigt aber nur Produkte,
+    /// die jemand als „in der Schweiz verkauft“ markiert hat – viele, die der
+    /// Barcode-Scan findet, fehlten deshalb in der Suche.
+    ///
+    /// Zuerst die neue Suche (search.openfoodfacts.org, schneller und besser
+    /// gewichtet), bei Fehler die alte Suche auf der Weltseite.
     static func search(_ query: String, session: URLSession = .shared) async -> [Product]? {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed.count >= 2 else { return [] }
-        var components = URLComponents()
-        components.scheme = "https"
-        components.host = "ch.openfoodfacts.org"
-        components.path = "/cgi/search.pl"
-        components.queryItems = [
-            URLQueryItem(name: "search_terms", value: trimmed),
-            URLQueryItem(name: "search_simple", value: "1"),
-            URLQueryItem(name: "action", value: "process"),
-            URLQueryItem(name: "json", value: "1"),
-            URLQueryItem(name: "page_size", value: "25"),
-            URLQueryItem(name: "fields", value: fields)
-        ]
-        guard let url = components.url else { return [] }
 
-        switch await fetch(url, session: session) {
+        if let url = searchALiciousURL(for: trimmed),
+           case .success(let data) = await fetch(url, session: session, timeout: searchTimeout),
+           let results = searchALiciousResults(from: data) {
+            if !results.isEmpty { return results }
+        }
+
+        guard let url = legacySearchURL(for: trimmed) else { return [] }
+        switch await fetch(url, session: session, timeout: searchTimeout) {
         case .failure(let failure):
             return failure == .notFound ? [] : nil
         case .success(let data):
@@ -99,12 +101,59 @@ enum OpenFoodFactsClient {
         }
     }
 
-    /// In der Suche nur, was sich direkt erfassen lässt.
+    /// Die Suche braucht oft länger als ein Barcode.
+    private static let searchTimeout: TimeInterval = 15
+
+    static func searchALiciousURL(for query: String) -> URL? {
+        var components = URLComponents()
+        components.scheme = "https"
+        components.host = "search.openfoodfacts.org"
+        components.path = "/search"
+        components.queryItems = [
+            URLQueryItem(name: "q", value: query),
+            URLQueryItem(name: "langs", value: "de,fr,it,en"),
+            URLQueryItem(name: "page_size", value: "40"),
+            URLQueryItem(name: "fields", value: [
+                "code", "product_name", "generic_name", "brands", "quantity", "nutriments",
+                "nutrition_data_per", "serving_quantity", "countries"
+            ].joined(separator: ","))
+        ]
+        return components.url
+    }
+
+    static func legacySearchURL(for query: String) -> URL? {
+        var components = URLComponents()
+        components.scheme = "https"
+        components.host = "world.openfoodfacts.org"
+        components.path = "/cgi/search.pl"
+        components.queryItems = [
+            URLQueryItem(name: "search_terms", value: query),
+            URLQueryItem(name: "search_simple", value: "1"),
+            URLQueryItem(name: "action", value: "process"),
+            URLQueryItem(name: "json", value: "1"),
+            URLQueryItem(name: "page_size", value: "40"),
+            URLQueryItem(name: "fields", value: fields)
+        ]
+        return components.url
+    }
+
+    /// Alte Suche: nur, was sich direkt erfassen lässt, Schweizer Produkte zuerst.
     static func searchResults(from data: Data) -> [Product] {
         guard let payload = try? JSONDecoder().decode(SearchPayload.self, from: data) else { return [] }
-        return (payload.products ?? [])
-            .compactMap { $0.product(fallbackCode: nil) }
-            .filter(\.isComplete)
+        return swissFirst((payload.products ?? []).compactMap { $0.product(fallbackCode: nil) }.filter(\.isComplete))
+    }
+
+    /// Neue Suche. `nil`, wenn die Antwort nicht lesbar ist (dann übernimmt die alte).
+    static func searchALiciousResults(from data: Data) -> [Product]? {
+        guard let payload = try? JSONDecoder().decode(SearchALiciousPayload.self, from: data),
+              let hits = payload.hits
+        else { return nil }
+        return swissFirst(hits.compactMap { $0.product }.filter(\.isComplete))
+    }
+
+    /// Schweizer Produkte nach vorne, sonst die Reihenfolge der Suche behalten.
+    static func swissFirst(_ products: [Product]) -> [Product] {
+        products.filter(\.isSwiss) + products.filter { !$0.isSwiss }
     }
 
     // MARK: - Netz
@@ -114,7 +163,7 @@ enum OpenFoodFactsClient {
         case unavailable
     }
 
-    private static func fetch(_ url: URL, session: URLSession) async -> Result<Data, Failure> {
+    private static func fetch(_ url: URL, session: URLSession, timeout: TimeInterval = barcodeTimeout) async -> Result<Data, Failure> {
         var request = URLRequest(url: url)
         request.timeoutInterval = timeout
         request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
@@ -210,6 +259,7 @@ enum OpenFoodFactsClient {
         let servingSize: String?
         let servingQuantity: FlexibleNumber?
         let nutriments: [String: FlexibleNumber]?
+        let countriesTags: [String]?
 
         enum CodingKeys: String, CodingKey {
             case code
@@ -226,6 +276,7 @@ enum OpenFoodFactsClient {
             case servingSize = "serving_size"
             case servingQuantity = "serving_quantity"
             case nutriments
+            case countriesTags = "countries_tags"
         }
 
         /// `nil` nur, wenn weder Name, Marke noch ein einziger Nährwert da ist.
@@ -265,13 +316,109 @@ enum OpenFoodFactsClient {
                 quantityText: quantity,
                 isLiquid: liquid,
                 per100: per100,
-                servingGrams: servingGrams
+                servingGrams: servingGrams,
+                isSwiss: OpenFoodFactsClient.isSwiss(countriesTags ?? [])
             )
+        }
+    }
+
+    static func isSwiss(_ countries: [String]) -> Bool {
+        countries.contains { tag in
+            let lower = tag.lowercased()
+            return lower.contains("switzerland") || lower.contains("schweiz") || lower.contains("suisse")
+        }
+    }
+
+    // MARK: Neue Suche (search-a-licious)
+
+    private struct SearchALiciousPayload: Decodable {
+        let hits: [SearchHit]?
+    }
+
+    /// Ein Treffer der neuen Suche. Sehr nachsichtig: Namen kommen je nach
+    /// Index als Text oder pro Sprache, Marken als Text oder Liste. Ein
+    /// unlesbares Feld lässt nur dieses Feld weg, nie den ganzen Treffer.
+    private struct SearchHit: Decodable {
+        let product: Product?
+
+        private enum Keys: String, CodingKey {
+            case code
+            case productName = "product_name"
+            case genericName = "generic_name"
+            case brands
+            case quantity
+            case nutriments
+            case nutritionDataPer = "nutrition_data_per"
+            case servingQuantity = "serving_quantity"
+            case countries
+        }
+
+        init(from decoder: Decoder) throws {
+            guard let container = try? decoder.container(keyedBy: Keys.self),
+                  let code = try? container.decode(String.self, forKey: .code)
+            else {
+                product = nil
+                return
+            }
+            let names = (try? container.decode(LangText.self, forKey: .productName))?.best
+            let generic = (try? container.decode(LangText.self, forKey: .genericName))?.best
+            let brands = (try? container.decode(TextList.self, forKey: .brands))?.values ?? []
+            let quantity = (try? container.decode(LangText.self, forKey: .quantity))?.best
+            let nutriments = (try? container.decode([String: FlexibleNumber].self, forKey: .nutriments)) ?? [:]
+            let per = (try? container.decode(String.self, forKey: .nutritionDataPer)) ?? ""
+            let serving = (try? container.decode(FlexibleNumber.self, forKey: .servingQuantity))?.value
+            let countries = (try? container.decode(TextList.self, forKey: .countries))?.values ?? []
+
+            let raw = RawProduct(
+                code: code, productName: names, productNameDe: nil, productNameFr: nil,
+                productNameIt: nil, productNameEn: nil, genericName: generic, genericNameDe: nil,
+                brands: brands.joined(separator: ","), quantity: quantity, nutritionDataPer: per,
+                servingSize: nil, servingQuantity: serving.map { FlexibleNumber(value: $0) },
+                nutriments: nutriments, countriesTags: countries
+            )
+            product = raw.product(fallbackCode: code)
+        }
+    }
+
+    /// Text oder Text pro Sprache – Deutsch bevorzugt.
+    private struct LangText: Decodable {
+        let best: String?
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            if let text = try? container.decode(String.self) {
+                best = text
+            } else if let byLang = try? container.decode([String: String].self) {
+                best = ["de", "main", "fr", "it", "en"].compactMap { byLang[$0] }.first { !$0.isEmpty }
+                    ?? byLang.values.first { !$0.isEmpty }
+            } else {
+                best = nil
+            }
+        }
+    }
+
+    /// Text mit Kommas oder Liste.
+    private struct TextList: Decodable {
+        let values: [String]
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            if let list = try? container.decode([String].self) {
+                values = list
+            } else if let text = try? container.decode(String.self) {
+                values = text.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+            } else {
+                values = []
+            }
         }
     }
 
     struct FlexibleNumber: Decodable {
         let value: Double?
+
+        init(value: Double?) {
+            self.value = value
+        }
 
         init(from decoder: Decoder) throws {
             let container = try decoder.singleValueContainer()

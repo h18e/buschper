@@ -54,6 +54,8 @@ final class DemoHealthSource: HealthDataProviding {
     func saveWeight(localId: UUID, date: Date, kg: Double) async throws {}
     func saveWorkout(localId: UUID, start: Date, end: Date, sport: SportType, kcal: Double) async throws {}
     func deleteOwnSamples(localId: UUID) async {}
+
+    func observeActivity(_ onUpdate: @escaping (_ done: @escaping () -> Void) -> Void) {}
 }
 
 extension AppEnvironment {

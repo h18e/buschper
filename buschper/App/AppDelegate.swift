@@ -13,6 +13,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     ) -> Bool {
         application.registerForRemoteNotifications()
         UNUserNotificationCenter.current().delegate = NotificationPresenter.shared
+        AppEnvironment.live.startBackgroundUpdates()
         return true
     }
 

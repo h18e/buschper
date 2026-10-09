@@ -33,6 +33,14 @@ final class WidgetUpdater {
         let meals = store.meals(on: today)
         let drinks = store.drinks(on: today)
         let eaten = NutrientSum(meals.flatMap(\.entryList).map(\.total) + drinks.map(\.total)).values
+        let profile = store.profile()
+        let baseBudget = max(
+            targets.budget.bmr + targets.budget.goalOffset,
+            EnergyCalculator.minimumBudget(for: profile.sex)
+        )
+        let baseFluid = FluidCalculator.goalMl(
+            weightKg: targets.weightKg, trainingMinutes: 0, overrideMl: profile.waterGoalOverride
+        )
         let snapshot = WidgetSnapshot(
             day: Calendar.current.startOfDay(for: today),
             kcalEaten: eaten.kcal ?? 0,
@@ -46,7 +54,9 @@ final class WidgetUpdater {
             fluidMl: drinks.reduce(0) { $0 + $1.fluidMl },
             fluidGoalMl: targets.fluidGoalMl,
             quickWaterMl: preferences.quickWaterMl,
-            updatedAt: Date()
+            updatedAt: Date(),
+            baseBudget: baseBudget,
+            baseFluidGoalMl: baseFluid
         )
         WidgetBridge.save(snapshot)
         WidgetCenter.shared.reloadTimelines(ofKind: WidgetBridge.widgetKind)

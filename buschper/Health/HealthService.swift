@@ -74,6 +74,10 @@ protocol HealthDataProviding: AnyObject {
     func saveWeight(localId: UUID, date: Date, kg: Double) async throws
     func saveWorkout(localId: UUID, start: Date, end: Date, sport: SportType, kcal: Double) async throws
     func deleteOwnSamples(localId: UUID) async
+
+    /// Meldet neue Aktivkalorien, auch wenn die App geschlossen ist (höchstens
+    /// etwa stündlich, von iOS gesteuert). `done` muss nach der Arbeit gerufen werden.
+    func observeActivity(_ onUpdate: @escaping (_ done: @escaping () -> Void) -> Void)
 }
 
 // MARK: - Umsetzung mit HealthKit
@@ -381,6 +385,29 @@ final class HealthKitService: HealthDataProviding {
     // MARK: Hilfen
 
     /// Alles, was **nicht** von buschper stammt.
+    // MARK: Hintergrund
+
+    private var activityObserver: HKObserverQuery?
+
+    func observeActivity(_ onUpdate: @escaping (_ done: @escaping () -> Void) -> Void) {
+        guard isAvailable, activityObserver == nil else { return }
+        let query = HKObserverQuery(sampleType: HealthTypes.activeEnergy, predicate: nil) { _, completion, error in
+            if let error {
+                Self.logger.info("Beobachtung Aktivkalorien: \(error.localizedDescription)")
+                completion()
+                return
+            }
+            onUpdate(completion)
+        }
+        activityObserver = query
+        store.execute(query)
+        store.enableBackgroundDelivery(for: HealthTypes.activeEnergy, frequency: .hourly) { _, error in
+            if let error {
+                Self.logger.error("Hintergrund-Zustellung nicht aktiv: \(error.localizedDescription)")
+            }
+        }
+    }
+
     private var notOwnSource: NSPredicate {
         NSCompoundPredicate(notPredicateWithSubpredicate: HKQuery.predicateForObjects(from: HKSource.default()))
     }
