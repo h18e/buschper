@@ -248,6 +248,13 @@ oder aus den Fotos wählen. Apple Vision liest den Text auf dem Gerät; buschper
 pro Zeile die erste Zahl (Spalte pro 100 g/ml), erkennt Deutsch, Französisch,
 Italienisch und Englisch und füllt nur erkannte Felder. Das Foto wird nicht gespeichert.
 
+**Sortierung der Treffer** (Testrunde 6): Stufen statt Länge – ganzer Name gleich
+der Suche, dann Suchwort als erstes ganzes Wort („Kartoffeln, roh“), dann als anderes
+ganzes Wort, dann als Anfang eines zusammengesetzten Worts („Kartoffelpüree“), zuletzt
+mitten im Wort („Süsskartoffel“). Mehrzahl und Beugung zählen als ganzes Wort.
+Zuoberst „Beschti Träffer“: bis drei Treffer mit ganzem Wort aus allen lokalen Quellen.
+Open-Food-Facts-Treffer werden nach derselben Regel sortiert.
+
 **Textsuche Open Food Facts** (Testrunde 5): sucht über alle Produkte, nicht nur
 die als „in der Schweiz verkauft“ markierten, Schweizer Produkte zuerst. Zuerst die
 neue Suche (search.openfoodfacts.org), bei Fehler die alte auf der Weltseite.

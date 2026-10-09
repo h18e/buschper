@@ -19,11 +19,50 @@ struct FoodSearchTests {
         #expect(FoodSearchRanking.score(name: "Pouletbrust, roh", query: "poulet gebr") == nil)
     }
 
-    @Test("Anfang vor Wortanfang vor irgendwo, kürzer vor länger")
+    @Test("Ganzes Wort vor zusammengesetztem Wort vor irgendwo")
     func ordering() {
         let names = ["Apfelstrudel", "Apfel", "Bratapfel", "Saft, Apfel"]
         let ranked = FoodSearchRanking.rank(names, query: "apfel", name: { $0 }, limit: 10)
-        #expect(ranked == ["Apfel", "Apfelstrudel", "Saft, Apfel", "Bratapfel"])
+        #expect(ranked == ["Apfel", "Saft, Apfel", "Apfelstrudel", "Bratapfel"])
+    }
+
+    @Test("Kartoffel: die Kartoffel selbst vor Püree, Klössen und Chips")
+    func potatoFirst() {
+        let names = [
+            "Kartoffelpüree", "Kartoffelklösse", "Kartoffel, geschält, gekocht",
+            "Kartoffeln, roh", "Süsskartoffel", "Kartoffelchips", "Rösti aus Kartoffeln",
+        ]
+        let ranked = FoodSearchRanking.rank(names, query: "kartoffel", name: { $0 }, limit: 10)
+        #expect(Array(ranked.prefix(3)) == ["Kartoffeln, roh", "Kartoffel, geschält, gekocht", "Rösti aus Kartoffeln"])
+        #expect(ranked.last == "Süsskartoffel")
+    }
+
+    @Test("Mehrzahl und Beugung zählen als ganzes Wort, Zusammensetzungen nicht")
+    func inflection() {
+        #expect(FoodSearchRanking.isWord("kartoffeln", matching: "kartoffel"))
+        #expect(FoodSearchRanking.isWord("eier", matching: "ei"))
+        #expect(!FoodSearchRanking.isWord("eiernudeln", matching: "ei"))
+        #expect(!FoodSearchRanking.isWord("kartoffelpuree", matching: "kartoffel"))
+    }
+
+    @Test("Fremd sortierte Treffer: passende nach Regel, Rest in alter Reihenfolge hinten")
+    func sortForeign() {
+        let names = ["Kartoffelchips Paprika", "Chips", "Kartoffeln festkochend", "Pommes"]
+        let sorted = FoodSearchRanking.sort(names, query: "kartoffel", name: { $0 })
+        #expect(sorted == ["Kartoffeln festkochend", "Kartoffelchips Paprika", "Chips", "Pommes"])
+    }
+
+    @Test("Beschti Träffer: über alle Quellen, nur ganze Wörter, ohne Doppel")
+    func bestHits() {
+        func item(_ id: String, _ name: String, brand: String? = nil) -> FoodCandidate {
+            FoodCandidate(source: .catalog(id), name: name, brand: brand, barcode: nil, isLiquid: false,
+                          per100: Nutrients(kcal: 80), portions: [], isFavorite: false, sourceLabel: "")
+        }
+        let own = [item("1", "Kartoffelstock", brand: "Mama")]
+        let remembered = [item("2", "Kartoffeln festkochend", brand: "Migros")]
+        let catalog = [item("3", "Kartoffelpüree"), item("4", "Kartoffeln, roh"), item("2", "Kartoffeln festkochend")]
+        let best = FoodSearchService.bestHits([own, [], remembered, catalog], query: "kartoffel")
+        #expect(best.map(\.id) == ["catalog-4", "catalog-2"])
     }
 }
 

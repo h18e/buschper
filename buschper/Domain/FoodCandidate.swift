@@ -168,26 +168,68 @@ enum FoodSearchRanking {
             .lowercased()
     }
 
+    /// Ab dieser Punktzahl ist das Suchwort ein ganzes Wort im Namen – ein
+    /// Kandidat für „Beschti Träffer“.
+    static let wholeWordScore = 1500
+
     /// Punktzahl eines Namens für eine Suche, `nil` wenn er nicht passt.
-    /// Alle Suchwörter müssen vorkommen. Besser ist: Name beginnt mit der Suche,
-    /// dann ein Wort beginnt damit, dann irgendwo enthalten; kürzere Namen zuerst.
+    ///
+    /// Alle Suchwörter müssen vorkommen. Dann zählt, **wie** das erste Suchwort
+    /// vorkommt (Stufen, von gut nach schlecht):
+    ///
+    /// 1. ganzer Name gleich der Suche („Kartoffel“)
+    /// 2. erstes Wort des Namens („Kartoffeln, roh“, „Kartoffel, gekocht“)
+    /// 3. ein anderes ganzes Wort („Rösti aus Kartoffeln“)
+    /// 4. Anfang eines zusammengesetzten ersten Worts („Kartoffelpüree“)
+    /// 5. Anfang eines anderen Worts
+    /// 6. irgendwo mitten im Wort („Süsskartoffel“)
+    ///
+    /// Innerhalb einer Stufe: weitere Suchwörter als ganzes Wort zählen mehr,
+    /// weniger Wörter und kürzere Namen zuerst. Früher entschied vor allem die
+    /// Länge, darum kam „Kartoffelstock“ vor „Kartoffel, geschält, gekocht“.
     static func score(name: String, query: String) -> Int? {
-        let haystack = normalize(name)
+        let haystack = normalize(name).trimmingCharacters(in: .whitespaces)
         let needle = normalize(query).trimmingCharacters(in: .whitespaces)
         guard !needle.isEmpty else { return nil }
         let words = needle.split(separator: " ").map(String.init)
         guard words.allSatisfy({ haystack.contains($0) }) else { return nil }
 
-        var score = 1000
-        if haystack.hasPrefix(needle) {
-            score += 500
-        } else if haystack.split(whereSeparator: { !$0.isLetter && !$0.isNumber })
-                    .contains(where: { $0.hasPrefix(words[0]) }) {
-            score += 250
+        let tokens = haystack.split(whereSeparator: { !$0.isLetter && !$0.isNumber }).map(String.init)
+        let first = words[0]
+        var score: Int
+        if haystack == needle {
+            score = 3000
+        } else if let leading = tokens.first, isWord(leading, matching: first) {
+            score = 2000
+        } else if tokens.contains(where: { isWord($0, matching: first) }) {
+            score = wholeWordScore
+        } else if tokens.first?.hasPrefix(first) == true {
+            score = 1000
+        } else if tokens.contains(where: { $0.hasPrefix(first) }) {
+            score = 800
+        } else {
+            score = 500
         }
-        if haystack == needle { score += 300 }
-        score -= min(200, haystack.count)
+        score += words.dropFirst().filter { word in tokens.contains { isWord($0, matching: word) } }.count * 100
+        score -= min(300, max(0, tokens.count - 1) * 25 + haystack.count)
         return score
+    }
+
+    /// Ein Wort des Namens ist das Suchwort – auch in Mehrzahl oder gebeugt
+    /// („kartoffeln“, „eier“, „aepfel“ → durch die Normalisierung „apfel“).
+    static func isWord(_ token: String, matching word: String) -> Bool {
+        guard token.hasPrefix(word) else { return false }
+        let rest = token.dropFirst(word.count)
+        return ["", "n", "e", "s", "en", "er", "es", "ern", "nen"].contains(String(rest))
+    }
+
+    /// Fremd sortierte Treffer (z. B. von Open Food Facts) nach derselben Regel
+    /// ordnen. Was nicht passt, bleibt in der bisherigen Reihenfolge hinten.
+    static func sort<T>(_ items: [T], query: String, name: (T) -> String) -> [T] {
+        items.enumerated()
+            .map { (index: $0.offset, item: $0.element, score: score(name: name($0.element), query: query) ?? Int.min) }
+            .sorted { $0.score != $1.score ? $0.score > $1.score : $0.index < $1.index }
+            .map(\.item)
     }
 
     static func rank<T>(_ items: [T], query: String, name: (T) -> String, limit: Int) -> [T] {

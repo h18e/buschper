@@ -52,6 +52,7 @@ struct IngredientPickerView: View {
                         Section("Zletscht bruucht") { rows(recents) }
                     }
                 } else if let local {
+                    if !local.best.isEmpty { Section("Beschti Träffer") { rows(local.best) } }
                     if !local.own.isEmpty { Section("Eigeti Produkt") { rows(local.own) } }
                     if !local.remembered.isEmpty { Section("Gmerkt") { rows(local.remembered) } }
                     if !local.catalog.isEmpty {
@@ -135,7 +136,9 @@ struct IngredientPickerView: View {
         let text = query.trimmingCharacters(in: .whitespaces)
         guard !text.isEmpty else { local = nil; remote = nil; return }
         var results = search.localResults(for: text)
+        // Rezepte sind keine Zutaten (nicht verschachtelt).
         results.recipes = []
+        results.best = results.best.filter { !$0.isRecipe }
         local = results
         guard text.count >= 3 else { remote = []; return }
         try? await Task.sleep(nanoseconds: 500_000_000)

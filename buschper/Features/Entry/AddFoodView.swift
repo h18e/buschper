@@ -268,6 +268,9 @@ struct AddFoodView: View {
             Section("Mahlzyte") { templateRows(templateHits) }
         }
         if let local {
+            if !local.best.isEmpty {
+                Section("Beschti Träffer") { candidateRows(local.best) }
+            }
             if !local.own.isEmpty {
                 Section("Eigeti Produkt") { candidateRows(local.own) }
             }

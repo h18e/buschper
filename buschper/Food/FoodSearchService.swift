@@ -17,12 +17,16 @@ final class FoodSearchService {
     }
 
     struct LocalResults {
+        /// Bis drei Treffer quer über alle Quellen, in denen das Suchwort als
+        /// ganzes Wort vorkommt – z. B. „Kartoffeln, roh“ bei „kartoffel“. Sie
+        /// stehen nicht nochmals in den Abschnitten darunter.
+        var best: [FoodCandidate] = []
         var own: [FoodCandidate]
         var recipes: [FoodCandidate]
         var remembered: [FoodCandidate]
         var catalog: [FoodCandidate]
 
-        var isEmpty: Bool { own.isEmpty && recipes.isEmpty && remembered.isEmpty && catalog.isEmpty }
+        var isEmpty: Bool { best.isEmpty && own.isEmpty && recipes.isEmpty && remembered.isEmpty && catalog.isEmpty }
     }
 
     func localResults(for query: String) -> LocalResults {
@@ -55,7 +59,36 @@ final class FoodSearchService {
             .map { catalog.candidate($0, isFavorite: favoriteCatalogIds.contains($0.id)) }
             .filter { !rememberedIds.contains($0.id) }
 
-        return LocalResults(own: own, recipes: recipes, remembered: remembered, catalog: catalogHits)
+        let best = Self.bestHits([own, recipes, remembered, catalogHits], query: query)
+        let bestIds = Set(best.map(\.id))
+        return LocalResults(
+            best: best,
+            own: own.filter { !bestIds.contains($0.id) },
+            recipes: recipes.filter { !bestIds.contains($0.id) },
+            remembered: remembered.filter { !bestIds.contains($0.id) },
+            catalog: catalogHits.filter { !bestIds.contains($0.id) }
+        )
+    }
+
+    /// Die besten Treffer aus allen Abschnitten. Bei gleicher Punktzahl gewinnt
+    /// die Reihenfolge der Quellen (eigene Produkte zuerst).
+    nonisolated static func bestHits(_ sections: [[FoodCandidate]], query: String, limit: Int = 3) -> [FoodCandidate] {
+        var seen = Set<String>()
+        let scored = sections.flatMap { $0 }.enumerated().compactMap { index, candidate -> (Int, Int, FoodCandidate)? in
+            guard seen.insert(candidate.id).inserted,
+                  let score = FoodSearchRanking.score(name: searchName(candidate), query: query),
+                  score >= FoodSearchRanking.wholeWordScore
+            else { return nil }
+            return (score, index, candidate)
+        }
+        return scored
+            .sorted { $0.0 != $1.0 ? $0.0 > $1.0 : $0.1 < $1.1 }
+            .prefix(limit)
+            .map(\.2)
+    }
+
+    nonisolated static func searchName(_ candidate: FoodCandidate) -> String {
+        "\(candidate.name) \(candidate.brand ?? "")"
     }
 
     /// `nil` heisst: Open Food Facts nicht erreichbar. Leer heisst: nichts gefunden
@@ -67,7 +100,13 @@ final class FoodSearchService {
             store.fetch(ExternalFoodRef.self, predicate: NSPredicate(format: "isFavorite == YES AND sourceRaw == %@", ExternalFoodSource.off.rawValue))
                 .compactMap(\.externalId)
         )
-        return products.map { $0.candidate(isFavorite: favorites.contains($0.code)) }
+        // Gleiche Regel wie lokal: „Kartoffeln“ vor „Kartoffelpüree“. Bei gleicher
+        // Punktzahl bleibt die Reihenfolge von Open Food Facts (Schweizer zuerst).
+        return FoodSearchRanking.sort(
+            products.map { $0.candidate(isFavorite: favorites.contains($0.code)) },
+            query: query,
+            name: Self.searchName
+        )
     }
 
     enum BarcodeResult: Equatable {
