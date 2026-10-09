@@ -57,7 +57,9 @@ final class FoodSearchService {
             store.fetch(ExternalFoodRef.self, predicate: NSPredicate(format: "isFavorite == YES AND sourceRaw == %@", ExternalFoodSource.blv.rawValue))
                 .compactMap(\.externalId)
         )
-        let catalogHits = catalog.search(query)
+        // Die mitgelieferten Richtwerte erscheinen nicht mehr in der Suche (Testrunde 8),
+        // nur die importierte Schweizer Nährwertdatenbank des BLV.
+        let catalogHits = (catalog.isBLV ? catalog.search(query) : [])
             .map { catalog.candidate($0, isFavorite: favoriteCatalogIds.contains($0.id)) }
             .filter { !rememberedIds.contains($0.id) }
 

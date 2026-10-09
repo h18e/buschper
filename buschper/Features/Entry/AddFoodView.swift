@@ -299,7 +299,7 @@ struct AddFoodView: View {
                 Section {
                     candidateRows(local.catalog)
                 } header: {
-                    Text(FoodCatalog.shared.isBLV ? "Schwiizer Nährwärtdatebank" : "Grundnahrigsmittel (Richtwärt)")
+                    Text("Schwiizer Nährwärtdatebank")
                 }
             }
         }

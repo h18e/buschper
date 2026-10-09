@@ -56,7 +56,7 @@ struct IngredientPickerView: View {
                     if !local.own.isEmpty { Section("Eigeti Produkt") { rows(local.own) } }
                     if !local.remembered.isEmpty { Section("Gmerkt") { rows(local.remembered) } }
                     if !local.catalog.isEmpty {
-                        Section(FoodCatalog.shared.isBLV ? "Schwiizer Nährwärtdatebank" : "Grundnahrigsmittel (Richtwärt)") {
+                        Section("Schwiizer Nährwärtdatebank") {
                             rows(local.catalog)
                         }
                     }

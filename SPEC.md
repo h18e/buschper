@@ -248,6 +248,10 @@ oder aus den Fotos wählen. Apple Vision liest den Text auf dem Gerät; buschper
 pro Zeile die erste Zahl (Spalte pro 100 g/ml), erkennt Deutsch, Französisch,
 Italienisch und Englisch und füllt nur erkannte Felder. Das Foto wird nicht gespeichert.
 
+**Richtwerte** (Testrunde 8): Die mitgelieferte Liste „Grundnahrigsmittel
+(Richtwärt)“ erscheint nicht mehr in der Suche. Gesucht wird in der Schweizer
+Nährwertdatenbank nur, wenn sie importiert ist (`./tools/buschper.sh blv`).
+
 **Sortierung der Treffer** (Testrunde 6/7): je näher der Name an der Suche, desto
 weiter oben. Stufen: Name gleich der Suche („Kartoffel“), gleich bis auf Mehrzahl
 („Kartoffeln“), Suchwort als erstes Wort plus weitere Wörter („Kartoffel, gekocht“ –
