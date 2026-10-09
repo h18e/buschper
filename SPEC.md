@@ -248,6 +248,12 @@ oder aus den Fotos wählen. Apple Vision liest den Text auf dem Gerät; buschper
 pro Zeile die erste Zahl (Spalte pro 100 g/ml), erkennt Deutsch, Französisch,
 Italienisch und Englisch und füllt nur erkannte Felder. Das Foto wird nicht gespeichert.
 
+**Wortanfänge** (Testrunde 9): Findet Open Food Facts zum getippten Wort nichts
+(„karto“), sucht buschper nach Wortanfängen („karto*“). Die alte, langsame Suche
+läuft nur noch, wenn die neue gar nicht antwortet – vorher führte „nichts gefunden“
+oft zur falschen Meldung „nicht erreichbar“. Lokal findet die Suche Teilwörter schon
+immer.
+
 **Richtwerte** (Testrunde 8): Die mitgelieferte Liste „Grundnahrigsmittel
 (Richtwärt)“ erscheint nicht mehr in der Suche. Gesucht wird in der Schweizer
 Nährwertdatenbank nur, wenn sie importiert ist (`./tools/buschper.sh blv`).
