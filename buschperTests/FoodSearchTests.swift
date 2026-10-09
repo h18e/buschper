@@ -43,8 +43,8 @@ struct FoodSearchTests {
             ("Kartoffel, gekocht", nil), ("Kartoffel, geschält, gekocht", nil),
             ("Kartoffeln", nil), ("Kartoffel", "Migros"),
         ]
-        let ranked = FoodSearchRanking.rank(items, query: "kartoffel", name: \.name, brand: \.brand, limit: 10)
-        #expect(ranked.map(\.name) == ["Kartoffel", "Kartoffeln", "Kartoffel, gekocht", "Kartoffel, geschält, gekocht"])
+        let ranked = FoodSearchRanking.rank(items, query: "kartoffel", name: { $0.name }, brand: { $0.brand }, limit: 10)
+        #expect(ranked.map { $0.name } == ["Kartoffel", "Kartoffeln", "Kartoffel, gekocht", "Kartoffel, geschält, gekocht"])
     }
 
     @Test("Die Marke hilft, wenn ein Suchwort nur dort steht")
