@@ -68,7 +68,7 @@ struct IngredientPickerView: View {
                         } else if remote == nil {
                             Label("Nid erreichbar", systemImage: "wifi.slash").foregroundStyle(Theme.textSecondary)
                         } else {
-                            Text("Nüt gfunde.").foregroundStyle(Theme.textTertiary)
+                            Text("Nüt gfunde. Open Food Facts sucht nume ganzi Wörter – tipp s Wort fertig.").foregroundStyle(Theme.textTertiary)
                         }
                     }
                 }

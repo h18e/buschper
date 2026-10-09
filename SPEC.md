@@ -248,6 +248,12 @@ oder aus den Fotos wählen. Apple Vision liest den Text auf dem Gerät; buschper
 pro Zeile die erste Zahl (Spalte pro 100 g/ml), erkennt Deutsch, Französisch,
 Italienisch und Englisch und füllt nur erkannte Felder. Das Foto wird nicht gespeichert.
 
+**Tippfehler** (Testrunde 10): Die lokale Suche toleriert Tippfehler – ab 4 Buchstaben
+einen, ab 7 Buchstaben zwei („kartofel“, „kartofe“, „tomatte“). Solche Treffer stehen
+nach allen echten Treffern; ein ganzes Wort mit Tippfehler vor einem ähnlichen
+Wortanfang. Findet Open Food Facts nichts, erklärt ein Hinweis, dass dort nur ganze
+Wörter gesucht werden.
+
 **Halbe Wörter** (Testrunde 9): Open Food Facts sucht nur ganze Wörter (mit etwas
 Tippfehler-Toleranz); „karto“ findet dort nichts. Teilwörter findet die lokale Suche
 in der importierten BLV-Datenbank, den eigenen und gemerkten Produkten. Die alte,

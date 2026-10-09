@@ -317,7 +317,9 @@ struct AddFoodView: View {
                 if !remainingRemote.isEmpty {
                     candidateRows(remainingRemote)
                 } else if remoteState == .done && (remote ?? []).isEmpty {
-                    Text(app.preferences.usesOpenFoodFacts ? "Nüt gfunde." : "Open Food Facts isch abgschaltet.")
+                    Text(app.preferences.usesOpenFoodFacts
+                         ? "Nüt gfunde. Open Food Facts sucht nume ganzi Wörter – tipp s Wort fertig (z. B. „Kartoffel“ statt „Karto“)."
+                         : "Open Food Facts isch abgschaltet.")
                         .foregroundStyle(Theme.textTertiary)
                 }
             }

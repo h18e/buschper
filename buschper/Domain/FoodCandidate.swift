@@ -205,9 +205,22 @@ enum FoodSearchRanking {
         let needle = normalize(query).trimmingCharacters(in: .whitespaces)
         guard !needle.isEmpty else { return nil }
         let words = needle.split(separator: " ").map(String.init)
-        guard words.allSatisfy({ haystack.contains($0) }) else { return nil }
-
         let tokens = haystack.split(whereSeparator: { !$0.isLetter && !$0.isNumber }).map(String.init)
+
+        guard words.allSatisfy({ haystack.contains($0) }) else {
+            // Tippfehler: Jedes Wort steht drin oder ist einem Wort des Namens sehr
+            // ähnlich („kartofel“ → „Kartoffel“). Solche Treffer kommen nach allen
+            // echten Treffern.
+            var wholeWords = true
+            for word in words where !haystack.contains(word) {
+                guard let match = typoMatch(word, of: tokens) else { return nil }
+                if match == .start { wholeWords = false }
+            }
+            // Ganzes Wort mit Tippfehler („Kartoffel, roh“) vor ähnlichem Wortanfang
+            // („Kartoffelpüree“).
+            return (wholeWords ? 450 : 300) - min(300, max(0, tokens.count - words.count) * 60 + haystack.count)
+        }
+
         let first = words[0]
         let sameWords = tokens.count == words.count
             && zip(tokens, words).allSatisfy { isWord($0, matching: $1) }
@@ -231,6 +244,66 @@ enum FoodSearchRanking {
         let extraWords = max(0, tokens.count - words.count)
         score -= min(400, extraWords * 60 + haystack.count)
         return score
+    }
+
+    /// Wie viele Tippfehler ein Wort haben darf: kurze keine, ab 4 Buchstaben
+    /// einen, ab 7 Buchstaben zwei.
+    static func allowedTypos(for word: String) -> Int {
+        switch word.count {
+        case ..<4: return 0
+        case 4..<7: return 1
+        default: return 2
+        }
+    }
+
+    enum TypoMatch {
+        /// Einem ganzen Wort des Namens ähnlich („kartofel“ – „Kartoffel“).
+        case word
+        /// Nur dem Anfang eines Worts ähnlich („kartofel“ – „Kartoffelpüree“).
+        case start
+    }
+
+    /// Das Suchwort ist einem Wort des Namens oder dessen Anfang sehr ähnlich –
+    /// so findet auch ein halb und falsch getipptes Wort („kartofe“) etwas.
+    static func typoMatch(_ word: String, of tokens: [String]) -> TypoMatch? {
+        let allowed = allowedTypos(for: word)
+        guard allowed > 0 else { return nil }
+        let target = Array(word)
+        var best: TypoMatch?
+        for token in tokens {
+            let letters = Array(token)
+            guard letters.count >= target.count - allowed else { continue }
+            if editDistance(target, letters, limit: allowed) <= allowed { return .word }
+            // Anfang des Worts in ähnlicher Länge vergleichen.
+            let starts = (-1...1).map { target.count + $0 }.filter { $0 > 0 && $0 < letters.count }
+            if starts.contains(where: { editDistance(target, Array(letters.prefix($0)), limit: allowed) <= allowed }) {
+                best = .start
+            }
+        }
+        return best
+    }
+
+    /// Levenshtein-Abstand; bricht ab, sobald `limit` sicher überschritten ist.
+    static func editDistance(_ a: [Character], _ b: [Character], limit: Int) -> Int {
+        if abs(a.count - b.count) > limit { return limit + 1 }
+        if a.isEmpty { return b.count }
+        if b.isEmpty { return a.count }
+        var previous = Array(0...b.count)
+        for (i, charA) in a.enumerated() {
+            var current = [i + 1] + Array(repeating: 0, count: b.count)
+            var rowMinimum = current[0]
+            for (j, charB) in b.enumerated() {
+                current[j + 1] = Swift.min(
+                    previous[j + 1] + 1,
+                    current[j] + 1,
+                    previous[j] + (charA == charB ? 0 : 1)
+                )
+                rowMinimum = Swift.min(rowMinimum, current[j + 1])
+            }
+            if rowMinimum > limit { return limit + 1 }
+            previous = current
+        }
+        return previous[b.count]
     }
 
     /// Ein Wort des Namens ist das Suchwort – auch in Mehrzahl oder gebeugt

@@ -56,6 +56,29 @@ struct FoodSearchTests {
         #expect(viaBrand < plain)
     }
 
+    @Test("Tippfehler finden trotzdem, aber nach allen echten Treffern")
+    func typos() {
+        #expect(FoodSearchRanking.score(name: "Kartoffel, roh", query: "kartofel") != nil)
+        #expect(FoodSearchRanking.score(name: "Kartoffeln, gekocht", query: "kartofe") != nil)
+        #expect(FoodSearchRanking.score(name: "Tomate", query: "tomatte") != nil)
+        #expect(FoodSearchRanking.score(name: "Kartoffel", query: "karotte") == nil)
+        #expect(FoodSearchRanking.score(name: "Brei", query: "brot") == nil)
+        #expect(FoodSearchRanking.score(name: "Eier", query: "eo") == nil)
+
+        let ranked = FoodSearchRanking.rank(
+            ["Kartoffelpüree", "Kartoffel, roh", "Kartoffelchips"], query: "kartofel", name: { $0 }, limit: 10
+        )
+        #expect(ranked.first == "Kartoffel, roh")
+        let mixed = FoodSearchRanking.rank(["Kartoffel", "Süsskartoffel"], query: "kartoffl", name: { $0 }, limit: 10)
+        #expect(mixed == ["Kartoffel"])
+    }
+
+    @Test("Abstand zwischen Wörtern")
+    func editDistance() {
+        #expect(FoodSearchRanking.editDistance(Array("kartofel"), Array("kartoffel"), limit: 2) == 1)
+        #expect(FoodSearchRanking.editDistance(Array("karotte"), Array("kartoff"), limit: 2) == 3)
+    }
+
     @Test("Mehrzahl und Beugung zählen als ganzes Wort, Zusammensetzungen nicht")
     func inflection() {
         #expect(FoodSearchRanking.isWord("kartoffeln", matching: "kartoffel"))
