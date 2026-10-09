@@ -117,14 +117,6 @@ struct OpenFoodFactsParsingTests {
         #expect(results[1].servingGrams == 25)
     }
 
-    @Test("Halbes Wort wird als Wortanfang gesucht")
-    func prefixQuery() {
-        #expect(OpenFoodFactsClient.prefixQuery(for: "karto") == "karto*")
-        #expect(OpenFoodFactsClient.prefixQuery(for: "kartoffel mig") == "kartoffel mig*")
-        #expect(OpenFoodFactsClient.prefixQuery(for: "ka") == nil)
-        #expect(OpenFoodFactsClient.prefixQuery(for: "karto*") == nil)
-    }
-
     @Test("Unlesbare Antwort der neuen Suche: zurück zur alten")
     func searchALiciousUnreadable() {
         #expect(OpenFoodFactsClient.searchALiciousResults(from: Data(#"{"errors":["boom"]}"#.utf8)) == nil)

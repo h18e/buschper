@@ -81,22 +81,17 @@ enum OpenFoodFactsClient {
     /// Barcode-Scan findet, fehlten deshalb in der Suche.
     ///
     /// Zuerst die neue Suche (search.openfoodfacts.org, schneller und besser
-    /// gewichtet). Findet sie zum Wort nichts, sucht sie nach Wortanfängen
-    /// („karto“ → „Kartoffel“). Nur wenn sie gar nicht antwortet, kommt die alte,
-    /// langsame Suche auf der Weltseite – früher lief die auch bei „nichts
-    /// gefunden“ und endete oft in „nicht erreichbar“.
+    /// gewichtet). Sie vergleicht ganze Wörter mit etwas Tippfehler-Toleranz –
+    /// halbe Wörter wie „karto“ findet sie nicht, dafür ist die lokale Suche da
+    /// (BLV-Datenbank, eigene und gemerkte Produkte). Nur wenn die neue Suche gar
+    /// nicht antwortet, kommt die alte, langsame auf der Weltseite – früher lief
+    /// die auch bei „nichts gefunden“ und endete oft in „nicht erreichbar“.
     static func search(_ query: String, session: URLSession = .shared) async -> [Product]? {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed.count >= 2 else { return [] }
 
         if let results = await searchALicious(trimmed, session: session) {
-            if !results.isEmpty { return results }
-            // Erreichbar, aber nichts zum ganzen Wort: als Wortanfang suchen.
-            if let prefix = prefixQuery(for: trimmed),
-               let more = await searchALicious(prefix, session: session) {
-                return more
-            }
-            return []
+            return results
         }
 
         guard let url = legacySearchURL(for: trimmed) else { return [] }
@@ -119,14 +114,6 @@ enum OpenFoodFactsClient {
         return searchALiciousResults(from: data)
     }
 
-    /// Letztes Wort als Wortanfang („kartoffel mig“ → „kartoffel mig*“), sobald es
-    /// mindestens drei Buchstaben hat. `nil`, wenn das nichts ändert.
-    static func prefixQuery(for query: String) -> String? {
-        var words = query.split(separator: " ").map(String.init)
-        guard let last = words.last, last.count >= 3, last.allSatisfy({ $0.isLetter || $0.isNumber }) else { return nil }
-        words[words.count - 1] = last + "*"
-        return words.joined(separator: " ")
-    }
 
     static func searchALiciousURL(for query: String) -> URL? {
         var components = URLComponents()
