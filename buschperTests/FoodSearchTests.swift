@@ -37,6 +37,25 @@ struct FoodSearchTests {
         #expect(ranked.last == "Süsskartoffel")
     }
 
+    @Test("Je näher an der Suche, desto weiter oben – die Marke zählt nicht zum Namen")
+    func closestFirst() {
+        let items: [(name: String, brand: String?)] = [
+            ("Kartoffel, gekocht", nil), ("Kartoffel, geschält, gekocht", nil),
+            ("Kartoffeln", nil), ("Kartoffel", "Migros"),
+        ]
+        let ranked = FoodSearchRanking.rank(items, query: "kartoffel", name: \.name, brand: \.brand, limit: 10)
+        #expect(ranked.map(\.name) == ["Kartoffel", "Kartoffeln", "Kartoffel, gekocht", "Kartoffel, geschält, gekocht"])
+    }
+
+    @Test("Die Marke hilft, wenn ein Suchwort nur dort steht")
+    func brandFallback() {
+        #expect(FoodSearchRanking.score(name: "Vollmilch", brand: "Migros", query: "milch migros") != nil)
+        #expect(FoodSearchRanking.score(name: "Milch", brand: "Coop", query: "milch migros") == nil)
+        let plain = FoodSearchRanking.score(name: "Milch", query: "milch") ?? 0
+        let viaBrand = FoodSearchRanking.score(name: "Milch", brand: "Migros", query: "milch migros") ?? 0
+        #expect(viaBrand < plain)
+    }
+
     @Test("Mehrzahl und Beugung zählen als ganzes Wort, Zusammensetzungen nicht")
     func inflection() {
         #expect(FoodSearchRanking.isWord("kartoffeln", matching: "kartoffel"))

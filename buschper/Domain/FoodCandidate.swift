@@ -172,22 +172,35 @@ enum FoodSearchRanking {
     /// Kandidat für „Beschti Träffer“.
     static let wholeWordScore = 1500
 
-    /// Punktzahl eines Namens für eine Suche, `nil` wenn er nicht passt.
+    /// Punktzahl eines Treffers, `nil` wenn er nicht passt. Je näher der Name an
+    /// der Suche, desto höher.
     ///
-    /// Alle Suchwörter müssen vorkommen. Dann zählt, **wie** das erste Suchwort
-    /// vorkommt (Stufen, von gut nach schlecht):
+    /// Bewertet wird der **Name ohne Marke** – „Kartoffel“ von Migros ist für die
+    /// Suche „kartoffel“ ein genauer Treffer. Die Marke hilft nur, wenn ein
+    /// Suchwort im Namen fehlt („kartoffel migros“); dann gibt es etwas Abzug.
+    static func score(name: String, brand: String? = nil, query: String) -> Int? {
+        if let score = nameScore(name, query: query) { return score }
+        guard let brand, !brand.trimmingCharacters(in: .whitespaces).isEmpty,
+              let withBrand = nameScore("\(name) \(brand)", query: query)
+        else { return nil }
+        return withBrand - 200
+    }
+
+    /// Alle Suchwörter müssen vorkommen. Dann zählt, **wie nahe** der Name an
+    /// der Suche ist (Stufen, von gut nach schlecht):
     ///
-    /// 1. ganzer Name gleich der Suche („Kartoffel“)
-    /// 2. erstes Wort des Namens („Kartoffeln, roh“, „Kartoffel, gekocht“)
-    /// 3. ein anderes ganzes Wort („Rösti aus Kartoffeln“)
-    /// 4. Anfang eines zusammengesetzten ersten Worts („Kartoffelpüree“)
-    /// 5. Anfang eines anderen Worts
-    /// 6. irgendwo mitten im Wort („Süsskartoffel“)
+    /// 1. Name gleich der Suche („Kartoffel“)
+    /// 2. gleich bis auf Mehrzahl oder Beugung („Kartoffeln“)
+    /// 3. erstes Wort ist das Suchwort, dazu weitere Wörter („Kartoffel, gekocht“)
+    /// 4. ein anderes ganzes Wort („Rösti aus Kartoffeln“)
+    /// 5. Anfang eines zusammengesetzten ersten Worts („Kartoffelpüree“)
+    /// 6. Anfang eines anderen Worts
+    /// 7. irgendwo mitten im Wort („Süsskartoffel“)
     ///
-    /// Innerhalb einer Stufe: weitere Suchwörter als ganzes Wort zählen mehr,
-    /// weniger Wörter und kürzere Namen zuerst. Früher entschied vor allem die
-    /// Länge, darum kam „Kartoffelstock“ vor „Kartoffel, geschält, gekocht“.
-    static func score(name: String, query: String) -> Int? {
+    /// Innerhalb einer Stufe: weitere Suchwörter als ganzes Wort zählen mehr, und
+    /// je weniger zusätzliche Wörter, desto besser – „Kartoffel, gekocht“ vor
+    /// „Kartoffel, geschält, gekocht“.
+    private static func nameScore(_ name: String, query: String) -> Int? {
         let haystack = normalize(name).trimmingCharacters(in: .whitespaces)
         let needle = normalize(query).trimmingCharacters(in: .whitespaces)
         guard !needle.isEmpty else { return nil }
@@ -196,9 +209,13 @@ enum FoodSearchRanking {
 
         let tokens = haystack.split(whereSeparator: { !$0.isLetter && !$0.isNumber }).map(String.init)
         let first = words[0]
+        let sameWords = tokens.count == words.count
+            && zip(tokens, words).allSatisfy { isWord($0, matching: $1) }
         var score: Int
-        if haystack == needle {
+        if haystack == needle || tokens == words {
             score = 3000
+        } else if sameWords {
+            score = 2900
         } else if let leading = tokens.first, isWord(leading, matching: first) {
             score = 2000
         } else if tokens.contains(where: { isWord($0, matching: first) }) {
@@ -211,7 +228,8 @@ enum FoodSearchRanking {
             score = 500
         }
         score += words.dropFirst().filter { word in tokens.contains { isWord($0, matching: word) } }.count * 100
-        score -= min(300, max(0, tokens.count - 1) * 25 + haystack.count)
+        let extraWords = max(0, tokens.count - words.count)
+        score -= min(400, extraWords * 60 + haystack.count)
         return score
     }
 
@@ -225,16 +243,19 @@ enum FoodSearchRanking {
 
     /// Fremd sortierte Treffer (z. B. von Open Food Facts) nach derselben Regel
     /// ordnen. Was nicht passt, bleibt in der bisherigen Reihenfolge hinten.
-    static func sort<T>(_ items: [T], query: String, name: (T) -> String) -> [T] {
+    static func sort<T>(_ items: [T], query: String, name: (T) -> String, brand: (T) -> String? = { _ in nil }) -> [T] {
         items.enumerated()
-            .map { (index: $0.offset, item: $0.element, score: score(name: name($0.element), query: query) ?? Int.min) }
-            .sorted { $0.score != $1.score ? $0.score > $1.score : $0.index < $1.index }
+            .map { entry in
+                (index: entry.offset, item: entry.element,
+                 points: score(name: name(entry.element), brand: brand(entry.element), query: query) ?? Int.min)
+            }
+            .sorted { $0.points != $1.points ? $0.points > $1.points : $0.index < $1.index }
             .map(\.item)
     }
 
-    static func rank<T>(_ items: [T], query: String, name: (T) -> String, limit: Int) -> [T] {
+    static func rank<T>(_ items: [T], query: String, name: (T) -> String, brand: (T) -> String? = { _ in nil }, limit: Int) -> [T] {
         items
-            .compactMap { item in score(name: name(item), query: query).map { (item, $0) } }
+            .compactMap { item in score(name: name(item), brand: brand(item), query: query).map { (item, $0) } }
             .sorted { $0.1 > $1.1 }
             .prefix(limit)
             .map(\.0)

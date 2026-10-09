@@ -261,6 +261,21 @@ struct AddFoodView: View {
         }
     }
 
+    /// Lokale beste Treffer plus die zwei besten von Open Food Facts, sobald sie
+    /// da sind – zusammen nach Nähe zur Suche sortiert. So steht „Kartoffel“
+    /// von Open Food Facts vor „Kartoffel, gekocht“ aus der Datenbank.
+    private var bestHits: [FoodCandidate] {
+        let localBest = local?.best ?? []
+        let remoteBest = FoodSearchService.bestHits([remote ?? []], query: query, limit: 2)
+        return FoodSearchService.bestHits([localBest, remoteBest], query: query, limit: localBest.count + remoteBest.count)
+    }
+
+    /// Open-Food-Facts-Treffer ohne die, die schon oben stehen.
+    private var remainingRemote: [FoodCandidate] {
+        let shown = Set(bestHits.map(\.id))
+        return (remote ?? []).filter { !shown.contains($0.id) }
+    }
+
     @ViewBuilder
     private var resultSections: some View {
         let templateHits = FoodSearchRanking.rank(mealTemplates, query: query, name: \.displayName, limit: 10)
@@ -268,8 +283,8 @@ struct AddFoodView: View {
             Section("Mahlzyte") { templateRows(templateHits) }
         }
         if let local {
-            if !local.best.isEmpty {
-                Section("Beschti Träffer") { candidateRows(local.best) }
+            if !bestHits.isEmpty {
+                Section("Beschti Träffer") { candidateRows(bestHits) }
             }
             if !local.own.isEmpty {
                 Section("Eigeti Produkt") { candidateRows(local.own) }
@@ -299,9 +314,9 @@ struct AddFoodView: View {
                 Label("Open Food Facts isch grad nid erreichbar.", systemImage: "wifi.slash")
                     .foregroundStyle(Theme.textSecondary)
             case .done, .idle:
-                if let remote, !remote.isEmpty {
-                    candidateRows(remote)
-                } else if remoteState == .done {
+                if !remainingRemote.isEmpty {
+                    candidateRows(remainingRemote)
+                } else if remoteState == .done && (remote ?? []).isEmpty {
                     Text(app.preferences.usesOpenFoodFacts ? "Nüt gfunde." : "Open Food Facts isch abgschaltet.")
                         .foregroundStyle(Theme.textTertiary)
                 }

@@ -33,7 +33,8 @@ final class FoodSearchService {
         let own = FoodSearchRanking.rank(
             store.allProducts().compactMap { store.candidate(for: $0) },
             query: query,
-            name: { "\($0.name) \($0.brand ?? "")" },
+            name: \.name,
+            brand: \.brand,
             limit: 20
         )
         let recipes = FoodSearchRanking.rank(
@@ -47,7 +48,8 @@ final class FoodSearchService {
         let remembered = FoodSearchRanking.rank(
             store.fetch(ExternalFoodRef.self).compactMap { store.candidate(for: $0) },
             query: query,
-            name: { "\($0.name) \($0.brand ?? "")" },
+            name: \.name,
+            brand: \.brand,
             limit: 10
         )
         let rememberedIds = Set(remembered.map(\.id))
@@ -76,7 +78,7 @@ final class FoodSearchService {
         var seen = Set<String>()
         let scored = sections.flatMap { $0 }.enumerated().compactMap { index, candidate -> (Int, Int, FoodCandidate)? in
             guard seen.insert(candidate.id).inserted,
-                  let score = FoodSearchRanking.score(name: searchName(candidate), query: query),
+                  let score = FoodSearchRanking.score(name: candidate.name, brand: candidate.brand, query: query),
                   score >= FoodSearchRanking.wholeWordScore
             else { return nil }
             return (score, index, candidate)
@@ -87,9 +89,7 @@ final class FoodSearchService {
             .map(\.2)
     }
 
-    nonisolated static func searchName(_ candidate: FoodCandidate) -> String {
-        "\(candidate.name) \(candidate.brand ?? "")"
-    }
+
 
     /// `nil` heisst: Open Food Facts nicht erreichbar. Leer heisst: nichts gefunden
     /// oder abgeschaltet.
@@ -105,7 +105,8 @@ final class FoodSearchService {
         return FoodSearchRanking.sort(
             products.map { $0.candidate(isFavorite: favorites.contains($0.code)) },
             query: query,
-            name: Self.searchName
+            name: \.name,
+            brand: \.brand
         )
     }
 

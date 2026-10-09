@@ -14,7 +14,7 @@ struct ProductListView: View {
     private var filtered: [FoodProduct] {
         let text = query.trimmingCharacters(in: .whitespaces)
         guard !text.isEmpty else { return Array(products) }
-        return FoodSearchRanking.rank(Array(products), query: text, name: { "\($0.displayName) \($0.brand ?? "")" }, limit: 200)
+        return FoodSearchRanking.rank(Array(products), query: text, name: \.displayName, brand: \.brand, limit: 200)
     }
 
     var body: some View {
