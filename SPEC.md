@@ -508,23 +508,33 @@ Trainings erscheinen **chronologisch zwischen den Mahlzeiten**
 Die Nacht, die am Morgen von Tag *D* endet, gehört zu *D*. Ihr **Vortag** ist
 *D − 1* von 00:00 bis zum Einschlafen.
 
-### 11.2 Schlafscore 0–100 (Q19, Richtwerte aus Testrunde 11)
+### 11.2 Schlafscore 0–100 (Fassung Testrunde 14)
 
-Phasen als Anteil der **ganzen Nacht** (Einschlafen bis Aufwachen, Wachphasen
-eingeschlossen) – dieselben Prozente wie im Phasenbalken.
+Gewichtet nur, was wissenschaftlich gut belegt ist und ein Wearable einigermassen
+zuverlässig misst. **Schlafphasen geben keine Punkte** (nur Information).
 
-| Teil | Punkte | volle Punkte | 0 Punkte |
-|---|---|---|---|
-| Dauer | 50 | Schlafziel erreicht | 3 h unter dem Ziel |
-| Tiefschlaf | 15 | ab 15 % (Ziel 15–25 %) | ≤ 5 % |
-| REM | 11 | ab 20 % (Ziel 20–25 %) | ≤ 8 % |
-| Leichtschlaf (Kern) | 8 | ab 50 % (Ziel 50–60 %) | ≤ 30 % |
-| Wach | 8 | unter 5 % | ≥ 20 % |
-| Regelmässigkeit | 8 | ±15 min vom Median (14 Nächte) | ≥ ±90 min |
+| Block | Punkte | Begründung |
+|---|---|---|
+| Dauer | 35 | AASM/SRS: ≥ 7 h |
+| Kontinuität | 30 | NSF-Kennzahlen |
+| Regelmässigkeit | 25 | Schlafmitte, Sleep Regularity Index |
+| Subjektive Erholung | 10 | RU-SATED, Morgen-Einschätzung |
 
-Dazwischen linear. Über dem Zielbereich gibt es keinen Abzug (Testrunde 12). Fehlt ein Teil (keine Phasen, keine Vorgeschichte), werden die
-übrigen auf 100 hochgerechnet. Die letzten Nächte werden beim Öffnen neu bewertet,
-ältere, sobald ein längerer Zeitraum angezeigt wird.
+- **Dauer:** 7–9.5 h volle 35, 5–7 h linear, unter 5 h 0; ab 9.5 h linear bis −5 bei 11 h.
+- **Kontinuität:** Einschlafdauer 8 (voll ≤ 30 min, 0 ≥ 45 min; braucht „Im Bett“
+  aus Health, aus jeder Quelle, höchstens 3 h vor dem Einschlafen), Wach nach dem
+  Einschlafen 8 (≤ 20 / ≥ 41 min), Aufwachphasen über 5 min 6 (≤ 1 / ≥ 4),
+  Schlafeffizienz 8 (≥ 85 % / ≤ 74 %; Schlaf ÷ Zeit im Bett, ohne „Im Bett“ ab
+  Einschlafen).
+- **Regelmässigkeit:** Abweichung der Schlafmitte vom Schnitt der letzten 7 Nächte,
+  voll ≤ 30 min, 0 ≥ 90 min.
+- **Erholung:** Sterne 1–5 → 0–10 Punkte; ändert den Score nachträglich.
+- Fehlt ein Teil (keine Bettzeit, keine Vorgeschichte, noch keine Sterne), werden die
+  übrigen auf 100 hochgerechnet.
+- **Einstufung** (eigene Grenzen): 85–100 guet, 70–84 solid, 50–69 iigschränkt,
+  unter 50 schlächt.
+- **Hauptanzeige** ist der Schnitt der letzten 7 Nächte (Dashboard, Schlaf-Tab); die
+  einzelne Nacht ist Detail. Das Schlafziel im Profil fliesst nicht mehr in den Score.
 
 ### 11.3 Morgen-Einschätzung (Q19)
 

@@ -12,136 +12,224 @@ struct SleepNight: Equatable {
     var deepMinutes: Double?
     var remMinutes: Double?
     var coreMinutes: Double?
-    /// Wachzeit zwischen Einschlafen und Aufwachen.
+    /// Wachzeit zwischen Einschlafen und Aufwachen (WASO).
     var awakeMinutes: Double
+    /// Zeit „Im Bett“ laut Health (Schlafplan/Schlaf-Fokus). `nil` ohne diese Daten.
+    var bedStart: Date? = nil
+    var bedEnd: Date? = nil
+    /// Wachphasen länger als 5 Minuten zwischen Einschlafen und Aufwachen.
+    var awakenings: Int = 0
 
     var hasStages: Bool { deepMinutes != nil && remMinutes != nil }
-}
 
-/// Punkte je Komponente. Bei fehlenden Phasen sind `deep`, `rem` und `light` `nil`.
-struct SleepScoreComponents: Codable, Equatable {
-    var duration: Double
-    var deep: Double?
-    var rem: Double?
-    /// Leichtschlaf (Apple: „Kern“). Fehlt in Auswertungen vor Testrunde 11.
-    var light: Double? = nil
-    var awake: Double
-    var regularity: Double?
-    /// 0–100.
-    var total: Double
-}
+    /// Einschlafdauer: von „Im Bett“ bis zum Einschlafen. `nil` ohne Bettzeit.
+    var latencyMinutes: Double? {
+        guard let bedStart else { return nil }
+        return max(0, sleepOnset.timeIntervalSince(bedStart) / 60)
+    }
 
-/// Zielbereich in Prozent der Nacht. Volle Punkte ab `low` – auch über `high`
-/// hinaus: Mehr als der Richtwert gibt keinen Abzug (Testrunde 12). Darunter
-/// linear weniger bis 0 bei `zeroBelow`. `high` dient nur der Anzeige.
-struct SleepBand: Equatable {
-    var zeroBelow: Double
-    var low: Double
-    var high: Double
+    /// Zeit im Bett: mit Bettzeit von „Im Bett“ an, sonst vom Einschlafen bis zum
+    /// Aufwachen.
+    var timeInBedMinutes: Double {
+        let start = min(bedStart ?? sleepOnset, sleepOnset)
+        let end = max(bedEnd ?? wake, wake)
+        return max(1, end.timeIntervalSince(start) / 60)
+    }
 
-    func share(_ percent: Double) -> Double {
-        SleepScore.rise(percent, zeroAt: zeroBelow, fullAt: low)
+    /// Schlafeffizienz in Prozent: Schlaf ÷ Zeit im Bett.
+    var efficiencyPercent: Double {
+        min(100, asleepMinutes / timeInBedMinutes * 100)
     }
 }
 
-/// Eigener Schlafscore 0–100 (SPEC 11.2, Richtwerte aus Testrunde 11).
+/// Punkte und Messwerte einer Nacht (SPEC 11.2, Fassung Testrunde 14).
 ///
-/// Die Phasen werden als Anteil der **ganzen Nacht** (Einschlafen bis Aufwachen,
-/// Wachphasen eingeschlossen) gewertet – dieselben Prozente wie im Phasenbalken.
-/// Richtwerte für einen ausgewogenen Schlaf:
+/// Optionale Teile fehlen, wenn die Daten fehlen: Einschlafdauer ohne „Im Bett“,
+/// Regelmässigkeit ohne Vorgeschichte, Erholung ohne Morgen-Einschätzung.
+struct SleepScoreComponents: Codable, Equatable {
+    // Punkte
+    var duration: Double
+    var latency: Double?
+    var waso: Double
+    var awakenings: Double
+    var efficiency: Double
+    var regularity: Double?
+    var recovery: Double?
+    /// 0–100, fehlende Teile hochgerechnet.
+    var total: Double
+
+    // Gemessen – für die Erklärung in der App
+    var asleepMinutes: Double
+    var latencyMinutes: Double?
+    var wasoMinutes: Double
+    var awakeningCount: Int
+    var efficiencyPercent: Double
+    var midpointDeviationMinutes: Double?
+    var rating: Int?
+
+    var continuity: Double { (latency ?? 0) + waso + awakenings + efficiency }
+}
+
+/// Einstufung des Scores (eigene Grenzen, nicht wissenschaftlich normiert).
+enum SleepGrade: String, CaseIterable {
+    case good, solid, limited, poor
+
+    init(score: Double) {
+        switch score {
+        case 85...: self = .good
+        case 70..<85: self = .solid
+        case 50..<70: self = .limited
+        default: self = .poor
+        }
+    }
+
+    var label: String {
+        switch self {
+        case .good: return "guet"
+        case .solid: return "solid"
+        case .limited: return "iigschränkt"
+        case .poor: return "schlächt"
+        }
+    }
+}
+
+/// Eigener Schlafscore 0–100 (SPEC 11.2, Testrunde 14).
 ///
-/// | Phase | Ziel |
+/// Gewichtet nur, was gut belegt ist und ein Wearable einigermassen zuverlässig
+/// misst. Schlafphasen geben **keine** Punkte – nur zur Information.
+///
+/// | Block | Punkte |
 /// |---|---|
-/// | Leichtschlaf | 50–60 % |
-/// | Tiefschlaf | 15–25 % |
-/// | REM | 20–25 % |
-/// | Wach | unter 5 % |
+/// | Dauer (AASM/SRS ≥ 7 h) | 35 |
+/// | Kontinuität (NSF) | 30 |
+/// | Regelmässigkeit (Schlafmitte) | 25 |
+/// | Subjektive Erholung (RU-SATED) | 10 |
 ///
-/// Jede Komponente liefert einen Anteil zwischen 0 und 1, der mit ihrem Gewicht
-/// multipliziert wird. Fehlt eine Komponente (keine Phasen, noch keine Vorgeschichte
-/// für die Regelmässigkeit), werden die übrigen Gewichte auf 100 hochgerechnet.
+/// Wer den NSF-Wert für „gut“ erreicht, erhält die volle Punktzahl, beim Wert für
+/// „schlecht“ 0, dazwischen linear. Fehlt ein Teil, werden die übrigen auf 100
+/// hochgerechnet.
 enum SleepScore {
 
     enum Weight {
-        // Dauer zählt die Hälfte (Testrunde 13), der Rest im bisherigen Verhältnis.
-        static let duration = 50.0
-        static let deep = 15.0
-        static let rem = 11.0
-        static let light = 8.0
-        static let awake = 8.0
-        static let regularity = 8.0
+        static let duration = 35.0
+        static let latency = 8.0
+        static let waso = 8.0
+        static let awakenings = 6.0
+        static let efficiency = 8.0
+        static let regularity = 25.0
+        static let recovery = 10.0
     }
 
     // MARK: - Schwellen
 
-    /// Volle Punkte ab dem Schlafziel; 3 Stunden darunter keine mehr.
-    static let durationZeroMinutesBelowGoal = 180.0
-    static let lightBand = SleepBand(zeroBelow: 30, low: 50, high: 60)
-    static let deepBand = SleepBand(zeroBelow: 5, low: 15, high: 25)
-    static let remBand = SleepBand(zeroBelow: 8, low: 20, high: 25)
-    /// Wach: volle Punkte bis 5 % der Nacht, keine ab 20 %.
-    static let awakeFullPercent = 5.0
-    static let awakeZeroPercent = 20.0
-    /// Abweichung der Einschlafzeit vom Median: voll bis 15 min, keine ab 90 min.
-    static let regularityFullMinutes = 15.0
+    /// Dauer: volle Punkte 7–9.5 h, 0 bis 5 h.
+    static let durationZeroHours = 5.0
+    static let durationFullHours = 7.0
+    /// Sehr langer Schlaf: ab 9.5 h linear bis −5 Punkte bei 11 h.
+    static let longSleepFromHours = 9.5
+    static let longSleepMaxHours = 11.0
+    static let longSleepMaxDeduction = 5.0
+    /// Einschlafdauer: voll bis 30 min, 0 ab 45 min.
+    static let latencyFullMinutes = 30.0
+    static let latencyZeroMinutes = 45.0
+    /// Wach nach dem Einschlafen: voll bis 20 min, 0 ab 41 min.
+    static let wasoFullMinutes = 20.0
+    static let wasoZeroMinutes = 41.0
+    /// Aufwachphasen über 5 Minuten: voll bis 1, 0 ab 4.
+    static let awakeningMinimumMinutes = 5.0
+    static let awakeningsFull = 1.0
+    static let awakeningsZero = 4.0
+    /// Schlafeffizienz: voll ab 85 %, 0 bis 74 %.
+    static let efficiencyFullPercent = 85.0
+    static let efficiencyZeroPercent = 74.0
+    /// Schlafmitte gegenüber dem Schnitt der letzten 7 Nächte: voll bis 30 min, 0 ab 90 min.
+    static let regularityFullMinutes = 30.0
     static let regularityZeroMinutes = 90.0
+    static let regularityNights = 7
 
-    /// Ganze Nacht in Minuten: Schlaf plus Wachphasen dazwischen.
-    static func nightMinutes(_ night: SleepNight) -> Double {
-        night.asleepMinutes + night.awakeMinutes
+    // MARK: - Berechnung
+
+    /// Schlafmitte in Minuten seit Mittag (über Mitternacht stetig).
+    static func midpointSinceNoon(onset: Date, wake: Date, calendar: Calendar = .current) -> Double {
+        let middle = onset.addingTimeInterval(wake.timeIntervalSince(onset) / 2)
+        return DayMath.minutesSinceNoon(middle, calendar: calendar)
     }
 
-    /// - Parameter medianOnsetSinceNoon: Median der Einschlafzeiten der letzten
-    ///   14 Nächte in `DayMath.minutesSinceNoon`. `nil` ohne Vorgeschichte.
+    static func durationPoints(asleepMinutes: Double) -> Double {
+        let hours = asleepMinutes / 60
+        var points = rise(hours, zeroAt: durationZeroHours, fullAt: durationFullHours) * Weight.duration
+        if hours > longSleepFromHours {
+            let share = min(1, (hours - longSleepFromHours) / (longSleepMaxHours - longSleepFromHours))
+            points -= share * longSleepMaxDeduction
+        }
+        return points
+    }
+
+    /// - Parameters:
+    ///   - previousMidpoints: Schlafmitten der vorangehenden Nächte in Minuten seit
+    ///     Mittag (die letzten 7 zählen). Leer ohne Vorgeschichte.
+    ///   - rating: Morgen-Einschätzung 1–5, `nil` solange keine da ist.
     static func score(
         night: SleepNight,
-        sleepGoalMinutes: Double,
-        medianOnsetSinceNoon: Double?,
+        previousMidpoints: [Double],
+        rating: Int?,
         calendar: Calendar = .current
     ) -> SleepScoreComponents {
-        let goal = max(1, sleepGoalMinutes)
-        let durationShare = rise(night.asleepMinutes, zeroAt: max(0, goal - durationZeroMinutesBelowGoal), fullAt: goal)
-        let total = nightMinutes(night)
+        let latencyMinutes = night.latencyMinutes
+        let efficiency = night.efficiencyPercent
 
-        var deepShare: Double?
-        var remShare: Double?
-        var lightShare: Double?
-        if let deep = night.deepMinutes, let rem = night.remMinutes, total > 0 {
-            deepShare = deepBand.share(deep / total * 100)
-            remShare = remBand.share(rem / total * 100)
-            let light = night.coreMinutes ?? max(0, night.asleepMinutes - deep - rem)
-            lightShare = lightBand.share(light / total * 100)
+        var deviation: Double?
+        let recent = previousMidpoints.suffix(regularityNights)
+        if !recent.isEmpty {
+            let mean = recent.reduce(0, +) / Double(recent.count)
+            deviation = abs(midpointSinceNoon(onset: night.sleepOnset, wake: night.wake, calendar: calendar) - mean)
         }
 
-        let awakePercent = total > 0 ? night.awakeMinutes / total * 100 : 0
-        let awakeShare = fall(awakePercent, fullUntil: awakeFullPercent, zeroFrom: awakeZeroPercent)
+        var components = SleepScoreComponents(
+            duration: durationPoints(asleepMinutes: night.asleepMinutes),
+            latency: latencyMinutes.map { fall($0, fullUntil: latencyFullMinutes, zeroFrom: latencyZeroMinutes) * Weight.latency },
+            waso: fall(night.awakeMinutes, fullUntil: wasoFullMinutes, zeroFrom: wasoZeroMinutes) * Weight.waso,
+            awakenings: fall(Double(night.awakenings), fullUntil: awakeningsFull, zeroFrom: awakeningsZero) * Weight.awakenings,
+            efficiency: rise(efficiency, zeroAt: efficiencyZeroPercent, fullAt: efficiencyFullPercent) * Weight.efficiency,
+            regularity: deviation.map { fall($0, fullUntil: regularityFullMinutes, zeroFrom: regularityZeroMinutes) * Weight.regularity },
+            recovery: nil,
+            total: 0,
+            asleepMinutes: night.asleepMinutes,
+            latencyMinutes: latencyMinutes,
+            wasoMinutes: night.awakeMinutes,
+            awakeningCount: night.awakenings,
+            efficiencyPercent: efficiency,
+            midpointDeviationMinutes: deviation,
+            rating: nil
+        )
+        return applying(rating: rating, to: components)
+    }
 
-        var regularityShare: Double?
-        if let median = medianOnsetSinceNoon {
-            let onset = DayMath.minutesSinceNoon(night.sleepOnset, calendar: calendar)
-            regularityShare = fall(abs(onset - median), fullUntil: regularityFullMinutes, zeroFrom: regularityZeroMinutes)
+    /// Morgen-Einschätzung nachtragen oder ändern: Erholung und Total neu.
+    static func applying(rating: Int?, to components: SleepScoreComponents) -> SleepScoreComponents {
+        var result = components
+        if let rating, (1...5).contains(rating) {
+            result.rating = rating
+            result.recovery = Double(rating - 1) / 4 * Weight.recovery
+        } else {
+            result.rating = nil
+            result.recovery = nil
         }
+        result.total = total(of: result)
+        return result
+    }
 
-        var earned = durationShare * Weight.duration + awakeShare * Weight.awake
-        var possible = Weight.duration + Weight.awake
-        for (share, weight) in [(deepShare, Weight.deep), (remShare, Weight.rem),
-                                (lightShare, Weight.light), (regularityShare, Weight.regularity)] {
-            guard let share else { continue }
-            earned += share * weight
+    /// Erreichte Punkte, auf 100 hochgerechnet über die vorhandenen Teile.
+    static func total(of c: SleepScoreComponents) -> Double {
+        var earned = c.duration + c.waso + c.awakenings + c.efficiency
+        var possible = Weight.duration + Weight.waso + Weight.awakenings + Weight.efficiency
+        for (points, weight) in [(c.latency, Weight.latency), (c.regularity, Weight.regularity), (c.recovery, Weight.recovery)] {
+            guard let points else { continue }
+            earned += points
             possible += weight
         }
-
-        let result = possible > 0 ? earned / possible * 100 : 0
-
-        return SleepScoreComponents(
-            duration: durationShare * Weight.duration,
-            deep: deepShare.map { $0 * Weight.deep },
-            rem: remShare.map { $0 * Weight.rem },
-            light: lightShare.map { $0 * Weight.light },
-            awake: awakeShare * Weight.awake,
-            regularity: regularityShare.map { $0 * Weight.regularity },
-            total: (result * 10).rounded() / 10
-        )
+        let value = possible > 0 ? max(0, earned) / possible * 100 : 0
+        return (value * 10).rounded() / 10
     }
 
     /// 0 bis `zeroAt`, linear steigend bis `fullAt`, danach 1.
@@ -156,6 +244,15 @@ enum SleepScore {
         if value <= fullUntil { return 1 }
         if value >= zeroFrom { return 0 }
         return 1 - (value - fullUntil) / (zeroFrom - fullUntil)
+    }
+
+    /// Schnitt der letzten `days` Nächte bis und mit `day` (ohne ausgeschlossene).
+    static func average(of scores: [(day: Date, score: Double)], days: Int = 7, endingAt day: Date, calendar: Calendar = .current) -> Double? {
+        let end = calendar.startOfDay(for: day)
+        guard let start = calendar.date(byAdding: .day, value: -(days - 1), to: end) else { return nil }
+        let values = scores.filter { calendar.startOfDay(for: $0.day) >= start && calendar.startOfDay(for: $0.day) <= end }.map(\.score)
+        guard !values.isEmpty else { return nil }
+        return values.reduce(0, +) / Double(values.count)
     }
 }
 

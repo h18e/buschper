@@ -28,7 +28,32 @@ enum SleepNightBuilder {
         let candidates = bySource.values.compactMap { night(from: $0) }
         let withStages = candidates.filter(\.hasStages)
         let pool = withStages.isEmpty ? candidates : withStages
-        return pool.max { $0.asleepMinutes < $1.asleepMinutes }
+        guard var best = pool.max(by: { $0.asleepMinutes < $1.asleepMinutes }) else { return nil }
+        // „Im Bett“ kommt oft von einer anderen Quelle als der Schlaf (iPhone-
+        // Schlafplan statt Uhr) – darum aus allen Quellen.
+        if let bed = bedInterval(from: samples, onset: best.sleepOnset, wake: best.wake) {
+            best.bedStart = bed.start
+            best.bedEnd = bed.end
+        }
+        return best
+    }
+
+    /// Längste Einschlafdauer, die noch als plausibel gilt. Ein Schlafplan, der
+    /// Stunden vor dem Einschlafen beginnt, misst eher den Abend auf dem Sofa.
+    static let maximumLatency: TimeInterval = 3 * 3600
+
+    /// Zusammengefasste „Im Bett“-Zeit rund um die Nacht.
+    static func bedInterval(from samples: [HealthSleepSample], onset: Date, wake: Date) -> (start: Date, end: Date)? {
+        let inBed = samples.filter {
+            $0.stage == .inBed && $0.end > onset.addingTimeInterval(-maximumLatency) && $0.start < wake
+        }
+        guard let start = inBed.map(\.start).min(), let end = inBed.map(\.end).max() else { return nil }
+        return (max(start, onset.addingTimeInterval(-maximumLatency)), end)
+    }
+
+    /// Wachlücken zwischen den Schlafabschnitten, die länger als `minimum` dauern.
+    static func awakenings(in intervals: [(start: Date, end: Date)], minimum: TimeInterval) -> Int {
+        zip(intervals, intervals.dropFirst()).filter { $1.start.timeIntervalSince($0.end) > minimum }.count
     }
 
     /// Nacht aus den Daten einer einzigen Quelle.
@@ -72,7 +97,8 @@ enum SleepNightBuilder {
             deepMinutes: stageMinutes(.deep),
             remMinutes: stageMinutes(.rem),
             coreMinutes: stageMinutes(.core),
-            awakeMinutes: max(0, span - asleepMinutes)
+            awakeMinutes: max(0, span - asleepMinutes),
+            awakenings: awakenings(in: intervals, minimum: SleepScore.awakeningMinimumMinutes * 60)
         )
     }
 

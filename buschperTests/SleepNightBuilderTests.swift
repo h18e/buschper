@@ -28,7 +28,24 @@ struct SleepNightBuilderTests {
         #expect(night.deepMinutes == 60)
         #expect(night.remMinutes == 100)
         #expect(night.awakeMinutes == 20)
+        #expect(night.awakenings == 1)
         #expect(night.hasStages)
+    }
+
+    @Test("„Im Bett“ vom iPhone ergibt Einschlafdauer und Effizienz")
+    func bedFromOtherSource() throws {
+        let samples = [
+            sample(22, 30, 7, 15, .inBed, source: "iphone").with(startDay: 23),
+            sample(23, 0, 3, 0, .core).with(startDay: 23),
+            sample(3, 3, 3, 30, .awake, nextDayStart: true),
+            sample(3, 30, 7, 0, .core, nextDayStart: true)
+        ]
+        let night = try #require(SleepNightBuilder.build(from: samples))
+        #expect(night.latencyMinutes == 30)
+        #expect(night.awakenings == 1)
+        #expect(night.asleepMinutes == 450)
+        // 450 ÷ (22:30 bis 07:15 = 525 min)
+        #expect(night.efficiencyPercent.isClose(to: 85.71))
     }
 
     @Test("Die Quelle mit Phasen gewinnt gegen eine längere ohne Phasen")

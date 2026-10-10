@@ -359,15 +359,23 @@ struct SleepCard: View {
     let range: ChartRange
     let threshold: Double
 
+    /// Hauptwert: Schnitt der letzten 7 Nächte (ohne ausgeschlossene).
+    private var weekAverage: Double? {
+        let scores = snapshot.sleepHistory
+            .filter { !$0.excluded }
+            .compactMap { night in night.nightDate.map { (day: $0, score: night.score) } }
+        return SleepScore.average(of: scores, days: 7, endingAt: snapshot.day)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             CompactCardHeader(
                 title: "Schlaf",
-                subtitle: snapshot.lastNight?.isBad == true ? "⚠︎ Schlächti Nacht" : range.label,
+                subtitle: snapshot.lastNight?.isBad == true ? "⚠︎ Schlächti Nacht" : "Schnitt 7 Nächt",
                 symbol: "moon.zzz.fill",
                 color: snapshot.lastNight?.isBad == true ? Theme.bad : Theme.sleep,
-                value: snapshot.lastNight.map { "Score \(Int($0.score.rounded()))" },
-                detail: snapshot.lastNight.map { "\(OnboardingView.hoursText(Int($0.asleepMinutes))) gschlafe" }
+                value: weekAverage.map { "Ø \(Int($0.rounded())) · \(SleepGrade(score: $0).label)" },
+                detail: snapshot.lastNight.map { "letschti Nacht \(Int($0.score.rounded())) · \(OnboardingView.hoursText(Int($0.asleepMinutes)))" }
             )
             if snapshot.sleepHistory.isEmpty {
                 Text("No kener Schlafdate. Si chöme us Apple Health, sobald d Uhr i dr Nacht treit wird.")

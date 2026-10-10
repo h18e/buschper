@@ -73,18 +73,21 @@ final class SleepService {
             from: calendar.date(byAdding: .day, value: -30, to: nightDay) ?? nightDay,
             to: calendar.startOfDay(for: nightDay)
         )
-        let recentOnsets = previous.suffix(14).compactMap(\.sleepOnset).map { DayMath.minutesSinceNoon($0, calendar: calendar) }
-        let median = DayMath.median(recentOnsets)
+        let previousMidpoints = previous.compactMap { record -> Double? in
+            guard let onset = record.sleepOnset, let wake = record.wakeTime else { return nil }
+            return SleepScore.midpointSinceNoon(onset: onset, wake: wake, calendar: calendar)
+        }
         let average30 = DayMath.average(previous.map(\.score))
+        let existing = record(for: nightDay)
 
         let components = SleepScore.score(
             night: night,
-            sleepGoalMinutes: profile.sleepGoal,
-            medianOnsetSinceNoon: median,
+            previousMidpoints: previousMidpoints,
+            rating: existing?.ratingValue,
             calendar: calendar
         )
 
-        let nightRecord = record(for: nightDay) ?? {
+        let nightRecord = existing ?? {
             let created = NightRecord(context: store.context)
             created.id = UUID()
             created.nightDate = calendar.startOfDay(for: nightDay)
@@ -108,6 +111,28 @@ final class SleepService {
 
         classify(nightRecord, average30: average30, rules: profile.badNightRules)
         nightRecord.computedAt = Date()
+    }
+
+    /// Morgen-Einschätzung setzen: Sie zählt als „subjektive Erholung“ zum Score.
+    func updateRating(_ record: NightRecord, to value: Int) {
+        record.ratingValue = value
+        if let components = record.components {
+            let updated = SleepScore.applying(rating: value > 0 ? value : nil, to: components)
+            record.components = updated
+            record.score = updated.total
+        }
+        classify(record)
+    }
+
+    /// Schnitt der letzten 7 Nächte bis und mit `day` – die Hauptanzeige, weil
+    /// einzelne Nächte stark schwanken.
+    func weekAverage(endingAt day: Date = Date()) -> Double? {
+        let end = DayMath.nextDay(of: day, calendar: calendar)
+        let start = calendar.date(byAdding: .day, value: -7, to: end) ?? end
+        let scores = store.nights(from: start, to: end)
+            .filter { !$0.excluded }
+            .compactMap { night in night.nightDate.map { (day: $0, score: night.score) } }
+        return SleepScore.average(of: scores, days: 7, endingAt: day, calendar: calendar)
     }
 
     /// Schlecht oder nicht – auch nach einer neuen Morgen-Einschätzung aufrufen.

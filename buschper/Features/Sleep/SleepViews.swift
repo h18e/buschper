@@ -23,6 +23,7 @@ struct SleepView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 14) {
+                    WeekAverageSleepCard(average: app.sleep.weekAverage(), lastNight: lastNight)
                     if let lastNight {
                         LastNightCard(night: lastNight)
                     } else if !isRefreshing {
@@ -152,6 +153,45 @@ struct SleepView: View {
 
 // MARK: - Bausteine
 
+/// Hauptanzeige: Schnitt der letzten 7 Nächte. Einzelne Nächte schwanken stark,
+/// aussagekräftig sind erst Trends.
+struct WeekAverageSleepCard: View {
+    let average: Double?
+    let lastNight: NightRecord?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            CardHeader(title: "Schlafscore", subtitle: "Schnitt 7 Nächt", symbol: "moon.zzz.fill", color: Theme.sleep)
+            if let average {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text("\(Int(average.rounded()))")
+                        .font(.system(size: 44, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                    Text(SleepGrade(score: average).label)
+                        .font(.headline)
+                        .foregroundStyle(Theme.sleep)
+                    Spacer()
+                    if let lastNight {
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Text("\(Int(lastNight.score.rounded()))")
+                                .font(.title3.weight(.semibold))
+                                .monospacedDigit()
+                            Text("letschti Nacht")
+                                .font(.caption)
+                                .foregroundStyle(Theme.textSecondary)
+                        }
+                    }
+                }
+            } else {
+                Text("No kener Nächt i de letschte 7 Täg.")
+                    .font(.subheadline)
+                    .foregroundStyle(Theme.textTertiary)
+            }
+        }
+        .card(tint: Theme.sleep)
+    }
+}
+
 struct LastNightCard: View {
     @Environment(AppEnvironment.self) private var app
     @ObservedObject var night: NightRecord
@@ -160,7 +200,7 @@ struct LastNightCard: View {
         VStack(alignment: .leading, spacing: 12) {
             CardHeader(title: "Letschti Nacht", subtitle: timesText, symbol: "moon.zzz.fill", color: Theme.sleep)
             HStack(alignment: .bottom) {
-                StatValue(value: "\(Int(night.score.rounded()))", caption: "Score")
+                StatValue(value: "\(Int(night.score.rounded()))", caption: "Score · \(SleepGrade(score: night.score).label)")
                 Spacer()
                 StatValue(value: OnboardingView.hoursText(Int(night.asleepMinutes)), caption: "gschlafe", alignment: .trailing)
             }
@@ -171,14 +211,13 @@ struct LastNightCard: View {
                 BadgeView(text: "Schlächti Nacht", color: Theme.bad, systemImage: "exclamationmark.triangle.fill")
             }
             VStack(alignment: .leading, spacing: 6) {
-                Text("Wie guet hesch gschlafe?")
+                Text("Wie erholt fühlsch di?")
                     .font(.subheadline)
                     .foregroundStyle(Theme.textSecondary)
                 StarRating(rating: Binding(
                     get: { night.ratingValue ?? 0 },
                     set: { value in
-                        night.ratingValue = value
-                        app.sleep.classify(night)
+                        app.sleep.updateRating(night, to: value)
                         app.dataDidChange()
                     }
                 ))
@@ -283,7 +322,7 @@ struct StageBar: View {
             }
             .font(.caption2)
             .foregroundStyle(Theme.textSecondary)
-            Text("Prozent vo dr ganze Nacht vom Iischlafe bis zum Ufwache.")
+            Text("Prozent vo dr ganze Nacht vom Iischlafe bis zum Ufwache. Nume zur Info – d Phase zelle nid zum Score.")
                 .font(.caption2)
                 .foregroundStyle(Theme.textTertiary)
         }
