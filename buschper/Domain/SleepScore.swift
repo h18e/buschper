@@ -80,7 +80,7 @@ enum SleepGrade: String, CaseIterable {
     init(score: Double) {
         switch score {
         case 85...: self = .good
-        case solidFrom..<85: self = .solid
+        case Self.solidFrom..<85: self = .solid
         case 50..<70: self = .limited
         default: self = .poor
         }
