@@ -74,10 +74,13 @@ struct SleepScoreComponents: Codable, Equatable {
 enum SleepGrade: String, CaseIterable {
     case good, solid, limited, poor
 
+    /// Ab hier „solid“ – auch die Linie im Schlaf-Diagramm des Dashboards.
+    static let solidFrom = 70.0
+
     init(score: Double) {
         switch score {
         case 85...: self = .good
-        case 70..<85: self = .solid
+        case solidFrom..<85: self = .solid
         case 50..<70: self = .limited
         default: self = .poor
         }

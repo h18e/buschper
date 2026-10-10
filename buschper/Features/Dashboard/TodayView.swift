@@ -221,7 +221,7 @@ struct TodayView: View {
             NavigationLink {
                 SleepDestination.view()
             } label: {
-                SleepCard(snapshot: snapshot, range: range, threshold: profile.badNightRules.absoluteThreshold)
+                SleepCard(snapshot: snapshot, range: range, threshold: SleepGrade.solidFrom)
             }
             .buttonStyle(.plain)
         case .weekAverage:
