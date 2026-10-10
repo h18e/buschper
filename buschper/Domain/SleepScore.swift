@@ -18,18 +18,46 @@ struct SleepNight: Equatable {
     var hasStages: Bool { deepMinutes != nil && remMinutes != nil }
 }
 
-/// Punkte je Komponente. Bei fehlenden Phasen sind `deep` und `rem` `nil`.
+/// Punkte je Komponente. Bei fehlenden Phasen sind `deep`, `rem` und `light` `nil`.
 struct SleepScoreComponents: Codable, Equatable {
     var duration: Double
     var deep: Double?
     var rem: Double?
+    /// Leichtschlaf (Apple: „Kern“). Fehlt in Auswertungen vor Testrunde 11.
+    var light: Double? = nil
     var awake: Double
     var regularity: Double?
     /// 0–100.
     var total: Double
 }
 
-/// Eigener Schlafscore 0–100 (SPEC 11.2).
+/// Zielbereich in Prozent der Nacht: volle Punkte zwischen `low` und `high`,
+/// linear weniger bis 0 bei `zeroBelow` bzw. `zeroAbove`.
+struct SleepBand: Equatable {
+    var zeroBelow: Double
+    var low: Double
+    var high: Double
+    var zeroAbove: Double
+
+    func share(_ percent: Double) -> Double {
+        if percent < low { return SleepScore.rise(percent, zeroAt: zeroBelow, fullAt: low) }
+        if percent > high { return SleepScore.fall(percent, fullUntil: high, zeroFrom: zeroAbove) }
+        return 1
+    }
+}
+
+/// Eigener Schlafscore 0–100 (SPEC 11.2, Richtwerte aus Testrunde 11).
+///
+/// Die Phasen werden als Anteil der **ganzen Nacht** (Einschlafen bis Aufwachen,
+/// Wachphasen eingeschlossen) gewertet – dieselben Prozente wie im Phasenbalken.
+/// Richtwerte für einen ausgewogenen Schlaf:
+///
+/// | Phase | Ziel |
+/// |---|---|
+/// | Leichtschlaf | 50–60 % |
+/// | Tiefschlaf | 15–25 % |
+/// | REM | 20–25 % |
+/// | Wach | unter 5 % |
 ///
 /// Jede Komponente liefert einen Anteil zwischen 0 und 1, der mit ihrem Gewicht
 /// multipliziert wird. Fehlt eine Komponente (keine Phasen, noch keine Vorgeschichte
@@ -37,10 +65,11 @@ struct SleepScoreComponents: Codable, Equatable {
 enum SleepScore {
 
     enum Weight {
-        static let duration = 40.0
+        static let duration = 35.0
         static let deep = 20.0
         static let rem = 15.0
-        static let awake = 15.0
+        static let light = 10.0
+        static let awake = 10.0
         static let regularity = 10.0
     }
 
@@ -48,18 +77,20 @@ enum SleepScore {
 
     /// Unter 50 % des Schlafziels gibt es für die Dauer keine Punkte mehr.
     static let durationZeroShare = 0.5
-    /// Tiefschlaf: volle Punkte ab 13 %, keine bis 5 %.
-    static let deepFullPercent = 13.0
-    static let deepZeroPercent = 5.0
-    /// REM: volle Punkte ab 20 %, keine bis 8 %.
-    static let remFullPercent = 20.0
-    static let remZeroPercent = 8.0
-    /// Wach nach dem Einschlafen: volle Punkte bis 10 min, keine ab 60 min.
-    static let awakeFullMinutes = 10.0
-    static let awakeZeroMinutes = 60.0
+    static let lightBand = SleepBand(zeroBelow: 30, low: 50, high: 60, zeroAbove: 80)
+    static let deepBand = SleepBand(zeroBelow: 5, low: 15, high: 25, zeroAbove: 40)
+    static let remBand = SleepBand(zeroBelow: 8, low: 20, high: 25, zeroAbove: 40)
+    /// Wach: volle Punkte bis 5 % der Nacht, keine ab 20 %.
+    static let awakeFullPercent = 5.0
+    static let awakeZeroPercent = 20.0
     /// Abweichung der Einschlafzeit vom Median: voll bis 15 min, keine ab 90 min.
     static let regularityFullMinutes = 15.0
     static let regularityZeroMinutes = 90.0
+
+    /// Ganze Nacht in Minuten: Schlaf plus Wachphasen dazwischen.
+    static func nightMinutes(_ night: SleepNight) -> Double {
+        night.asleepMinutes + night.awakeMinutes
+    }
 
     /// - Parameter medianOnsetSinceNoon: Median der Einschlafzeiten der letzten
     ///   14 Nächte in `DayMath.minutesSinceNoon`. `nil` ohne Vorgeschichte.
@@ -71,17 +102,20 @@ enum SleepScore {
     ) -> SleepScoreComponents {
         let goal = max(1, sleepGoalMinutes)
         let durationShare = rise(night.asleepMinutes / goal, zeroAt: durationZeroShare, fullAt: 1)
+        let total = nightMinutes(night)
 
         var deepShare: Double?
         var remShare: Double?
-        if let deep = night.deepMinutes, let rem = night.remMinutes, night.asleepMinutes > 0 {
-            // Über den Zielbereich hinaus gibt es keinen Abzug: Zu viel Tief- oder
-            // REM-Schlaf ist kein Befund, den ein Tracker werten sollte.
-            deepShare = rise(deep / night.asleepMinutes * 100, zeroAt: deepZeroPercent, fullAt: deepFullPercent)
-            remShare = rise(rem / night.asleepMinutes * 100, zeroAt: remZeroPercent, fullAt: remFullPercent)
+        var lightShare: Double?
+        if let deep = night.deepMinutes, let rem = night.remMinutes, total > 0 {
+            deepShare = deepBand.share(deep / total * 100)
+            remShare = remBand.share(rem / total * 100)
+            let light = night.coreMinutes ?? max(0, night.asleepMinutes - deep - rem)
+            lightShare = lightBand.share(light / total * 100)
         }
 
-        let awakeShare = fall(night.awakeMinutes, fullUntil: awakeFullMinutes, zeroFrom: awakeZeroMinutes)
+        let awakePercent = total > 0 ? night.awakeMinutes / total * 100 : 0
+        let awakeShare = fall(awakePercent, fullUntil: awakeFullPercent, zeroFrom: awakeZeroPercent)
 
         var regularityShare: Double?
         if let median = medianOnsetSinceNoon {
@@ -91,28 +125,23 @@ enum SleepScore {
 
         var earned = durationShare * Weight.duration + awakeShare * Weight.awake
         var possible = Weight.duration + Weight.awake
-        if let deepShare {
-            earned += deepShare * Weight.deep
-            possible += Weight.deep
-        }
-        if let remShare {
-            earned += remShare * Weight.rem
-            possible += Weight.rem
-        }
-        if let regularityShare {
-            earned += regularityShare * Weight.regularity
-            possible += Weight.regularity
+        for (share, weight) in [(deepShare, Weight.deep), (remShare, Weight.rem),
+                                (lightShare, Weight.light), (regularityShare, Weight.regularity)] {
+            guard let share else { continue }
+            earned += share * weight
+            possible += weight
         }
 
-        let total = possible > 0 ? earned / possible * 100 : 0
+        let result = possible > 0 ? earned / possible * 100 : 0
 
         return SleepScoreComponents(
             duration: durationShare * Weight.duration,
             deep: deepShare.map { $0 * Weight.deep },
             rem: remShare.map { $0 * Weight.rem },
+            light: lightShare.map { $0 * Weight.light },
             awake: awakeShare * Weight.awake,
             regularity: regularityShare.map { $0 * Weight.regularity },
-            total: (total * 10).rounded() / 10
+            total: (result * 10).rounded() / 10
         )
     }
 
@@ -204,9 +233,9 @@ enum SleepStageShares {
         return result
     }
 
-    /// Anteil am Schlaf (ohne Wachzeit) – so wertet der Score Tief- und REM-Schlaf.
-    static func shareOfSleep(_ minutes: Double?, asleep: Double) -> Double? {
-        guard let minutes, asleep > 0 else { return nil }
-        return minutes / asleep * 100
+    /// Anteil an der ganzen Nacht – so wertet der Score die Phasen.
+    static func shareOfNight(_ minutes: Double?, nightMinutes: Double) -> Double? {
+        guard let minutes, nightMinutes > 0 else { return nil }
+        return minutes / nightMinutes * 100
     }
 }

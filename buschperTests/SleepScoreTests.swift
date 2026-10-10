@@ -6,22 +6,26 @@ import Testing
 struct SleepScoreTests {
     let calendar = TestCalendar.calendar
 
+    /// Ausgewogene Nacht nach den Richtwerten: 475 min, davon Tief 19 %,
+    /// REM 22 %, Leicht 56 %, Wach 3 %.
     private func night(
-        asleep: Double = 480,
-        deep: Double? = 80,
-        rem: Double? = 100,
-        awake: Double = 5,
+        deep: Double? = 90,
+        rem: Double? = 105,
+        core: Double? = 265,
+        asleep: Double? = nil,
+        awake: Double = 15,
         onsetHour: Int = 23,
         onsetMinute: Int = 0
     ) -> SleepNight {
         let onset = TestCalendar.date(2026, 9, 23, onsetHour, onsetMinute)
+        let sleep = asleep ?? ((deep ?? 0) + (rem ?? 0) + (core ?? 0))
         return SleepNight(
             sleepOnset: onset,
-            wake: onset.addingTimeInterval((asleep + awake) * 60),
-            asleepMinutes: asleep,
+            wake: onset.addingTimeInterval((sleep + awake) * 60),
+            asleepMinutes: sleep,
             deepMinutes: deep,
             remMinutes: rem,
-            coreMinutes: deep.flatMap { d in rem.map { asleep - d - $0 } },
+            coreMinutes: core,
             awakeMinutes: awake
         )
     }
@@ -29,47 +33,80 @@ struct SleepScoreTests {
     /// Einschlafzeit 23:00 in Minuten seit Mittag.
     private let medianAt2300 = 660.0
 
-    @Test("Perfekte Nacht ergibt 100")
+    @Test("Ausgewogene Nacht nach den Richtwerten ergibt 100")
     func perfect() {
-        let score = SleepScore.score(night: night(), sleepGoalMinutes: 480, medianOnsetSinceNoon: medianAt2300, calendar: calendar)
+        let score = SleepScore.score(night: night(), sleepGoalMinutes: 460, medianOnsetSinceNoon: medianAt2300, calendar: calendar)
         #expect(score.total == 100)
-        #expect(score.duration == 40)
+        #expect(score.duration == 35)
         #expect(score.deep == 20)
         #expect(score.rem == 15)
-        #expect(score.awake == 15)
+        #expect(score.light == 10)
+        #expect(score.awake == 10)
         #expect(score.regularity == 10)
     }
 
     @Test("Halbe Schlafzeit gibt für die Dauer keine Punkte")
     func halfDuration() {
-        let score = SleepScore.score(night: night(asleep: 240, deep: 40, rem: 50), sleepGoalMinutes: 480, medianOnsetSinceNoon: medianAt2300, calendar: calendar)
+        let score = SleepScore.score(night: night(), sleepGoalMinutes: 920, medianOnsetSinceNoon: medianAt2300, calendar: calendar)
         #expect(score.duration == 0)
-        #expect(score.total == 60)
+        #expect(score.total == 65)
     }
 
     @Test("Dreiviertel der Schlafzeit gibt die Hälfte der Dauer-Punkte")
     func threeQuarterDuration() {
-        let score = SleepScore.score(night: night(asleep: 360, deep: 60, rem: 75), sleepGoalMinutes: 480, medianOnsetSinceNoon: medianAt2300, calendar: calendar)
-        #expect(score.duration == 20)
+        let score = SleepScore.score(night: night(), sleepGoalMinutes: 460 / 0.75, medianOnsetSinceNoon: medianAt2300, calendar: calendar)
+        #expect(score.duration.isClose(to: 17.5))
     }
 
-    @Test("35 Minuten wach geben die Hälfte der Wach-Punkte")
-    func awakePartial() {
-        let score = SleepScore.score(night: night(awake: 35), sleepGoalMinutes: 480, medianOnsetSinceNoon: medianAt2300, calendar: calendar)
-        #expect(score.awake == 7.5)
+    @Test("Wach: unter 5 % voll, 12.5 % halb, ab 20 % nichts")
+    func awakeShares() {
+        // 60 von 480 Minuten = 12.5 %
+        let half = SleepScore.score(night: night(deep: 84, rem: 105, core: 231, awake: 60), sleepGoalMinutes: 420, medianOnsetSinceNoon: nil, calendar: calendar)
+        #expect(half.awake == 5)
+        // 100 von 500 Minuten = 20 %
+        let none = SleepScore.score(night: night(deep: 80, rem: 90, core: 230, awake: 100), sleepGoalMinutes: 400, medianOnsetSinceNoon: nil, calendar: calendar)
+        #expect(none.awake == 0)
+    }
+
+    @Test("Tiefschlaf: zu wenig und zu viel kosten Punkte")
+    func deepBand() {
+        // 4 % → 0
+        let low = SleepScore.score(night: night(deep: 20, rem: 110, core: 370, awake: 0), sleepGoalMinutes: 500, medianOnsetSinceNoon: nil, calendar: calendar)
+        #expect(low.deep == 0)
+        // 32.5 % → halbe Punkte (Ziel bis 25 %, null ab 40 %)
+        let high = SleepScore.score(night: night(deep: 130, rem: 90, core: 180, awake: 0), sleepGoalMinutes: 400, medianOnsetSinceNoon: nil, calendar: calendar)
+        #expect((high.deep ?? -1).isClose(to: 10))
+    }
+
+    @Test("Leichtschlaf über 60 % kostet Punkte")
+    func lightBand() {
+        // 70 % Leicht → halbe Punkte (Ziel bis 60 %, null ab 80 %)
+        let score = SleepScore.score(night: night(deep: 60, rem: 80, core: 350, awake: 10), sleepGoalMinutes: 490, medianOnsetSinceNoon: nil, calendar: calendar)
+        #expect((score.light ?? -1).isClose(to: 5))
+    }
+
+    @Test("Zielbereich: voll innen, linear nach aussen")
+    func band() {
+        let band = SleepBand(zeroBelow: 5, low: 15, high: 25, zeroAbove: 40)
+        #expect(band.share(20) == 1)
+        #expect(band.share(10) == 0.5)
+        #expect(band.share(32.5) == 0.5)
+        #expect(band.share(3) == 0)
+        #expect(band.share(45) == 0)
     }
 
     @Test("Ohne Phasen werden die übrigen Gewichte hochgerechnet")
     func withoutStages() {
-        let score = SleepScore.score(night: night(deep: nil, rem: nil), sleepGoalMinutes: 480, medianOnsetSinceNoon: medianAt2300, calendar: calendar)
+        let score = SleepScore.score(night: night(deep: nil, rem: nil, core: nil, asleep: 460), sleepGoalMinutes: 460, medianOnsetSinceNoon: medianAt2300, calendar: calendar)
         #expect(score.deep == nil)
         #expect(score.rem == nil)
+        #expect(score.light == nil)
         #expect(score.total == 100)
     }
 
     @Test("Ohne Vorgeschichte fällt die Regelmässigkeit weg")
     func withoutHistory() {
-        let score = SleepScore.score(night: night(), sleepGoalMinutes: 480, medianOnsetSinceNoon: nil, calendar: calendar)
+        let score = SleepScore.score(night: night(), sleepGoalMinutes: 460, medianOnsetSinceNoon: nil, calendar: calendar)
         #expect(score.regularity == nil)
         #expect(score.total == 100)
     }
@@ -79,18 +116,18 @@ struct SleepScoreTests {
         // Median 23:30, Einschlafen 00:15 → 45 Minuten Abweichung
         let onset = TestCalendar.date(2026, 9, 24, 0, 15)
         let late = SleepNight(sleepOnset: onset, wake: onset.addingTimeInterval(8 * 3600), asleepMinutes: 480,
-                              deepMinutes: 80, remMinutes: 100, coreMinutes: 300, awakeMinutes: 0)
+                              deepMinutes: 90, remMinutes: 110, coreMinutes: 280, awakeMinutes: 0)
         let score = SleepScore.score(night: late, sleepGoalMinutes: 480, medianOnsetSinceNoon: 690, calendar: calendar)
         let expected = (1 - (45.0 - 15) / (90 - 15)) * 10
         #expect((score.regularity ?? -1).isClose(to: expected))
     }
 
-    @Test("Zu wenig Tiefschlaf kostet Punkte, zu viel nicht")
-    func deepSleepBounds() {
-        let low = SleepScore.score(night: night(deep: 24), sleepGoalMinutes: 480, medianOnsetSinceNoon: nil, calendar: calendar)
-        #expect(low.deep == 0)
-        let high = SleepScore.score(night: night(deep: 160, rem: 100), sleepGoalMinutes: 480, medianOnsetSinceNoon: nil, calendar: calendar)
-        #expect(high.deep == 20)
+    @Test("Ältere Auswertungen ohne Leichtschlaf lassen sich noch lesen")
+    func decodesOldComponents() throws {
+        let json = #"{"duration":40,"deep":20,"rem":15,"awake":15,"regularity":10,"total":100}"#
+        let old = try JSONDecoder().decode(SleepScoreComponents.self, from: Data(json.utf8))
+        #expect(old.light == nil)
+        #expect(old.total == 100)
     }
 
     @Test("Hilfsfunktionen steigen und fallen linear")
@@ -134,7 +171,7 @@ struct NightClassifierTests {
         #expect(SleepStageShares.percentages([65, 95, 260, 30]) == [14, 21, 58, 7])
         #expect(SleepStageShares.percentages([1, 1, 1]).reduce(0, +) == 100)
         #expect(SleepStageShares.percentages([0, 0]) == [0, 0])
-        #expect(SleepStageShares.shareOfSleep(84, asleep: 420) == 20)
-        #expect(SleepStageShares.shareOfSleep(nil, asleep: 420) == nil)
+        #expect(SleepStageShares.shareOfNight(84, nightMinutes: 420) == 20)
+        #expect(SleepStageShares.shareOfNight(nil, nightMinutes: 420) == nil)
     }
 }

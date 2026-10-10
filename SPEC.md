@@ -508,22 +508,23 @@ Trainings erscheinen **chronologisch zwischen den Mahlzeiten**
 Die Nacht, die am Morgen von Tag *D* endet, gehört zu *D*. Ihr **Vortag** ist
 *D − 1* von 00:00 bis zum Einschlafen.
 
-### 11.2 Schlafscore 0–100 (Q19)
+### 11.2 Schlafscore 0–100 (Q19, Richtwerte aus Testrunde 11)
 
-| Komponente | Gewicht | Volle Punkte | 0 Punkte |
+Phasen als Anteil der **ganzen Nacht** (Einschlafen bis Aufwachen, Wachphasen
+eingeschlossen) – dieselben Prozente wie im Phasenbalken.
+
+| Teil | Punkte | volle Punkte | 0 Punkte |
 |---|---|---|---|
-| Dauer (Schlafzeit im Vergleich zum Ziel) | 40 | ≥ Ziel | ≤ 50 % des Ziels |
-| Tiefschlaf-Anteil | 20 | 13–23 % | ≤ 5 % |
-| REM-Anteil | 15 | 20–25 % | ≤ 8 % |
-| Wachphasen nach dem Einschlafen | 15 | ≤ 10 min | ≥ 60 min |
-| Regelmässigkeit (Einschlafzeit im Vergleich zum 14-Tage-Median) | 10 | ≤ 15 min | ≥ 90 min |
+| Dauer | 35 | Schlafziel erreicht | unter 50 % des Ziels |
+| Tiefschlaf | 20 | 15–25 % | ≤ 5 % oder ≥ 40 % |
+| REM | 15 | 20–25 % | ≤ 8 % oder ≥ 40 % |
+| Leichtschlaf (Kern) | 10 | 50–60 % | ≤ 30 % oder ≥ 80 % |
+| Wach | 10 | unter 5 % | ≥ 20 % |
+| Regelmässigkeit | 10 | ±15 min vom Median (14 Nächte) | ≥ ±90 min |
 
-Dazwischen linear. **Ohne Schlafphasen** (nur iPhone, keine Uhr) werden Tief und
-REM weggelassen und die übrigen Gewichte hochgerechnet. Die Nacht bekommt den
-Hinweis „ohni Phase“.
-
-Die Gewichte und Schwellen stehen an einer Stelle im Code (`SleepScore.swift`)
-und sind getestet.
+Dazwischen linear. Fehlt ein Teil (keine Phasen, keine Vorgeschichte), werden die
+übrigen auf 100 hochgerechnet. Die letzten Nächte werden beim Öffnen neu bewertet,
+ältere, sobald ein längerer Zeitraum angezeigt wird.
 
 ### 11.3 Morgen-Einschätzung (Q19)
 
