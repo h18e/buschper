@@ -52,7 +52,7 @@ struct SleepView: View {
                                 .foregroundStyle(Theme.textTertiary)
                         } else {
                             SleepScoreChart(nights: chartNights, days: range.days,
-                                            threshold: app.store.profile().badNightRules.absoluteThreshold)
+                                            threshold: SleepGrade.solidFrom)
                         }
                     }
                     .card(tint: Theme.sleep)
