@@ -31,18 +31,16 @@ struct SleepScoreComponents: Codable, Equatable {
     var total: Double
 }
 
-/// Zielbereich in Prozent der Nacht: volle Punkte zwischen `low` und `high`,
-/// linear weniger bis 0 bei `zeroBelow` bzw. `zeroAbove`.
+/// Zielbereich in Prozent der Nacht. Volle Punkte ab `low` – auch über `high`
+/// hinaus: Mehr als der Richtwert gibt keinen Abzug (Testrunde 12). Darunter
+/// linear weniger bis 0 bei `zeroBelow`. `high` dient nur der Anzeige.
 struct SleepBand: Equatable {
     var zeroBelow: Double
     var low: Double
     var high: Double
-    var zeroAbove: Double
 
     func share(_ percent: Double) -> Double {
-        if percent < low { return SleepScore.rise(percent, zeroAt: zeroBelow, fullAt: low) }
-        if percent > high { return SleepScore.fall(percent, fullUntil: high, zeroFrom: zeroAbove) }
-        return 1
+        SleepScore.rise(percent, zeroAt: zeroBelow, fullAt: low)
     }
 }
 
@@ -77,9 +75,9 @@ enum SleepScore {
 
     /// Unter 50 % des Schlafziels gibt es für die Dauer keine Punkte mehr.
     static let durationZeroShare = 0.5
-    static let lightBand = SleepBand(zeroBelow: 30, low: 50, high: 60, zeroAbove: 80)
-    static let deepBand = SleepBand(zeroBelow: 5, low: 15, high: 25, zeroAbove: 40)
-    static let remBand = SleepBand(zeroBelow: 8, low: 20, high: 25, zeroAbove: 40)
+    static let lightBand = SleepBand(zeroBelow: 30, low: 50, high: 60)
+    static let deepBand = SleepBand(zeroBelow: 5, low: 15, high: 25)
+    static let remBand = SleepBand(zeroBelow: 8, low: 20, high: 25)
     /// Wach: volle Punkte bis 5 % der Nacht, keine ab 20 %.
     static let awakeFullPercent = 5.0
     static let awakeZeroPercent = 20.0

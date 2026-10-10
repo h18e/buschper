@@ -71,7 +71,7 @@ struct NightDetailView: View {
                 } header: {
                     Text("Wie dr Score zämechunnt")
                 } footer: {
-                    Text("Richtwärt für e usgwogene Schlaf: Liechtschlaf 50–60 %, Tiefschlaf 15–25 %, REM 20–25 %, wach under 5 %. Im Zielbereich gits voll Pünkt, drüber oder drunder linear weniger. Fählt öppis (z. B. Phase ohni Uhr), zelle di angere entsprächend meh.")
+                    Text("Richtwärt für e usgwogene Schlaf: Liechtschlaf 50–60 %, Tiefschlaf 15–25 %, REM 20–25 %, wach under 5 %. Ab em Zielbereich gits voll Pünkt – meh git ke Abzug, weniger linear weniger. Bim Wache isch's umgekehrt: under 5 % voll, meh git weniger. Fählt öppis (z. B. Phase ohni Uhr), zelle di angere entsprächend meh.")
                 }
             }
 
@@ -196,9 +196,12 @@ struct NightDetailView: View {
         "\(percentText(minutes)) – Ziel \(Int(band.low))–\(Int(band.high)) %"
     }
 
+    /// „65 min · 14 % vo dr Nacht“.
     private func percentText(_ minutes: Double?) -> String {
+        guard let minutes else { return "–" }
         let share = SleepStageShares.shareOfNight(minutes, nightMinutes: night.asleepMinutes + night.awakeMinutes)
-        return share.map { "\(Int($0.rounded())) % vo dr Nacht" } ?? "–"
+        let percent = share.map { " · \(Int($0.rounded())) % vo dr Nacht" } ?? ""
+        return "\(Int(minutes.rounded())) min\(percent)"
     }
 
     private func metricRow(_ label: String, _ value: String?) -> some View {

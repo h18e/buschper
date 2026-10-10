@@ -68,31 +68,33 @@ struct SleepScoreTests {
         #expect(none.awake == 0)
     }
 
-    @Test("Tiefschlaf: zu wenig und zu viel kosten Punkte")
+    @Test("Tiefschlaf: zu wenig kostet Punkte, zu viel nicht")
     func deepBand() {
         // 4 % → 0
         let low = SleepScore.score(night: night(deep: 20, rem: 110, core: 370, awake: 0), sleepGoalMinutes: 500, medianOnsetSinceNoon: nil, calendar: calendar)
         #expect(low.deep == 0)
-        // 32.5 % → halbe Punkte (Ziel bis 25 %, null ab 40 %)
+        // 10 % → halbe Punkte (null bis 5 %, voll ab 15 %)
+        let half = SleepScore.score(night: night(deep: 40, rem: 90, core: 270, awake: 0), sleepGoalMinutes: 400, medianOnsetSinceNoon: nil, calendar: calendar)
+        #expect((half.deep ?? -1).isClose(to: 10))
+        // 32.5 % → über dem Ziel, trotzdem voll
         let high = SleepScore.score(night: night(deep: 130, rem: 90, core: 180, awake: 0), sleepGoalMinutes: 400, medianOnsetSinceNoon: nil, calendar: calendar)
-        #expect((high.deep ?? -1).isClose(to: 10))
+        #expect(high.deep == 20)
     }
 
-    @Test("Leichtschlaf über 60 % kostet Punkte")
+    @Test("Leichtschlaf über 60 % gibt volle Punkte")
     func lightBand() {
-        // 70 % Leicht → halbe Punkte (Ziel bis 60 %, null ab 80 %)
         let score = SleepScore.score(night: night(deep: 60, rem: 80, core: 350, awake: 10), sleepGoalMinutes: 490, medianOnsetSinceNoon: nil, calendar: calendar)
-        #expect((score.light ?? -1).isClose(to: 5))
+        #expect(score.light == 10)
     }
 
-    @Test("Zielbereich: voll innen, linear nach aussen")
+    @Test("Zielbereich: voll ab dem Richtwert, darunter linear")
     func band() {
-        let band = SleepBand(zeroBelow: 5, low: 15, high: 25, zeroAbove: 40)
+        let band = SleepBand(zeroBelow: 5, low: 15, high: 25)
         #expect(band.share(20) == 1)
         #expect(band.share(10) == 0.5)
-        #expect(band.share(32.5) == 0.5)
+        #expect(band.share(32.5) == 1)
         #expect(band.share(3) == 0)
-        #expect(band.share(45) == 0)
+        #expect(band.share(60) == 1)
     }
 
     @Test("Ohne Phasen werden die übrigen Gewichte hochgerechnet")
