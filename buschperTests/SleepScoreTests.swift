@@ -128,4 +128,13 @@ struct NightClassifierTests {
         let reasons = NightClassifier.reasons(score: 50, average30: 80, rating: 1, rules: rules)
         #expect(reasons == [.lowScore, .belowAverage, .feltBad])
     }
+
+    @Test("Phasen in Prozent ergeben zusammen genau 100")
+    func stagePercentages() {
+        #expect(SleepStageShares.percentages([65, 95, 260, 30]) == [14, 21, 58, 7])
+        #expect(SleepStageShares.percentages([1, 1, 1]).reduce(0, +) == 100)
+        #expect(SleepStageShares.percentages([0, 0]) == [0, 0])
+        #expect(SleepStageShares.shareOfSleep(84, asleep: 420) == 20)
+        #expect(SleepStageShares.shareOfSleep(nil, asleep: 420) == nil)
+    }
 }

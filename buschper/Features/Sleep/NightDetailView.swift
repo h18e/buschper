@@ -47,14 +47,27 @@ struct NightDetailView: View {
             }
 
             if let components = night.components {
-                Section("Wie dr Score zämechunnt") {
-                    componentRow("Duur", components.duration, SleepScore.Weight.duration)
-                    if let deep = components.deep { componentRow("Tiefschlaf", deep, SleepScore.Weight.deep) }
-                    if let rem = components.rem { componentRow("REM", rem, SleepScore.Weight.rem) }
-                    componentRow("Wachphase", components.awake, SleepScore.Weight.awake)
-                    if let regularity = components.regularity {
-                        componentRow("Regelmässigkeit", regularity, SleepScore.Weight.regularity)
+                Section {
+                    componentRow("Duur", components.duration, SleepScore.Weight.duration,
+                                 detail: "\(OnboardingView.hoursText(Int(night.asleepMinutes))) vo \(OnboardingView.hoursText(Int(app.store.profile().sleepGoal))) Ziel – voll ab 100 %, null under 50 %")
+                    if let deep = components.deep {
+                        componentRow("Tiefschlaf", deep, SleepScore.Weight.deep,
+                                     detail: shareDetail(night.deepMinutes, full: SleepScore.deepFullPercent, zero: SleepScore.deepZeroPercent))
                     }
+                    if let rem = components.rem {
+                        componentRow("REM", rem, SleepScore.Weight.rem,
+                                     detail: shareDetail(night.remMinutes, full: SleepScore.remFullPercent, zero: SleepScore.remZeroPercent))
+                    }
+                    componentRow("Wachphase", components.awake, SleepScore.Weight.awake,
+                                 detail: "\(Int(night.awakeMinutes.rounded())) min wach – voll bis \(Int(SleepScore.awakeFullMinutes)) min, null ab \(Int(SleepScore.awakeZeroMinutes)) min")
+                    if let regularity = components.regularity {
+                        componentRow("Regelmässigkeit", regularity, SleepScore.Weight.regularity,
+                                     detail: "Iischlafzyt vs. Median vo de letschte 14 Nächt – voll bis ±\(Int(SleepScore.regularityFullMinutes)) min, null ab ±\(Int(SleepScore.regularityZeroMinutes)) min")
+                    }
+                } header: {
+                    Text("Wie dr Score zämechunnt")
+                } footer: {
+                    Text("Punkte zämezellt u uf 100 grächnet. Fählt öppis (z. B. Phase ohni Uhr), zelle di angere entsprächend meh.")
                 }
             }
 
@@ -156,7 +169,7 @@ struct NightDetailView: View {
         app.dataDidChange()
     }
 
-    private func componentRow(_ label: String, _ points: Double, _ weight: Double) -> some View {
+    private func componentRow(_ label: String, _ points: Double, _ weight: Double, detail: String? = nil) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Text(label)
@@ -166,7 +179,21 @@ struct NightDetailView: View {
                     .foregroundStyle(Theme.textSecondary)
             }
             ProgressBar(fraction: weight > 0 ? points / weight : 0, color: Theme.sleep)
+            if let detail {
+                Text(detail)
+                    .font(.caption2)
+                    .foregroundStyle(Theme.textTertiary)
+            }
         }
+    }
+
+    /// „14 % vom Schlaf – voll ab 13 %, null bis 5 %“. Der Score wertet Tief- und
+    /// REM-Schlaf am Schlaf ohne Wachzeit, darum weicht die Zahl leicht vom
+    /// Balken oben ab.
+    private func shareDetail(_ minutes: Double?, full: Double, zero: Double) -> String {
+        let share = SleepStageShares.shareOfSleep(minutes, asleep: night.asleepMinutes)
+        let value = share.map { "\(Int($0.rounded())) % vom Schlaf" } ?? "–"
+        return "\(value) – voll ab \(Int(full)) %, null bis \(Int(zero)) %"
     }
 
     private func metricRow(_ label: String, _ value: String?) -> some View {

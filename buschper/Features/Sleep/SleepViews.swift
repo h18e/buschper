@@ -268,17 +268,24 @@ struct StageBar: View {
                 }
             }
             .frame(height: 10)
-            HStack(spacing: 10) {
+            let percents = SleepStageShares.percentages(parts.map(\.minutes))
+            LazyVGrid(columns: [GridItem(.flexible(), alignment: .leading), GridItem(.flexible(), alignment: .leading)], spacing: 4) {
                 ForEach(parts.indices, id: \.self) { index in
                     let part = parts[index]
                     HStack(spacing: 4) {
                         RoundedRectangle(cornerRadius: 2).fill(part.color).frame(width: 8, height: 8)
-                        Text("\(part.label) \(Int(part.minutes.rounded())) min")
+                        Text(part.label)
+                        Text("\(Int(part.minutes.rounded())) min · \(percents[index]) %")
+                            .monospacedDigit()
+                            .foregroundStyle(Theme.textPrimary)
                     }
                 }
             }
             .font(.caption2)
             .foregroundStyle(Theme.textSecondary)
+            Text("Prozent vo dr ganze Nacht vom Iischlafe bis zum Ufwache.")
+                .font(.caption2)
+                .foregroundStyle(Theme.textTertiary)
         }
         .accessibilityElement(children: .combine)
     }

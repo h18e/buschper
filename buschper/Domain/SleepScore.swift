@@ -184,3 +184,29 @@ enum NightClassifier {
         !reasons(score: score, average30: average30, rating: rating, rules: rules).isEmpty
     }
 }
+
+// MARK: - Anteile in Prozent
+
+enum SleepStageShares {
+    /// Ganze Prozente, die zusammen genau 100 ergeben (grösster Rest zuerst
+    /// aufgerundet). Leer oder nur Nullen: alles 0.
+    static func percentages(_ minutes: [Double]) -> [Int] {
+        let values = minutes.map { max(0, $0) }
+        let total = values.reduce(0, +)
+        guard total > 0 else { return values.map { _ in 0 } }
+        let exact = values.map { $0 / total * 100 }
+        var result = exact.map { Int($0.rounded(.down)) }
+        let missing = 100 - result.reduce(0, +)
+        let order = exact.indices.sorted { (exact[$0] - Double(result[$0])) > (exact[$1] - Double(result[$1])) }
+        for index in order.prefix(missing) {
+            result[index] += 1
+        }
+        return result
+    }
+
+    /// Anteil am Schlaf (ohne Wachzeit) – so wertet der Score Tief- und REM-Schlaf.
+    static func shareOfSleep(_ minutes: Double?, asleep: Double) -> Double? {
+        guard let minutes, asleep > 0 else { return nil }
+        return minutes / asleep * 100
+    }
+}
