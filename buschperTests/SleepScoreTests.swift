@@ -37,32 +37,33 @@ struct SleepScoreTests {
     func perfect() {
         let score = SleepScore.score(night: night(), sleepGoalMinutes: 460, medianOnsetSinceNoon: medianAt2300, calendar: calendar)
         #expect(score.total == 100)
-        #expect(score.duration == 35)
-        #expect(score.deep == 20)
-        #expect(score.rem == 15)
-        #expect(score.light == 10)
-        #expect(score.awake == 10)
-        #expect(score.regularity == 10)
+        #expect(score.duration == 50)
+        #expect(score.deep == 15)
+        #expect(score.rem == 11)
+        #expect(score.light == 8)
+        #expect(score.awake == 8)
+        #expect(score.regularity == 8)
     }
 
-    @Test("Halbe Schlafzeit gibt für die Dauer keine Punkte")
-    func halfDuration() {
-        let score = SleepScore.score(night: night(), sleepGoalMinutes: 920, medianOnsetSinceNoon: medianAt2300, calendar: calendar)
+    @Test("3 Stunden unter dem Ziel gibt für die Dauer keine Punkte")
+    func durationZero() {
+        // 460 min geschlafen, Ziel 640 min → 180 min darunter
+        let score = SleepScore.score(night: night(), sleepGoalMinutes: 640, medianOnsetSinceNoon: medianAt2300, calendar: calendar)
         #expect(score.duration == 0)
-        #expect(score.total == 65)
+        #expect(score.total == 50)
     }
 
-    @Test("Dreiviertel der Schlafzeit gibt die Hälfte der Dauer-Punkte")
-    func threeQuarterDuration() {
-        let score = SleepScore.score(night: night(), sleepGoalMinutes: 460 / 0.75, medianOnsetSinceNoon: medianAt2300, calendar: calendar)
-        #expect(score.duration.isClose(to: 17.5))
+    @Test("1.5 Stunden unter dem Ziel gibt die Hälfte der Dauer-Punkte")
+    func durationHalf() {
+        let score = SleepScore.score(night: night(), sleepGoalMinutes: 550, medianOnsetSinceNoon: medianAt2300, calendar: calendar)
+        #expect(score.duration.isClose(to: 25))
     }
 
     @Test("Wach: unter 5 % voll, 12.5 % halb, ab 20 % nichts")
     func awakeShares() {
         // 60 von 480 Minuten = 12.5 %
         let half = SleepScore.score(night: night(deep: 84, rem: 105, core: 231, awake: 60), sleepGoalMinutes: 420, medianOnsetSinceNoon: nil, calendar: calendar)
-        #expect(half.awake == 5)
+        #expect(half.awake == 4)
         // 100 von 500 Minuten = 20 %
         let none = SleepScore.score(night: night(deep: 80, rem: 90, core: 230, awake: 100), sleepGoalMinutes: 400, medianOnsetSinceNoon: nil, calendar: calendar)
         #expect(none.awake == 0)
@@ -75,16 +76,16 @@ struct SleepScoreTests {
         #expect(low.deep == 0)
         // 10 % → halbe Punkte (null bis 5 %, voll ab 15 %)
         let half = SleepScore.score(night: night(deep: 40, rem: 90, core: 270, awake: 0), sleepGoalMinutes: 400, medianOnsetSinceNoon: nil, calendar: calendar)
-        #expect((half.deep ?? -1).isClose(to: 10))
+        #expect((half.deep ?? -1).isClose(to: 7.5))
         // 32.5 % → über dem Ziel, trotzdem voll
         let high = SleepScore.score(night: night(deep: 130, rem: 90, core: 180, awake: 0), sleepGoalMinutes: 400, medianOnsetSinceNoon: nil, calendar: calendar)
-        #expect(high.deep == 20)
+        #expect(high.deep == 15)
     }
 
     @Test("Leichtschlaf über 60 % gibt volle Punkte")
     func lightBand() {
         let score = SleepScore.score(night: night(deep: 60, rem: 80, core: 350, awake: 10), sleepGoalMinutes: 490, medianOnsetSinceNoon: nil, calendar: calendar)
-        #expect(score.light == 10)
+        #expect(score.light == 8)
     }
 
     @Test("Zielbereich: voll ab dem Richtwert, darunter linear")
@@ -120,7 +121,7 @@ struct SleepScoreTests {
         let late = SleepNight(sleepOnset: onset, wake: onset.addingTimeInterval(8 * 3600), asleepMinutes: 480,
                               deepMinutes: 90, remMinutes: 110, coreMinutes: 280, awakeMinutes: 0)
         let score = SleepScore.score(night: late, sleepGoalMinutes: 480, medianOnsetSinceNoon: 690, calendar: calendar)
-        let expected = (1 - (45.0 - 15) / (90 - 15)) * 10
+        let expected = (1 - (45.0 - 15) / (90 - 15)) * 8
         #expect((score.regularity ?? -1).isClose(to: expected))
     }
 

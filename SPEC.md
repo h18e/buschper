@@ -515,12 +515,12 @@ eingeschlossen) – dieselben Prozente wie im Phasenbalken.
 
 | Teil | Punkte | volle Punkte | 0 Punkte |
 |---|---|---|---|
-| Dauer | 35 | Schlafziel erreicht | unter 50 % des Ziels |
-| Tiefschlaf | 20 | ab 15 % (Ziel 15–25 %) | ≤ 5 % |
-| REM | 15 | ab 20 % (Ziel 20–25 %) | ≤ 8 % |
-| Leichtschlaf (Kern) | 10 | ab 50 % (Ziel 50–60 %) | ≤ 30 % |
-| Wach | 10 | unter 5 % | ≥ 20 % |
-| Regelmässigkeit | 10 | ±15 min vom Median (14 Nächte) | ≥ ±90 min |
+| Dauer | 50 | Schlafziel erreicht | 3 h unter dem Ziel |
+| Tiefschlaf | 15 | ab 15 % (Ziel 15–25 %) | ≤ 5 % |
+| REM | 11 | ab 20 % (Ziel 20–25 %) | ≤ 8 % |
+| Leichtschlaf (Kern) | 8 | ab 50 % (Ziel 50–60 %) | ≤ 30 % |
+| Wach | 8 | unter 5 % | ≥ 20 % |
+| Regelmässigkeit | 8 | ±15 min vom Median (14 Nächte) | ≥ ±90 min |
 
 Dazwischen linear. Über dem Zielbereich gibt es keinen Abzug (Testrunde 12). Fehlt ein Teil (keine Phasen, keine Vorgeschichte), werden die
 übrigen auf 100 hochgerechnet. Die letzten Nächte werden beim Öffnen neu bewertet,

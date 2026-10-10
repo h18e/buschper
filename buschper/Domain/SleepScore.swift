@@ -63,18 +63,19 @@ struct SleepBand: Equatable {
 enum SleepScore {
 
     enum Weight {
-        static let duration = 35.0
-        static let deep = 20.0
-        static let rem = 15.0
-        static let light = 10.0
-        static let awake = 10.0
-        static let regularity = 10.0
+        // Dauer zählt die Hälfte (Testrunde 13), der Rest im bisherigen Verhältnis.
+        static let duration = 50.0
+        static let deep = 15.0
+        static let rem = 11.0
+        static let light = 8.0
+        static let awake = 8.0
+        static let regularity = 8.0
     }
 
     // MARK: - Schwellen
 
-    /// Unter 50 % des Schlafziels gibt es für die Dauer keine Punkte mehr.
-    static let durationZeroShare = 0.5
+    /// Volle Punkte ab dem Schlafziel; 3 Stunden darunter keine mehr.
+    static let durationZeroMinutesBelowGoal = 180.0
     static let lightBand = SleepBand(zeroBelow: 30, low: 50, high: 60)
     static let deepBand = SleepBand(zeroBelow: 5, low: 15, high: 25)
     static let remBand = SleepBand(zeroBelow: 8, low: 20, high: 25)
@@ -99,7 +100,7 @@ enum SleepScore {
         calendar: Calendar = .current
     ) -> SleepScoreComponents {
         let goal = max(1, sleepGoalMinutes)
-        let durationShare = rise(night.asleepMinutes / goal, zeroAt: durationZeroShare, fullAt: 1)
+        let durationShare = rise(night.asleepMinutes, zeroAt: max(0, goal - durationZeroMinutesBelowGoal), fullAt: goal)
         let total = nightMinutes(night)
 
         var deepShare: Double?

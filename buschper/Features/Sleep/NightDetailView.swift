@@ -49,7 +49,7 @@ struct NightDetailView: View {
             if let components = night.components {
                 Section {
                     componentRow("Duur", components.duration, SleepScore.Weight.duration,
-                                 detail: "\(OnboardingView.hoursText(Int(night.asleepMinutes))) vo \(OnboardingView.hoursText(Int(app.store.profile().sleepGoal))) Ziel – voll ab 100 %, null under 50 %")
+                                 detail: "\(OnboardingView.hoursText(Int(night.asleepMinutes))) vo \(OnboardingView.hoursText(Int(app.store.profile().sleepGoal))) Ziel – voll ab Ziel, null \(Int(SleepScore.durationZeroMinutesBelowGoal / 60)) h drunder")
                     if let deep = components.deep {
                         componentRow("Tiefschlaf", deep, SleepScore.Weight.deep,
                                      detail: bandDetail(night.deepMinutes, SleepScore.deepBand))
