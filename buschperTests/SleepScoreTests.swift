@@ -99,6 +99,7 @@ struct SleepScoreTests {
         let history = [mid - 300, mid - 300] + Array(repeating: mid - 60, count: 7)
         let score = SleepScore.score(night: tonight, previousMidpoints: history, rating: nil, calendar: calendar)
         #expect(score.midpointDeviationMinutes == 60)
+        #expect(score.midpointOffsetMinutes == 60)
         #expect(score.regularity == 12.5)
     }
 

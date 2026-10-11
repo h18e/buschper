@@ -45,42 +45,42 @@ struct NightDetailView: View {
 
                 Section {
                     blockHeader("Duur", c.duration, SleepScore.Weight.duration)
-                    detailLine("\(OnboardingView.hoursText(Int(c.asleepMinutes))) gschlafe – voll 7–9 h, null under 5 h, ab 9½ h bis −5")
+                    detailLine("Du hesch \(OnboardingView.hoursText(Int(c.asleepMinutes))) gschlafe. Ab 7 h gits aui Pünkt, under 5 h keni. Meh als 9½ h git e chlyne Abzug.")
                 } header: {
                     Text("Wie dr Score zämechunnt")
                 }
 
                 Section {
                     blockHeader("Kontinuität", c.continuity, continuityMax)
-                    detailLine("Summe us dene drei Teil:")
+                    detailLine("Wie ruhig d Nacht isch gsy. Zämegsetzt us:")
                     componentRow("Wach nachem Iischlafe", c.waso, SleepScore.Weight.waso,
-                                 detail: "\(minutesText(c.wasoMinutes)) – voll bis \(Int(SleepScore.wasoFullMinutes)) min, null ab \(Int(SleepScore.wasoZeroMinutes)) min")
+                                 detail: "Du bisch \(minutesText(c.wasoMinutes)) wach gläge. Bis \(Int(SleepScore.wasoFullMinutes)) min gits aui Pünkt, ab \(Int(SleepScore.wasoZeroMinutes)) min keni.")
                     componentRow("Ufwachphase > 5 min", c.awakenings, SleepScore.Weight.awakenings,
-                                 detail: "\(c.awakeningCount)× – voll bis 1×, null ab 4×")
+                                 detail: "Du bisch \(c.awakeningCount)× länger als 5 min wach gsy. 1× isch no guet, ab 4× gits keni Pünkt.")
                     componentRow("Schlafeffizienz", c.efficiency, SleepScore.Weight.efficiency,
-                                 detail: "\(Int(c.efficiencyPercent.rounded())) % vom Iischlafe bis zum Ufwache – voll ab \(Int(SleepScore.efficiencyFullPercent)) %, null bis \(Int(SleepScore.efficiencyZeroPercent)) %")
+                                 detail: "Vo dr Zyt zwüsche Iischlafe u Ufwache hesch \(Int(c.efficiencyPercent.rounded())) % würklech gschlafe. Ab \(Int(SleepScore.efficiencyFullPercent)) % gits aui Pünkt, under \(Int(SleepScore.efficiencyZeroPercent)) % keni.")
                 }
 
                 Section {
                     if let regularity = c.regularity {
                         blockHeader("Regelmässigkeit", regularity, SleepScore.Weight.regularity)
-                        detailLine("Schlafmitti \(minutesText(c.midpointDeviationMinutes)) näbem Schnitt vo de letschte 7 Nächt – voll bis \(Int(SleepScore.regularityFullMinutes)) min, null ab \(Int(SleepScore.regularityZeroMinutes)) min")
+                        detailLine("\(regularityText(c)) Bis \(Int(SleepScore.regularityFullMinutes)) min Abwychig gits aui Pünkt, ab \(Int(SleepScore.regularityZeroMinutes)) min keni.")
                     } else {
                         blockHeader("Regelmässigkeit", nil, SleepScore.Weight.regularity)
-                        detailLine("No ke Vorgschicht – zellt ab dr zwöite Nacht.")
+                        detailLine("Zellt erscht, wenn's mindestens e Nacht zum Vergliche git.")
                     }
                 }
 
                 Section {
                     if let recovery = c.recovery {
                         blockHeader("Erholig", recovery, SleepScore.Weight.recovery)
-                        detailLine("\(c.rating ?? 0) vo 5 Stärn – 1 = 0 Pünkt, 5 = 10 Pünkt")
+                        detailLine("Du hesch \(c.rating ?? 0) vo 5 Stärn gä. Jede Stärn über em erschte git 2.5 Pünkt.")
                     } else {
                         blockHeader("Erholig", nil, SleepScore.Weight.recovery)
-                        detailLine("Obe d Stärn setze – bis dahin zellt d Erholig nid.")
+                        detailLine("No keni Stärn gsetzt. Setz obe, wie erholt du di fühlsch – de zellt's mit.")
                     }
                 } footer: {
-                    Text("Fählt öppis, wärde di angere Teil uf 100 hochgrächnet. Iistufig: 85–100 guet, 70–84 solid, 50–69 iigschränkt, under 50 schlächt (eigeti Gränze, nid wüsseschaftlech normiert).")
+                    Text("Iistufig: 85–100 guet · 70–84 solid · 50–69 iigschränkt · under 50 schlächt.")
                 }
             }
 
@@ -95,7 +95,7 @@ struct NightDetailView: View {
             } header: {
                 Text("Schlafphase")
             } footer: {
-                Text("Nume zur Info – zellt nid zum Score. Es git ke wüsseschaftleche Konsens drzue, u d Uhr schätzt d Phase nume ungfähr.")
+                Text("Nume zur Info, zellt nid zum Score. D Uhr cha d Phase nume ungfähr schätze.")
             }
 
             if night.isBad {
@@ -254,22 +254,46 @@ struct NightDetailView: View {
                     .foregroundStyle(Theme.textSecondary)
             }
             if possible < 100 {
-                Text("Es fähle Teil (\(missingParts(c))). Drum wird uf 100 hochgrächnet: \(earned) ÷ \(possible) × 100 = \(Int(night.score.rounded())).")
+                Text("\(missingParts(c)) \(missingCount(c) > 1 ? "fähle" : "fählt") no. Drum zellt nume, was da isch: \(Int(points.earned.rounded())) vo \(possible) mügleche Pünkt entspricht \(Int(night.score.rounded())) vo 100.")
                     .font(.caption2)
                     .foregroundStyle(Theme.textTertiary)
             } else {
-                Text("Aui Teil vorhande – d Summe isch dr Score.")
+                Text("Dr Score isch d Summe vo de Pünkt unde.")
                     .font(.caption2)
                     .foregroundStyle(Theme.textTertiary)
             }
         }
     }
 
+    private func missingCount(_ c: SleepScoreComponents) -> Int {
+        (c.regularity == nil ? 1 : 0) + (c.recovery == nil ? 1 : 0)
+    }
+
     private func missingParts(_ c: SleepScoreComponents) -> String {
         var missing: [String] = []
         if c.regularity == nil { missing.append("Regelmässigkeit") }
         if c.recovery == nil { missing.append("Erholig") }
-        return missing.joined(separator: ", ")
+        return missing.joined(separator: " u ")
+    }
+
+    /// „D Mitti vo dyre Nacht (03:05) isch 45 min später als süsch.“
+    private func regularityText(_ c: SleepScoreComponents) -> String {
+        var clock = ""
+        if let onset = night.sleepOnset, let wake = night.wakeTime {
+            let middle = onset.addingTimeInterval(wake.timeIntervalSince(onset) / 2)
+            clock = " (\(middle.formatted(date: .omitted, time: .shortened)))"
+        }
+        let minutes = Int((c.midpointDeviationMinutes ?? 0).rounded())
+        guard minutes > 0 else { return "D Mitti vo dyre Nacht\(clock) isch genau wie süsch." }
+        let direction: String
+        if let offset = c.midpointOffsetMinutes {
+            direction = offset > 0 ? "später" : "früecher"
+        } else {
+            direction = "näbe dr"
+        }
+        return direction == "näbe dr"
+            ? "D Mitti vo dyre Nacht\(clock) isch \(minutes) min näbe dr übliche Zyt."
+            : "D Mitti vo dyre Nacht\(clock) isch \(minutes) min \(direction) als süsch."
     }
 
     private func detailLine(_ text: String) -> some View {

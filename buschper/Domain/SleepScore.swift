@@ -64,6 +64,9 @@ struct SleepScoreComponents: Codable, Equatable {
     var awakeningCount: Int
     var efficiencyPercent: Double
     var midpointDeviationMinutes: Double?
+    /// Positiv: Schlafmitte später als sonst, negativ: früher. Fehlt bei älteren
+    /// Auswertungen.
+    var midpointOffsetMinutes: Double? = nil
     var rating: Int?
 
     var continuity: Double { waso + awakenings + efficiency }
@@ -178,10 +181,12 @@ enum SleepScore {
         let efficiency = night.efficiencyPercent
 
         var deviation: Double?
+        var offset: Double?
         let recent = previousMidpoints.suffix(regularityNights)
         if !recent.isEmpty {
             let mean = recent.reduce(0, +) / Double(recent.count)
-            deviation = abs(midpointSinceNoon(onset: night.sleepOnset, wake: night.wake, calendar: calendar) - mean)
+            offset = midpointSinceNoon(onset: night.sleepOnset, wake: night.wake, calendar: calendar) - mean
+            deviation = offset.map(abs)
         }
 
         var components = SleepScoreComponents(
@@ -200,6 +205,7 @@ enum SleepScore {
             awakeningCount: night.awakenings,
             efficiencyPercent: efficiency,
             midpointDeviationMinutes: deviation,
+            midpointOffsetMinutes: offset,
             rating: nil
         )
         return applying(rating: rating, to: components)
