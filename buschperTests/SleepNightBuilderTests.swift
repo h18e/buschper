@@ -44,8 +44,8 @@ struct SleepNightBuilderTests {
         #expect(night.latencyMinutes == 30)
         #expect(night.awakenings == 1)
         #expect(night.asleepMinutes == 450)
-        // 450 ÷ (22:30 bis 07:15 = 525 min)
-        #expect(night.efficiencyPercent.isClose(to: 85.71))
+        // 450 ÷ (23:00 bis 07:00 = 480 min) – „Im Bett“ zählt für die Effizienz nicht
+        #expect(night.efficiencyPercent.isClose(to: 93.75))
     }
 
     @Test("Die Quelle mit Phasen gewinnt gegen eine längere ohne Phasen")

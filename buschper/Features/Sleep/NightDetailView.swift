@@ -51,19 +51,13 @@ struct NightDetailView: View {
                 }
 
                 Section {
-                    blockHeader("Kontinuität", c.continuity, continuityMax(c))
-                    if let latency = c.latency {
-                        componentRow("Iischlafduur", latency, SleepScore.Weight.latency,
-                                     detail: "\(minutesText(c.latencyMinutes)) – voll bis \(Int(SleepScore.latencyFullMinutes)) min, null ab \(Int(SleepScore.latencyZeroMinutes)) min")
-                    } else {
-                        detailLine("Iischlafduur: ke „Im Bett“-Zyt i Health (Schlafplan bzw. Schlaf-Fokus) – zellt drum nid.")
-                    }
+                    blockHeader("Kontinuität", c.continuity, continuityMax)
                     componentRow("Wach nachem Iischlafe", c.waso, SleepScore.Weight.waso,
                                  detail: "\(minutesText(c.wasoMinutes)) – voll bis \(Int(SleepScore.wasoFullMinutes)) min, null ab \(Int(SleepScore.wasoZeroMinutes)) min")
                     componentRow("Ufwachphase > 5 min", c.awakenings, SleepScore.Weight.awakenings,
                                  detail: "\(c.awakeningCount)× – voll bis 1×, null ab 4×")
                     componentRow("Schlafeffizienz", c.efficiency, SleepScore.Weight.efficiency,
-                                 detail: "\(Int(c.efficiencyPercent.rounded())) % vo dr Zyt im Bett – voll ab \(Int(SleepScore.efficiencyFullPercent)) %, null bis \(Int(SleepScore.efficiencyZeroPercent)) %")
+                                 detail: "\(Int(c.efficiencyPercent.rounded())) % vom Iischlafe bis zum Ufwache – voll ab \(Int(SleepScore.efficiencyFullPercent)) %, null bis \(Int(SleepScore.efficiencyZeroPercent)) %")
                 }
 
                 Section {
@@ -260,7 +254,6 @@ struct NightDetailView: View {
 
     private func missingParts(_ c: SleepScoreComponents) -> String {
         var missing: [String] = []
-        if c.latency == nil { missing.append("Iischlafduur") }
         if c.regularity == nil { missing.append("Regelmässigkeit") }
         if c.recovery == nil { missing.append("Erholig") }
         return missing.joined(separator: ", ")
@@ -272,10 +265,8 @@ struct NightDetailView: View {
             .foregroundStyle(Theme.textTertiary)
     }
 
-    /// Ohne „Im Bett“-Zeit zählt die Einschlafdauer nicht – der Block hat dann 22 Punkte.
-    private func continuityMax(_ c: SleepScoreComponents) -> Double {
+    private var continuityMax: Double {
         SleepScore.Weight.waso + SleepScore.Weight.awakenings + SleepScore.Weight.efficiency
-            + (c.latency == nil ? 0 : SleepScore.Weight.latency)
     }
 
     private func minutesText(_ minutes: Double?) -> String {

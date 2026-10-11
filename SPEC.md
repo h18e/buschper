@@ -521,15 +521,14 @@ zuverlässig misst. **Schlafphasen geben keine Punkte** (nur Information).
 | Subjektive Erholung | 10 | RU-SATED, Morgen-Einschätzung |
 
 - **Dauer:** 7–9.5 h volle 35, 5–7 h linear, unter 5 h 0; ab 9.5 h linear bis −5 bei 11 h.
-- **Kontinuität:** Einschlafdauer 8 (voll ≤ 30 min, 0 ≥ 45 min; braucht „Im Bett“
-  aus Health, aus jeder Quelle, höchstens 3 h vor dem Einschlafen), Wach nach dem
-  Einschlafen 8 (≤ 20 / ≥ 41 min), Aufwachphasen über 5 min 6 (≤ 1 / ≥ 4),
-  Schlafeffizienz 8 (≥ 85 % / ≤ 74 %; Schlaf ÷ Zeit im Bett, ohne „Im Bett“ ab
-  Einschlafen).
+- **Kontinuität (Testrunde 15, ohne Einschlafdauer):** Wach nach dem Einschlafen 11
+  (voll ≤ 20 min, 0 ≥ 41 min), Aufwachphasen über 5 min 8 (≤ 1 / ≥ 4),
+  Schlafeffizienz 11 (≥ 85 % / ≤ 74 %; Schlaf ÷ Zeit vom Einschlafen bis zum
+  Aufwachen). Die „Im Bett“-Zeit aus Health wird nicht mehr verwendet.
 - **Regelmässigkeit:** Abweichung der Schlafmitte vom Schnitt der letzten 7 Nächte,
   voll ≤ 30 min, 0 ≥ 90 min.
 - **Erholung:** Sterne 1–5 → 0–10 Punkte; ändert den Score nachträglich.
-- Fehlt ein Teil (keine Bettzeit, keine Vorgeschichte, noch keine Sterne), werden die
+- Fehlt ein Teil (keine Vorgeschichte, noch keine Sterne), werden die
   übrigen auf 100 hochgerechnet.
 - **Einstufung** (eigene Grenzen): 85–100 guet, 70–84 solid, 50–69 iigschränkt,
   unter 50 schlächt.

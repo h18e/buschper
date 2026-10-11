@@ -28,15 +28,14 @@ struct SleepNight: Equatable {
         return max(0, sleepOnset.timeIntervalSince(bedStart) / 60)
     }
 
-    /// Zeit im Bett: mit Bettzeit von „Im Bett“ an, sonst vom Einschlafen bis zum
-    /// Aufwachen.
+    /// Zeit vom Einschlafen bis zum Aufwachen. Die „Im Bett“-Zeit aus Health
+    /// zählt nicht mehr (Testrunde 15): Sie stammt vom Schlafplan, nicht von einem
+    /// Sensor, und fehlt oft.
     var timeInBedMinutes: Double {
-        let start = min(bedStart ?? sleepOnset, sleepOnset)
-        let end = max(bedEnd ?? wake, wake)
-        return max(1, end.timeIntervalSince(start) / 60)
+        max(1, wake.timeIntervalSince(sleepOnset) / 60)
     }
 
-    /// Schlafeffizienz in Prozent: Schlaf ÷ Zeit im Bett.
+    /// Schlafeffizienz in Prozent: Schlaf ÷ Zeit vom Einschlafen bis zum Aufwachen.
     var efficiencyPercent: Double {
         min(100, asleepMinutes / timeInBedMinutes * 100)
     }
@@ -67,7 +66,7 @@ struct SleepScoreComponents: Codable, Equatable {
     var midpointDeviationMinutes: Double?
     var rating: Int?
 
-    var continuity: Double { (latency ?? 0) + waso + awakenings + efficiency }
+    var continuity: Double { waso + awakenings + efficiency }
 }
 
 /// Einstufung des Scores (eigene Grenzen, nicht wissenschaftlich normiert).
@@ -104,7 +103,7 @@ enum SleepGrade: String, CaseIterable {
 /// | Block | Punkte |
 /// |---|---|
 /// | Dauer (AASM/SRS ≥ 7 h) | 35 |
-/// | Kontinuität (NSF) | 30 |
+/// | Kontinuität (NSF, ohne Einschlafdauer) | 30 |
 /// | Regelmässigkeit (Schlafmitte) | 25 |
 /// | Subjektive Erholung (RU-SATED) | 10 |
 ///
@@ -115,10 +114,10 @@ enum SleepScore {
 
     enum Weight {
         static let duration = 35.0
-        static let latency = 8.0
-        static let waso = 8.0
-        static let awakenings = 6.0
-        static let efficiency = 8.0
+        // Kontinuität 30 ohne Einschlafdauer (Testrunde 15), im bisherigen Verhältnis.
+        static let waso = 11.0
+        static let awakenings = 8.0
+        static let efficiency = 11.0
         static let regularity = 25.0
         static let recovery = 10.0
     }
@@ -132,9 +131,6 @@ enum SleepScore {
     static let longSleepFromHours = 9.5
     static let longSleepMaxHours = 11.0
     static let longSleepMaxDeduction = 5.0
-    /// Einschlafdauer: voll bis 30 min, 0 ab 45 min.
-    static let latencyFullMinutes = 30.0
-    static let latencyZeroMinutes = 45.0
     /// Wach nach dem Einschlafen: voll bis 20 min, 0 ab 41 min.
     static let wasoFullMinutes = 20.0
     static let wasoZeroMinutes = 41.0
@@ -190,7 +186,8 @@ enum SleepScore {
 
         var components = SleepScoreComponents(
             duration: durationPoints(asleepMinutes: night.asleepMinutes),
-            latency: latencyMinutes.map { fall($0, fullUntil: latencyFullMinutes, zeroFrom: latencyZeroMinutes) * Weight.latency },
+            // Einschlafdauer zählt nicht zum Score (Testrunde 15).
+            latency: nil,
             waso: fall(night.awakeMinutes, fullUntil: wasoFullMinutes, zeroFrom: wasoZeroMinutes) * Weight.waso,
             awakenings: fall(Double(night.awakenings), fullUntil: awakeningsFull, zeroFrom: awakeningsZero) * Weight.awakenings,
             efficiency: rise(efficiency, zeroAt: efficiencyZeroPercent, fullAt: efficiencyFullPercent) * Weight.efficiency,
@@ -234,7 +231,7 @@ enum SleepScore {
     static func points(of c: SleepScoreComponents) -> (earned: Double, possible: Double) {
         var earned = c.duration + c.waso + c.awakenings + c.efficiency
         var possible = Weight.duration + Weight.waso + Weight.awakenings + Weight.efficiency
-        for (points, weight) in [(c.latency, Weight.latency), (c.regularity, Weight.regularity), (c.recovery, Weight.recovery)] {
+        for (points, weight) in [(c.regularity, Weight.regularity), (c.recovery, Weight.recovery)] {
             guard let points else { continue }
             earned += points
             possible += weight

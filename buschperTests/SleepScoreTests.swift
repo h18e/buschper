@@ -28,20 +28,20 @@ struct SleepScoreTests {
         SleepScore.midpointSinceNoon(onset: night.sleepOnset, wake: night.wake, calendar: calendar)
     }
 
-    @Test("Beispielnacht aus der Vorlage ergibt 77 Punkte")
+    @Test("Beispielnacht: Einschlafdauer zählt nicht mehr")
     func exampleNight() {
         // 6 h 40 Schlaf, 20 min Einschlafen, 30 min wach, 2 Aufwachphasen,
         // Schlafmitte 45 min neben dem Wochenschnitt, Erholung 3/5
         let example = night(asleep: 400, waso: 30, awakenings: 2, latency: 20)
         let score = SleepScore.score(night: example, previousMidpoints: [midpoint(example) - 45], rating: 3, calendar: calendar)
         #expect(score.duration.isClose(to: 29.17))
-        #expect(score.latency == 8)
-        #expect(score.waso.isClose(to: 4.19))
-        #expect(score.awakenings.isClose(to: 4))
-        #expect(score.efficiency == 8)
+        #expect(score.latency == nil)
+        #expect(score.waso.isClose(to: 5.76))
+        #expect(score.awakenings.isClose(to: 5.33))
+        #expect(score.efficiency == 11)
         #expect((score.regularity ?? -1).isClose(to: 18.75))
         #expect(score.recovery == 5)
-        #expect(score.total == 77.1)
+        #expect(score.total == 75)
         #expect(SleepGrade(score: score.total) == .solid)
     }
 
@@ -67,20 +67,18 @@ struct SleepScoreTests {
     func continuity() {
         let bad = night(asleep: 480, waso: 41, awakenings: 4, latency: 45)
         let score = SleepScore.score(night: bad, previousMidpoints: [], rating: nil, calendar: calendar)
-        #expect(score.latency == 0)
+        #expect(score.latency == nil)
         #expect(score.waso == 0)
         #expect(score.awakenings == 0)
-        // 480 ÷ (45 + 480 + 41) = 84.8 % → knapp unter voll
-        #expect(score.efficiency < 8 && score.efficiency > 7)
+        // 480 ÷ (480 + 41) = 92 % → voll
+        #expect(score.efficiency == 11)
     }
 
-    @Test("Effizienz ohne „Im Bett“: Schlaf ÷ Einschlafen bis Aufwachen")
-    func efficiencyWithoutBed() {
-        let noBed = night(asleep: 370, waso: 130, latency: nil)
-        #expect(noBed.latencyMinutes == nil)
-        #expect(noBed.efficiencyPercent == 74)
-        let score = SleepScore.score(night: noBed, previousMidpoints: [], rating: nil, calendar: calendar)
-        #expect(score.latency == nil)
+    @Test("Effizienz: Schlaf ÷ Einschlafen bis Aufwachen, „Im Bett“ zählt nicht")
+    func efficiency() {
+        let night = night(asleep: 370, waso: 130, latency: 120)
+        #expect(night.efficiencyPercent == 74)
+        let score = SleepScore.score(night: night, previousMidpoints: [], rating: nil, calendar: calendar)
         #expect(score.efficiency == 0)
     }
 
