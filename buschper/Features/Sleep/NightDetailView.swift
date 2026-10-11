@@ -52,6 +52,7 @@ struct NightDetailView: View {
 
                 Section {
                     blockHeader("Kontinuität", c.continuity, continuityMax)
+                    detailLine("Summe us dene drei Teil:")
                     componentRow("Wach nachem Iischlafe", c.waso, SleepScore.Weight.waso,
                                  detail: "\(minutesText(c.wasoMinutes)) – voll bis \(Int(SleepScore.wasoFullMinutes)) min, null ab \(Int(SleepScore.wasoZeroMinutes)) min")
                     componentRow("Ufwachphase > 5 min", c.awakenings, SleepScore.Weight.awakenings,
@@ -195,22 +196,34 @@ struct NightDetailView: View {
         app.dataDidChange()
     }
 
+    /// Unterpunkt eines Blocks (z. B. der Kontinuität): eingerückt, mit farbiger
+    /// Linie links, kleinerer Schrift und schmalerem Balken – damit klar ist, dass
+    /// er zum Block darüber gehört.
     private func componentRow(_ label: String, _ points: Double, _ weight: Double, detail: String? = nil) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text(label)
-                Spacer()
-                Text("\(NumberText.oneDecimal(points)) / \(Int(weight))")
-                    .monospacedDigit()
-                    .foregroundStyle(Theme.textSecondary)
-            }
-            ProgressBar(fraction: weight > 0 ? points / weight : 0, color: Theme.sleep)
-            if let detail {
-                Text(detail)
-                    .font(.caption2)
-                    .foregroundStyle(Theme.textTertiary)
+        HStack(alignment: .top, spacing: 10) {
+            RoundedRectangle(cornerRadius: 1.5, style: .continuous)
+                .fill(Theme.sleep.opacity(0.5))
+                .frame(width: 3)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(label)
+                        .font(.subheadline)
+                    Spacer()
+                    Text("\(NumberText.oneDecimal(points)) / \(Int(weight))")
+                        .font(.subheadline)
+                        .monospacedDigit()
+                        .foregroundStyle(Theme.textSecondary)
+                }
+                ProgressBar(fraction: weight > 0 ? points / weight : 0, color: Theme.sleep.opacity(0.7), height: 3)
+                if let detail {
+                    Text(detail)
+                        .font(.caption2)
+                        .foregroundStyle(Theme.textTertiary)
+                }
             }
         }
+        .padding(.leading, 14)
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     private func blockHeader(_ label: String, _ points: Double?, _ weight: Double) -> some View {
