@@ -224,6 +224,14 @@ enum SleepScore {
 
     /// Erreichte Punkte, auf 100 hochgerechnet über die vorhandenen Teile.
     static func total(of c: SleepScoreComponents) -> Double {
+        let points = points(of: c)
+        let value = points.possible > 0 ? max(0, points.earned) / points.possible * 100 : 0
+        return (value * 10).rounded() / 10
+    }
+
+    /// Erreichte und mögliche Punkte über die vorhandenen Teile – vor dem
+    /// Hochrechnen auf 100. Für die Erklärung in der App.
+    static func points(of c: SleepScoreComponents) -> (earned: Double, possible: Double) {
         var earned = c.duration + c.waso + c.awakenings + c.efficiency
         var possible = Weight.duration + Weight.waso + Weight.awakenings + Weight.efficiency
         for (points, weight) in [(c.latency, Weight.latency), (c.regularity, Weight.regularity), (c.recovery, Weight.recovery)] {
@@ -231,8 +239,7 @@ enum SleepScore {
             earned += points
             possible += weight
         }
-        let value = possible > 0 ? max(0, earned) / possible * 100 : 0
-        return (value * 10).rounded() / 10
+        return (earned, possible)
     }
 
     /// 0 bis `zeroAt`, linear steigend bis `fullAt`, danach 1.

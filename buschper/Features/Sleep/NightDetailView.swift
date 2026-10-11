@@ -40,6 +40,10 @@ struct NightDetailView: View {
 
             if let c = night.components {
                 Section {
+                    scoreSummary(c)
+                }
+
+                Section {
                     blockHeader("Duur", c.duration, SleepScore.Weight.duration)
                     detailLine("\(OnboardingView.hoursText(Int(c.asleepMinutes))) gschlafe – voll 7–9 h, null under 5 h, ab 9½ h bis −5")
                 } header: {
@@ -226,6 +230,40 @@ struct NightDetailView: View {
             }
             ProgressBar(fraction: weight > 0 ? (points ?? 0) / weight : 0, color: Theme.sleep)
         }
+    }
+
+    /// Wie aus den Punkten unten der Score wird – auch wenn Teile fehlen.
+    @ViewBuilder
+    private func scoreSummary(_ c: SleepScoreComponents) -> some View {
+        let points = SleepScore.points(of: c)
+        let earned = NumberText.oneDecimal(points.earned)
+        let possible = Int(points.possible.rounded())
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text("Pünkt zäme")
+                Spacer()
+                Text("\(earned) / \(possible)")
+                    .monospacedDigit()
+                    .foregroundStyle(Theme.textSecondary)
+            }
+            if possible < 100 {
+                Text("Es fähle Teil (\(missingParts(c))). Drum wird uf 100 hochgrächnet: \(earned) ÷ \(possible) × 100 = \(Int(night.score.rounded())).")
+                    .font(.caption2)
+                    .foregroundStyle(Theme.textTertiary)
+            } else {
+                Text("Aui Teil vorhande – d Summe isch dr Score.")
+                    .font(.caption2)
+                    .foregroundStyle(Theme.textTertiary)
+            }
+        }
+    }
+
+    private func missingParts(_ c: SleepScoreComponents) -> String {
+        var missing: [String] = []
+        if c.latency == nil { missing.append("Iischlafduur") }
+        if c.regularity == nil { missing.append("Regelmässigkeit") }
+        if c.recovery == nil { missing.append("Erholig") }
+        return missing.joined(separator: ", ")
     }
 
     private func detailLine(_ text: String) -> some View {
