@@ -11,6 +11,8 @@ struct ProductEditorView: View {
 
     @State private var draft: ProductDraft
     @State private var showsScanner = false
+    @State private var showsLabelCamera = false
+    @State private var labelPhoto: UIImage?
     @State private var confirmsDelete = false
     /// Pro Produkt abwählbar, falls Mithelfen eingeschaltet ist (SPEC 5.11).
     @State private var sendsToOpenFoodFacts = true
@@ -73,7 +75,7 @@ struct ProductEditorView: View {
                     .pickerStyle(.segmented)
                 }
 
-                NutritionLabelScanSection(draft: $draft)
+                NutritionLabelScanSection(draft: $draft, showsCamera: $showsLabelCamera, capturedImage: $labelPhoto)
 
                 Section {
                     NutrientInputs(nutrients: $draft.per100, isLiquid: draft.isLiquid)
@@ -157,6 +159,9 @@ struct ProductEditorView: View {
                 CodeScannerView(mode: .barcode) { code in
                     draft.barcode = code
                 }
+            }
+            .sheet(isPresented: $showsLabelCamera) {
+                LabelCameraView { image in labelPhoto = image }
             }
         }
     }

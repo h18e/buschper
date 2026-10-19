@@ -247,6 +247,8 @@ die sich direkt erfassen lassen.
 oder aus den Fotos wählen. Apple Vision liest den Text auf dem Gerät; buschper nimmt
 pro Zeile die erste Zahl (Spalte pro 100 g/ml), erkennt Deutsch, Französisch,
 Italienisch und Englisch und füllt nur erkannte Felder. Das Foto wird nicht gespeichert.
+Die Kamera ist derselbe VisionKit-Scanner wie beim Barcode (mit Auslöser);
+Fotos werden vor der Erkennung auf max. 2000 px verkleinert und aufgerichtet.
 
 **Tippfehler** (Testrunde 10): Die lokale Suche toleriert Tippfehler – ab 4 Buchstaben
 einen, ab 7 Buchstaben zwei („kartofel“, „kartofe“, „tomatte“). Solche Treffer stehen
