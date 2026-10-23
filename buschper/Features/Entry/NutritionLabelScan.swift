@@ -200,30 +200,56 @@ private struct LabelScannerRepresentable: UIViewControllerRepresentable {
     }
 }
 
-/// Abschnitt im Produktformular: Nährwerttabelle fotografieren oder aus den
-/// Fotos wählen, erkannte Werte ins Formular übernehmen.
+/// Abschnitt im Produkt- oder Mahlzeitformular: Nährwerttabelle fotografieren
+/// oder aus den Fotos wählen. Nach dem Lesen muss immer gewählt werden, für
+/// welche Menge die Werte gelten – erst dann werden sie übernommen (SPEC 5.5).
 struct NutritionLabelScanSection: View {
-    @Binding var draft: ProductDraft
+    enum Purpose {
+        /// Produktformular: Werte werden pro 100 g/ml gespeichert.
+        case product
+        /// „Ganzi Mahlzyt“: Werte gelten für das, was gegessen wird.
+        case meal
+
+        var bases: [LabelBasis] {
+            switch self {
+            case .product: return [.per100, .piece, .portion]
+            case .meal: return LabelBasis.allCases
+            }
+        }
+    }
+
+    let purpose: Purpose
     /// Kamera und Foto liegen beim Formular, das die Kamera – wie den
     /// Barcode-Scanner – als eigenes Blatt öffnet.
     @Binding var showsCamera: Bool
     @Binding var capturedImage: UIImage?
+    /// Gibt die erkannten Werte samt gewählter Menge weiter. `false`, wenn
+    /// das Formular damit nichts anfangen kann.
+    let onImport: (LabelImport) -> Bool
 
     @State private var photoItem: PhotosPickerItem?
     @State private var isReading = false
     @State private var message: String?
+    @State private var pending: NutritionLabelParser.Result?
+    @State private var basis: LabelBasis?
+    @State private var grams: Double?
+    @State private var count: Double? = 1
 
     var body: some View {
         Section {
-            if LabelCameraView.isAvailable {
-                Button {
-                    showsCamera = true
-                } label: {
-                    Label("Nährwärttabelle fotografiere", systemImage: "camera.viewfinder")
+            if let pending {
+                choice(for: pending)
+            } else {
+                if LabelCameraView.isAvailable {
+                    Button {
+                        showsCamera = true
+                    } label: {
+                        Label("Nährwärttabelle fotografiere", systemImage: "camera.viewfinder")
+                    }
                 }
-            }
-            PhotosPicker(selection: $photoItem, matching: .images) {
-                Label("Foti vo dr Tabelle uswähle", systemImage: "photo.on.rectangle")
+                PhotosPicker(selection: $photoItem, matching: .images) {
+                    Label("Foti vo dr Tabelle uswähle", systemImage: "photo.on.rectangle")
+                }
             }
             if isReading {
                 HStack {
@@ -231,8 +257,10 @@ struct NutritionLabelScanSection: View {
                     Text("Lise d Tabelle …").foregroundStyle(Theme.textSecondary)
                 }
             }
+        } header: {
+            Text("Nährwärttabelle")
         } footer: {
-            Text(message ?? "buschper list d Wärt us em Foti u füllt se unde i. D Erkennig lauft ufem iPhone, s Foti wird nid gspycheret.")
+            Text(footer)
         }
         .onChange(of: capturedImage) { _, image in
             guard let image else { return }
@@ -252,28 +280,99 @@ struct NutritionLabelScanSection: View {
         }
     }
 
-    private func read(_ image: UIImage) {
-        isReading = true
-        message = nil
-        Task {
-            let lines = await NutritionLabelReader.recognize(image)
-            let result = NutritionLabelParser.parse(lines: lines)
-            apply(result)
-            isReading = false
+    // MARK: - Mängi wähle
+
+    @ViewBuilder
+    private func choice(for result: NutritionLabelParser.Result) -> some View {
+        let unit = result.isLiquid ? "ml" : "g"
+        Text("\(result.fields.count) Wärt erkannt: \(result.fields.map(Self.label).joined(separator: ", ")).")
+            .font(.subheadline)
+        Picker("Wärt gälte für", selection: $basis) {
+            Text("Bitte wähle").tag(LabelBasis?.none)
+            ForEach(purpose.bases) { item in
+                Text(item.label(isLiquid: result.isLiquid)).tag(LabelBasis?.some(item))
+            }
+        }
+        switch (purpose, basis) {
+        case (.product, .per100?):
+            OptionalNumberField(title: "Portionsgrössi (fakultativ)", value: $grams, unit: unit, fractionDigits: 0)
+        case (.product, let chosen?):
+            OptionalNumberField(title: "Gwicht vo \(chosen.label(isLiquid: result.isLiquid))", value: $grams, unit: unit, fractionDigits: 0)
+        case (.meal, .per100?):
+            OptionalNumberField(title: "Gässni Mängi", value: $grams, unit: unit, fractionDigits: 0)
+        case (.meal, .piece?), (.meal, .portion?):
+            OptionalNumberField(title: "Aazahl", value: $count, unit: basis == .piece ? "Stück" : "Portione")
+        default:
+            EmptyView()
+        }
+        HStack {
+            Button("Verwärfe", role: .destructive) { reset() }
+                .buttonStyle(.borderless)
+            Spacer()
+            Button("Wärt übernäh") { confirm(result) }
+                .buttonStyle(.borderless)
+                .fontWeight(.semibold)
+                .disabled(labelImport(for: result).map(isUsable) != true)
         }
     }
 
-    private func apply(_ result: NutritionLabelParser.Result) {
-        guard !result.isEmpty else {
-            message = "Kener Nährwärt erkennt. Probier's no einisch: Tabelle grad vo vorne, gnue Liecht, nume d Tabelle im Bild."
-            return
+    private func labelImport(for result: NutritionLabelParser.Result) -> LabelImport? {
+        guard let basis else { return nil }
+        return LabelImport(
+            values: result.per100, fields: result.fields, isLiquid: result.isLiquid,
+            basis: basis, grams: grams, count: count ?? 0
+        )
+    }
+
+    private func isUsable(_ label: LabelImport) -> Bool {
+        switch purpose {
+        case .product: return label.per100 != nil
+        case .meal: return label.total != nil
         }
-        for field in result.fields {
-            draft.per100[field] = result.per100[field]
-        }
-        if result.isLiquid { draft.isLiquid = true }
+    }
+
+    private func confirm(_ result: NutritionLabelParser.Result) {
+        guard let label = labelImport(for: result), onImport(label) else { return }
         let names = result.fields.map(Self.label).joined(separator: ", ")
-        message = "\(result.fields.count) Wärt übernoh (\(names)). Bitte mit dr Packig vergliche – d Kamera cha sech verläse."
+        reset()
+        message = "\(result.fields.count) Wärt übernoh (\(names)) für \(label.basis.label(isLiquid: label.isLiquid)). Bitte mit dr Packig vergliche – d Kamera cha sech verläse."
+    }
+
+    private func reset() {
+        pending = nil
+        basis = nil
+        grams = nil
+        count = 1
+    }
+
+    private var footer: String {
+        if pending != nil {
+            switch purpose {
+            case .product:
+                return "Wähl, für weli Mängi d Tabelle gilt. Bi Stück oder Portion bruucht's ds Gwicht, denn rächnet buschper uf 100 \(pending?.isLiquid == true ? "ml" : "g") um."
+            case .meal:
+                return "Wähl, für weli Mängi d Tabelle gilt. Bi 100 g gisch a, wie viel du gässe hesch – d Wärt wärde drnah grächnet."
+            }
+        }
+        return message ?? "buschper list d Wärt us em Foti. D Erkennig lauft ufem iPhone, s Foti wird nid gspycheret."
+    }
+
+    // MARK: - Lesen
+
+    private func read(_ image: UIImage) {
+        isReading = true
+        message = nil
+        reset()
+        Task {
+            let lines = await NutritionLabelReader.recognize(image)
+            let result = NutritionLabelParser.parse(lines: lines)
+            isReading = false
+            if result.isEmpty {
+                message = "Kener Nährwärt erkennt. Probier's no einisch: Tabelle grad vo vorne, gnue Liecht, nume d Tabelle im Bild."
+            } else {
+                pending = result
+            }
+        }
     }
 
     static func label(_ field: Nutrients.Field) -> String {

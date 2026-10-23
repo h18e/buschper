@@ -179,18 +179,34 @@ struct QuickEntryView: View {
     @State private var kcal: Double?
     @State private var loaded = false
     @State private var savesTemplate = false
+    /// Energie von der Nährwerttabelle – gewinnt gegen die aus den Makros
+    /// gerechnete. Nur sichtbar, wenn eine da ist.
+    @State private var labelKcal: Double?
+    @State private var showsLabelKcal = false
+    /// Zucker, gesättigte Fettsäuren, Salz usw. aus der Tabelle – ohne eigenes Feld.
+    @State private var extras = Nutrients()
+    @State private var showsLabelCamera = false
+    @State private var labelPhoto: UIImage?
 
     private var hasName: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private var item: BasketItem {
-        BasketItem.quick(
+        var item = BasketItem.quick(
             name: name,
             carbs: carbs, protein: protein, fat: fat, fiber: fiber, alcohol: alcohol,
             kcalOnly: kcalOnly ? kcal : nil
         )
+        if !kcalOnly, var total = item.fixedTotal {
+            if showsLabelKcal, let labelKcal { total.kcal = labelKcal }
+            for field in Self.extraFields { total[field] = extras[field] }
+            item.fixedTotal = total
+        }
+        return item
     }
+
+    private static let extraFields: [Nutrients.Field] = [.sugar, .saturatedFat, .salt, .caffeine]
 
     private var isValid: Bool {
         let hasValues = kcalOnly ? (kcal ?? 0) > 0 : ((carbs ?? 0) + (protein ?? 0) + (fat ?? 0) + (alcohol ?? 0)) > 0
@@ -209,6 +225,9 @@ struct QuickEntryView: View {
                     }
                     .pickerStyle(.segmented)
                 }
+                NutritionLabelScanSection(purpose: .meal, showsCamera: $showsLabelCamera, capturedImage: $labelPhoto) { label in
+                    applyLabel(label)
+                }
                 if kcalOnly {
                     Section {
                         OptionalNumberField(title: "Energie", value: $kcal, unit: "kcal", fractionDigits: 0)
@@ -220,8 +239,15 @@ struct QuickEntryView: View {
                         OptionalNumberField(title: "Fett", value: $fat, unit: "g")
                         OptionalNumberField(title: "Ballaststoffe", value: $fiber, unit: "g")
                         OptionalNumberField(title: "Alkohol", value: $alcohol, unit: "g")
+                        if showsLabelKcal {
+                            OptionalNumberField(title: "Energie (Tabelle)", value: $labelKcal, unit: "kcal", fractionDigits: 0)
+                        }
                     } footer: {
-                        Text("Energie wird usgrächnet: \(NumberText.kcal(item.total.kcal ?? 0)) kcal (4 kcal pro g KH u Eiwiss, 9 pro g Fett, 7 pro g Alkohol).")
+                        if showsLabelKcal, labelKcal != nil {
+                            Text("Energie vo dr Nährwärttabelle. Läär mache, wenn buschper se us de Makros sött rächne.")
+                        } else {
+                            Text("Energie wird usgrächnet: \(NumberText.kcal(item.total.kcal ?? 0)) kcal (4 kcal pro g KH u Eiwiss, 9 pro g Fett, 7 pro g Alkohol).")
+                        }
                     }
                 }
                 if onSaveTemplate != nil {
@@ -259,7 +285,30 @@ struct QuickEntryView: View {
                 }
             }
             .onAppear(perform: load)
+            .sheet(isPresented: $showsLabelCamera) {
+                LabelCameraView { image in labelPhoto = image }
+            }
         }
+    }
+
+    /// Werte aus der Nährwerttabelle für die gewählte Menge eintragen.
+    private func applyLabel(_ label: LabelImport) -> Bool {
+        guard let total = label.total else { return false }
+        func rounded(_ value: Double?) -> Double? { value.map { ($0 * 10).rounded() / 10 } }
+        let hasMacros = [total.carbs, total.protein, total.fat, total.alcohol].contains { $0 != nil }
+        kcalOnly = !hasMacros
+        carbs = rounded(total.carbs)
+        protein = rounded(total.protein)
+        fat = rounded(total.fat)
+        fiber = rounded(total.fiber)
+        alcohol = rounded(total.alcohol)
+        kcal = total.kcal.map { $0.rounded() }
+        labelKcal = kcal
+        showsLabelKcal = kcal != nil
+        var extras = Nutrients()
+        for field in Self.extraFields { extras[field] = rounded(total[field]) }
+        self.extras = extras
+        return true
     }
 
     private func load() {
@@ -275,5 +324,12 @@ struct QuickEntryView: View {
         fiber = total.fiber
         alcohol = total.alcohol
         kcal = total.kcal
+        for field in Self.extraFields { extras[field] = total[field] }
+        // Weicht die Energie von der aus den Makros ab, stammt sie von einer Tabelle.
+        let computed = Nutrients.kcal(carbs: total.carbs, protein: total.protein, fat: total.fat, alcohol: total.alcohol)
+        if hasMacros, let value = total.kcal, abs(value - computed) >= 1 {
+            labelKcal = value
+            showsLabelKcal = true
+        }
     }
 }

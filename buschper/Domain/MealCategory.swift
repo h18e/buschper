@@ -50,6 +50,36 @@ enum MealCategory: String, Codable, CaseIterable, Identifiable {
         return windows.first { minutes >= $0.start && minutes < $0.end }?.category ?? .snack
     }
 
+    /// Feste Uhrzeit für geplante Einträge (SPEC 5.2). Snacks werden nicht
+    /// geplant und haben keine.
+    var plannedTime: (hour: Int, minute: Int)? {
+        switch self {
+        case .breakfast: return (7, 0)
+        case .morningSnack: return (9, 0)
+        case .lunch: return (12, 0)
+        case .afternoonSnack: return (15, 0)
+        case .dinner: return (19, 0)
+        case .snack: return nil
+        }
+    }
+
+    /// Ab so vielen Minuten Vorlauf gilt ein Eintrag von heute als geplant.
+    static let planningLeadMinutes = 30
+
+    /// Zeitpunkt für einen geplanten Eintrag dieser Kategorie am Tag von `date`.
+    /// `nil`, wenn nicht geplant wird: Snack, ein vergangener Tag oder heute
+    /// eine Zeit, die schon (fast) vorbei ist – dann bleibt die Uhrzeit.
+    func plannedTimestamp(on date: Date, now: Date = Date(), calendar: Calendar = .current) -> Date? {
+        guard let time = plannedTime,
+              let planned = calendar.date(bySettingHour: time.hour, minute: time.minute, second: 0, of: date)
+        else { return nil }
+        let day = calendar.startOfDay(for: date)
+        let today = calendar.startOfDay(for: now)
+        if day > today { return planned }
+        if day == today, planned.timeIntervalSince(now) > Double(Self.planningLeadMinutes * 60) { return planned }
+        return nil
+    }
+
     /// Wird eine Mahlzeit dieser Kategorie als Znacht gewertet (Schlafanalyse)?
     var isDinner: Bool { self == .dinner }
 }

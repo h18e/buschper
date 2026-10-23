@@ -75,7 +75,9 @@ struct ProductEditorView: View {
                     .pickerStyle(.segmented)
                 }
 
-                NutritionLabelScanSection(draft: $draft, showsCamera: $showsLabelCamera, capturedImage: $labelPhoto)
+                NutritionLabelScanSection(purpose: .product, showsCamera: $showsLabelCamera, capturedImage: $labelPhoto) { label in
+                    label.apply(to: &draft)
+                }
 
                 Section {
                     NutrientInputs(nutrients: $draft.per100, isLiquid: draft.isLiquid)

@@ -11,8 +11,9 @@ struct KcalEntryView: View {
     /// `false`, wenn an eine bestehende Mahlzeit angehängt wird – dann steht
     /// die Kategorie schon fest.
     var choosesCategory = true
-    /// Zusatz zum Hinweis, z. B. „um 12:30“ oder „i „Zmittag““.
-    var saveHint: String = ""
+    /// Zusatz zum Hinweis je nach gewählter Kategorie, z. B. „um 12:30“ oder
+    /// „i „Zmittag““ – geplante Einträge springen auf die feste Zeit.
+    var saveHint: (MealCategory) -> String = { _ in "" }
     let onConfirm: (BasketItem, MealCategory) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -69,7 +70,7 @@ struct KcalEntryView: View {
     }
 
     private var hint: String {
-        let target = choosesCategory ? "als \(selected.label) \(saveHint)" : saveHint
+        let target = choosesCategory ? "als \(selected.label) \(saveHint(selected))" : saveHint(selected)
         return "Wird direkt gspycheret \(target). Nume d Energie – Makros blybe läär. Im Tagesprotokoll steit „\(Self.defaultName)“."
     }
 

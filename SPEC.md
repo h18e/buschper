@@ -200,6 +200,11 @@ vorgeschlagen und lässt sich ändern:
 | 17:30–21:59 | Znacht |
 | sonst | Snack |
 
+**Geplante Einträge** (Testrunde 12): Für einen späteren Tag – oder heute mehr als
+30 Minuten im Voraus – setzt die Wahl der Kategorie die Uhrzeit fest: Zmorge 07:00,
+Znüni 09:00, Zmittag 12:00, Zvieri 15:00, Znacht 19:00. Snacks werden nicht geplant
+und behalten die Uhrzeit. Die Zeit lässt sich danach von Hand ändern.
+
 ### 5.3 Erfassen: der Weg „Ässe“ (Q27)
 
 1. Zeitpunkt (Vorgabe: jetzt) und Kategorie (Vorschlag)
@@ -249,6 +254,13 @@ pro Zeile die erste Zahl (Spalte pro 100 g/ml), erkennt Deutsch, Französisch,
 Italienisch und Englisch und füllt nur erkannte Felder. Das Foto wird nicht gespeichert.
 Die Kamera ist derselbe VisionKit-Scanner wie beim Barcode (mit Auslöser);
 Fotos werden vor der Erkennung auf max. 2000 px verkleinert und aufgerichtet.
+Nach jedem Import (Foto oder Bild) wird **von Hand gewählt, für welche Menge** die
+Werte gelten – vorher wird nichts übernommen (Testrunde 12):
+- Produkt: 100 g/ml (optional mit Portionsgrösse, z. B. 80 g), 1 Stück oder 1 Portion.
+  Stück/Portion brauchen ihr Gewicht; die Werte werden auf 100 g/ml umgerechnet und
+  Stück/Portion als Portionsgrösse angelegt. Beim Erfassen skaliert die Portion.
+- Ganzi Mahlzyt (5.6): zusätzlich „Ganzi Mahlzyt“. Bei 100 g wird die gegessene Menge
+  verlangt und skaliert, bei Stück/Portion die Anzahl.
 
 **Tippfehler** (Testrunde 10): Die lokale Suche toleriert Tippfehler – ab 4 Buchstaben
 einen, ab 7 Buchstaben zwei („kartofel“, „kartofe“, „tomatte“). Solche Treffer stehen
@@ -316,6 +328,9 @@ Für ein ganzes Gericht, dessen Zutaten du nicht kennst:
 - **Variante Makros:** KH, Eiweiss, Fett in g, optional Ballaststoffe und Alkohol.
   Die kcal rechnet die App: `KH × 4 + Eiweiss × 4 + Fett × 9 + Alkohol × 7`
 - **Variante nur kcal:** Makros bleiben leer
+- **Nährwerttabelle** fotografieren oder Bild wählen (wie 5.5, mit Mengenwahl).
+  Die Energie der Tabelle gewinnt gegen die gerechnete; Zucker, gesättigte
+  Fettsäuren und Salz werden mitgenommen.
 
 Wird **nicht** als eigenes Produkt oder Rezept gespeichert, sondern lebt nur als
 Eintrag in der Mahlzeit. Beim Kopieren einer Mahlzeit kommt er mit. Mit dem

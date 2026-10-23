@@ -55,8 +55,12 @@ struct AddFoodView: View {
     init(existingMeal: Meal? = nil, date: Date = Date()) {
         self.existingMeal = existingMeal
         let start = existingMeal?.timestamp ?? date
-        _timestamp = State(initialValue: start)
-        _category = State(initialValue: existingMeal?.category ?? MealCategory.suggested(for: start))
+        let suggested = existingMeal?.category ?? MealCategory.suggested(for: start)
+        // Geplant für einen späteren Tag: gleich die feste Zeit der Mahlzeit (SPEC 5.2).
+        let isLaterDay = Calendar.current.startOfDay(for: start) > Calendar.current.startOfDay(for: Date())
+        let planned = existingMeal == nil && isLaterDay ? suggested.plannedTimestamp(on: start) : nil
+        _timestamp = State(initialValue: planned ?? start)
+        _category = State(initialValue: suggested)
         _categoryTouched = State(initialValue: existingMeal != nil)
     }
 
@@ -76,7 +80,7 @@ struct AddFoodView: View {
                         DatePicker("Zyt", selection: $timestamp)
                         Picker("Mahlzyt", selection: Binding(
                             get: { category },
-                            set: { category = $0; categoryTouched = true }
+                            set: { choose($0) }
                         )) {
                             ForEach(MealCategory.allCases) { item in
                                 Label(item.label, systemImage: item.symbolName).tag(item)
@@ -143,11 +147,14 @@ struct AddFoodView: View {
                 KcalEntryView(
                     initialCategory: category,
                     choosesCategory: existingMeal == nil,
-                    saveHint: kcalSaveHint
+                    saveHint: { kcalSaveHint(for: $0) }
                 ) { item, chosenCategory in
                     // Direkt sichern, ohne Umweg übers Chörbli. Liegt schon etwas
                     // im Chörbli, kommt es mit, damit nichts verloren geht.
                     basket.append(item)
+                    if existingMeal == nil, chosenCategory != category {
+                        choose(chosenCategory)
+                    }
                     app.store.saveMeal(items: basket, timestamp: timestamp, category: chosenCategory, into: existingMeal)
                     app.dataDidChange()
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { dismiss() }
@@ -648,11 +655,23 @@ struct AddFoodView: View {
     }
 
     /// Wohin „Nume kcal“ direkt sichert.
-    private var kcalSaveHint: String {
+    private func kcalSaveHint(for chosen: MealCategory) -> String {
+        let time = chosen != category ? (chosen.plannedTimestamp(on: timestamp) ?? timestamp) : timestamp
         let target = existingMeal.map { "i „\($0.displayTitle)“" }
-            ?? "um \(timestamp.formatted(date: .omitted, time: .shortened))"
+            ?? "um \(time.formatted(date: .omitted, time: .shortened))"
         let extra = basket.isEmpty ? "" : " (mit de \(basket.count) Iiträg us em Chörbli)"
         return target + extra
+    }
+
+    /// Mahlzeit von Hand gewählt. Wird geplant (späterer Tag oder heute noch
+    /// mehr als eine halbe Stunde hin), springt die Zeit auf die feste Zeit
+    /// der Mahlzeit – ausser beim Snack.
+    private func choose(_ newCategory: MealCategory) {
+        category = newCategory
+        categoryTouched = true
+        if let planned = newCategory.plannedTimestamp(on: timestamp) {
+            timestamp = planned
+        }
     }
 
     private func saveMeal() {
