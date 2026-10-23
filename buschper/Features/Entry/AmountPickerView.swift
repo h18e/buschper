@@ -176,6 +176,7 @@ struct QuickEntryView: View {
     @State private var fat: Double?
     @State private var fiber: Double?
     @State private var alcohol: Double?
+    @State private var caffeine: Double?
     @State private var kcal: Double?
     @State private var loaded = false
     @State private var savesTemplate = false
@@ -198,15 +199,22 @@ struct QuickEntryView: View {
             carbs: carbs, protein: protein, fat: fat, fiber: fiber, alcohol: alcohol,
             kcalOnly: kcalOnly ? kcal : nil
         )
-        if !kcalOnly, var total = item.fixedTotal {
-            if showsLabelKcal, let labelKcal { total.kcal = labelKcal }
-            for field in Self.extraFields { total[field] = extras[field] }
+        if var total = item.fixedTotal {
+            if !kcalOnly {
+                if showsLabelKcal, let labelKcal { total.kcal = labelKcal }
+                for field in Self.extraFields { total[field] = extras[field] }
+            } else {
+                // Bei „Nume kcal“ gilt die eingegebene Energie; Alkohol zählt
+                // nicht noch einmal dazu, wird aber für den Schlaf gespeichert.
+                total.alcohol = alcohol
+            }
+            total.caffeine = caffeine
             item.fixedTotal = total
         }
         return item
     }
 
-    private static let extraFields: [Nutrients.Field] = [.sugar, .saturatedFat, .salt, .caffeine]
+    private static let extraFields: [Nutrients.Field] = [.sugar, .saturatedFat, .salt]
 
     private var isValid: Bool {
         let hasValues = kcalOnly ? (kcal ?? 0) > 0 : ((carbs ?? 0) + (protein ?? 0) + (fat ?? 0) + (alcohol ?? 0)) > 0
@@ -238,7 +246,6 @@ struct QuickEntryView: View {
                         OptionalNumberField(title: "Eiwiss", value: $protein, unit: "g")
                         OptionalNumberField(title: "Fett", value: $fat, unit: "g")
                         OptionalNumberField(title: "Ballaststoffe", value: $fiber, unit: "g")
-                        OptionalNumberField(title: "Alkohol", value: $alcohol, unit: "g")
                         if showsLabelKcal {
                             OptionalNumberField(title: "Energie (Tabelle)", value: $labelKcal, unit: "kcal", fractionDigits: 0)
                         }
@@ -249,6 +256,16 @@ struct QuickEntryView: View {
                             Text("Energie wird usgrächnet: \(NumberText.kcal(item.total.kcal ?? 0)) kcal (4 kcal pro g KH u Eiwiss, 9 pro g Fett, 7 pro g Alkohol).")
                         }
                     }
+                }
+                Section {
+                    OptionalNumberField(title: "Alkohol", value: $alcohol, unit: "g")
+                    OptionalNumberField(title: "Koffein", value: $caffeine, unit: "mg", fractionDigits: 0)
+                } header: {
+                    Text("Alkohol u Koffein (fakultativ)")
+                } footer: {
+                    Text(kcalOnly
+                         ? "Zellt nid zur Energie dobe drzue – d kcal gälte so, wie du se iigisch. Fliesst i d Schlafuswärtig y."
+                         : "Alkohol zellt mit 7 kcal pro g zur Energie. Beides fliesst i d Schlafuswärtig y.")
                 }
                 if onSaveTemplate != nil {
                     Section {
@@ -302,6 +319,7 @@ struct QuickEntryView: View {
         fat = rounded(total.fat)
         fiber = rounded(total.fiber)
         alcohol = rounded(total.alcohol)
+        caffeine = total.caffeine.map { $0.rounded() }
         kcal = total.kcal.map { $0.rounded() }
         labelKcal = kcal
         showsLabelKcal = kcal != nil
@@ -323,6 +341,7 @@ struct QuickEntryView: View {
         fat = total.fat
         fiber = total.fiber
         alcohol = total.alcohol
+        caffeine = total.caffeine
         kcal = total.kcal
         for field in Self.extraFields { extras[field] = total[field] }
         // Weicht die Energie von der aus den Makros ab, stammt sie von einer Tabelle.

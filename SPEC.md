@@ -328,6 +328,9 @@ Für ein ganzes Gericht, dessen Zutaten du nicht kennst:
 - **Variante Makros:** KH, Eiweiss, Fett in g, optional Ballaststoffe und Alkohol.
   Die kcal rechnet die App: `KH × 4 + Eiweiss × 4 + Fett × 9 + Alkohol × 7`
 - **Variante nur kcal:** Makros bleiben leer
+- **Alkohol (g) und Koffein (mg)** in beiden Varianten, fakultativ (Testrunde 13).
+  Bei Makros zählt Alkohol mit 7 kcal/g zur Energie, bei „nur kcal“ nicht noch einmal.
+  Beides fliesst in die Schlafauswertung (Tagesfaktoren) ein.
 - **Nährwerttabelle** fotografieren oder Bild wählen (wie 5.5, mit Mengenwahl).
   Die Energie der Tabelle gewinnt gegen die gerechnete; Zucker, gesättigte
   Fettsäuren und Salz werden mitgenommen.
