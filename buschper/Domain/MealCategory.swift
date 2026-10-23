@@ -35,19 +35,22 @@ enum MealCategory: String, Codable, CaseIterable, Identifiable {
     }
 
     /// Minuten seit Mitternacht, ab denen eine Kategorie vorgeschlagen wird.
+    /// Jede feste Planungszeit liegt im eigenen Fenster (09:00 ist Znüni).
+    /// Snacks werden nie vorgeschlagen – spät in der Nacht gilt noch Znacht.
     private static let windows: [(start: Int, end: Int, category: MealCategory)] = [
-        (5 * 60, 9 * 60 + 30, .breakfast),
-        (9 * 60 + 30, 11 * 60, .morningSnack),
+        (0, 3 * 60, .dinner),
+        (3 * 60, 9 * 60, .breakfast),
+        (9 * 60, 11 * 60, .morningSnack),
         (11 * 60, 14 * 60, .lunch),
         (14 * 60, 17 * 60 + 30, .afternoonSnack),
-        (17 * 60 + 30, 22 * 60, .dinner)
+        (17 * 60 + 30, 24 * 60, .dinner)
     ]
 
-    /// Vorschlag aus der Uhrzeit. Ausserhalb aller Fenster: Snack.
+    /// Vorschlag aus der Uhrzeit – immer eine Hauptmahlzeit, nie Snack.
     static func suggested(for date: Date, calendar: Calendar = .current) -> MealCategory {
         let components = calendar.dateComponents([.hour, .minute], from: date)
         let minutes = (components.hour ?? 0) * 60 + (components.minute ?? 0)
-        return windows.first { minutes >= $0.start && minutes < $0.end }?.category ?? .snack
+        return windows.first { minutes >= $0.start && minutes < $0.end }?.category ?? .dinner
     }
 
     /// Feste Uhrzeit für geplante Einträge (SPEC 5.2). Snacks werden nicht

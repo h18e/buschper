@@ -193,17 +193,22 @@ vorgeschlagen und lässt sich ändern:
 
 | Uhrzeit | Vorschlag |
 |---|---|
-| 05:00–09:29 | Zmorge |
-| 09:30–10:59 | Znüni |
+| 03:00–08:59 | Zmorge |
+| 09:00–10:59 | Znüni |
 | 11:00–13:59 | Zmittag |
 | 14:00–17:29 | Zvieri |
-| 17:30–21:59 | Znacht |
-| sonst | Snack |
+| 17:30–02:59 | Znacht |
+
+Snack wird nie vorgeschlagen, nur von Hand gewählt (Testrunde 14). Jede feste
+Planungszeit liegt im Fenster ihrer eigenen Kategorie.
 
 **Geplante Einträge** (Testrunde 12): Für einen späteren Tag – oder heute mehr als
 30 Minuten im Voraus – setzt die Wahl der Kategorie die Uhrzeit fest: Zmorge 07:00,
 Znüni 09:00, Zmittag 12:00, Zvieri 15:00, Znacht 19:00. Snacks werden nicht geplant
 und behalten die Uhrzeit. Die Zeit lässt sich danach von Hand ändern.
+Wird nur das **Datum** umgestellt, springt die Zeit ebenfalls auf die feste Zeit der
+angezeigten Mahlzeit; zurück auf heute (nicht mehr geplant) gilt wieder die aktuelle
+Uhrzeit. Vergangene Tage behalten die Uhrzeit.
 
 ### 5.3 Erfassen: der Weg „Ässe“ (Q27)
 

@@ -119,7 +119,12 @@ struct AddFoodView: View {
                 }
             }
             .safeAreaInset(edge: .bottom) { basketBar }
-            .onChange(of: timestamp) { _, newValue in
+            .onChange(of: timestamp) { oldValue, newValue in
+                if existingMeal == nil, let adjusted = timeAfterDayChange(from: oldValue, to: newValue) {
+                    // Löst einen weiteren Durchlauf aus, dann mit gleichem Tag.
+                    timestamp = adjusted
+                    return
+                }
                 if !categoryTouched { category = MealCategory.suggested(for: newValue) }
             }
             .task { reloadLists() }
@@ -672,6 +677,22 @@ struct AddFoodView: View {
         if let planned = newCategory.plannedTimestamp(on: timestamp) {
             timestamp = planned
         }
+    }
+
+    /// Neuer Tag gewählt: geplant gilt die feste Zeit der angezeigten Mahlzeit,
+    /// zurück auf heute (ohne Planung) wieder die aktuelle Uhrzeit. `nil`, wenn
+    /// die Zeit bleibt.
+    private func timeAfterDayChange(from oldValue: Date, to newValue: Date) -> Date? {
+        let calendar = Calendar.current
+        guard !calendar.isDate(oldValue, inSameDayAs: newValue) else { return nil }
+        if let planned = category.plannedTimestamp(on: newValue) {
+            return planned == newValue ? nil : planned
+        }
+        if calendar.isDateInToday(newValue) {
+            let now = Date()
+            return abs(now.timeIntervalSince(newValue)) < 60 ? nil : now
+        }
+        return nil
     }
 
     private func saveMeal() {

@@ -59,19 +59,29 @@ struct FluidAndDrinkTests {
 struct MealCategoryTests {
     let calendar = TestCalendar.calendar
 
-    @Test("Vorschlag aus der Uhrzeit", arguments: [
+    @Test("Vorschlag aus der Uhrzeit, nie Snack", arguments: [
         (7, 0, MealCategory.breakfast),
-        (9, 29, .breakfast),
-        (9, 30, .morningSnack),
+        (8, 59, .breakfast),
+        (9, 0, .morningSnack),
+        (10, 59, .morningSnack),
         (12, 15, .lunch),
         (15, 0, .afternoonSnack),
         (17, 30, .dinner),
-        (21, 59, .dinner),
-        (22, 0, .snack),
-        (3, 0, .snack)
+        (22, 0, .dinner),
+        (2, 59, .dinner),
+        (3, 0, .breakfast)
     ])
     func suggestion(hour: Int, minute: Int, expected: MealCategory) {
         let date = TestCalendar.date(2026, 9, 24, hour, minute)
         #expect(MealCategory.suggested(for: date, calendar: calendar) == expected)
+    }
+
+    @Test("Jede feste Planungszeit ergibt wieder ihre Kategorie")
+    func plannedTimesMatchSuggestion() {
+        for category in MealCategory.allCases {
+            guard let time = category.plannedTime else { continue }
+            let date = TestCalendar.date(2026, 9, 24, time.hour, time.minute)
+            #expect(MealCategory.suggested(for: date, calendar: calendar) == category)
+        }
     }
 }
