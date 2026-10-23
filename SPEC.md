@@ -331,6 +331,13 @@ Für ein ganzes Gericht, dessen Zutaten du nicht kennst:
 - **Alkohol (g) und Koffein (mg)** in beiden Varianten, fakultativ (Testrunde 13).
   Bei Makros zählt Alkohol mit 7 kcal/g zur Energie, bei „nur kcal“ nicht noch einmal.
   Beides fliesst in die Schlafauswertung (Tagesfaktoren) ein.
+
+**Alkohol und Koffein überall** (Testrunde 13): Jede Nährwerttabelle der App zeigt
+Alkohol (g) und Koffein (mg) immer an, auch wenn unbekannt („–“). Erfassen lässt sich
+beides bei Produkten (fest und flüssig), Getränken, Ganzi Mahlzyt und „Nume kcal“
+(eingeklappt, zählt dort nicht zu den kcal). Die Kurzzeile („640 kcal · …“) nennt
+beides, sobald etwas drin ist. Der Tabellen-Leser erkennt Koffein (mg) und Alkohol
+(g, oder aus „% vol“ pro 100 ml umgerechnet); Zuckeralkohole zählen nicht.
 - **Nährwerttabelle** fotografieren oder Bild wählen (wie 5.5, mit Mengenwahl).
   Die Energie der Tabelle gewinnt gegen die gerechnete; Zucker, gesättigte
   Fettsäuren und Salz werden mitgenommen.

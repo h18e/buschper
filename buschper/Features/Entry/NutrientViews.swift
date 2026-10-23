@@ -23,6 +23,13 @@ struct NutrientLine: View {
         add(.carbs, "KH")
         add(.protein, "Eiwiss")
         add(.fat, "Fett")
+        // Alkohol und Koffein nur, wenn etwas drin ist – sonst wird die Zeile lang.
+        if let alcohol = nutrients.alcohol, alcohol > 0 {
+            parts.append("\(incomplete.contains(.alcohol) ? "≥" : "")\(NumberText.amount(alcohol)) g Alkohol")
+        }
+        if let caffeine = nutrients.caffeine, caffeine > 0 {
+            parts.append("\(incomplete.contains(.caffeine) ? "≥" : "")\(NumberText.kcal(caffeine)) mg Koffein")
+        }
         return parts.joined(separator: " · ")
     }
 }
@@ -41,12 +48,8 @@ struct NutrientTable: View {
             row("Eiwiss", nutrients.protein, "g")
             row("Ballaststoffe", nutrients.fiber, "g")
             row("Salz", nutrients.salt, "g", digits: 2)
-            if nutrients.alcohol != nil {
-                row("Alkohol", nutrients.alcohol, "g")
-            }
-            if nutrients.caffeine != nil {
-                row("Koffein", nutrients.caffeine, "mg", digits: 0)
-            }
+            row("Alkohol", nutrients.alcohol, "g")
+            row("Koffein", nutrients.caffeine, "mg", digits: 0)
         }
         .font(.subheadline)
     }

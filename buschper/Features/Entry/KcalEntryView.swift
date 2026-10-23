@@ -19,6 +19,9 @@ struct KcalEntryView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var kcal: Double = 0
     @State private var category: MealCategory?
+    @State private var alcohol: Double?
+    @State private var caffeine: Double?
+    @State private var showsExtras = false
 
     static let defaultName = "Kalorie"
 
@@ -39,6 +42,7 @@ struct KcalEntryView: View {
                     if choosesCategory {
                         categoryGrid
                     }
+                    extrasBox
                     Text(hint)
                         .font(.footnote)
                         .foregroundStyle(Theme.textSecondary)
@@ -55,11 +59,15 @@ struct KcalEntryView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Sichere") {
-                        onConfirm(BasketItem.quick(
+                        var item = BasketItem.quick(
                             name: Self.defaultName,
                             carbs: nil, protein: nil, fat: nil, fiber: nil, alcohol: nil,
                             kcalOnly: kcal.rounded()
-                        ), selected)
+                        )
+                        // Zählen nicht zur Energie (die gilt wie eingegeben), aber für den Schlaf.
+                        item.fixedTotal?.alcohol = alcohol
+                        item.fixedTotal?.caffeine = caffeine
+                        onConfirm(item, selected)
                         dismiss()
                     }
                     .disabled(kcal <= 0)
@@ -72,6 +80,23 @@ struct KcalEntryView: View {
     private var hint: String {
         let target = choosesCategory ? "als \(selected.label) \(saveHint(selected))" : saveHint(selected)
         return "Wird direkt gspycheret \(target). Nume d Energie – Makros blybe läär. Im Tagesprotokoll steit „\(Self.defaultName)“."
+    }
+
+    /// Alkohol und Koffein, fakultativ und eingeklappt.
+    private var extrasBox: some View {
+        DisclosureGroup("Alkohol u Koffein (fakultativ)", isExpanded: $showsExtras) {
+            VStack(spacing: 10) {
+                OptionalNumberField(title: "Alkohol", value: $alcohol, unit: "g")
+                OptionalNumberField(title: "Koffein", value: $caffeine, unit: "mg", fractionDigits: 0)
+                Text("Zellt nid zu de kcal drzue, fliesst aber i d Schlafuswärtig y.")
+                    .font(.caption)
+                    .foregroundStyle(Theme.textTertiary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.top, 8)
+        }
+        .padding(12)
+        .background(Theme.surfaceElevated, in: RoundedRectangle(cornerRadius: Theme.smallCornerRadius, style: .continuous))
     }
 
     /// Sechs Kategorien als Kacheln, zwei Reihen à drei.

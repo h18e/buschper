@@ -64,7 +64,7 @@ enum NutritionLabelParser {
 
         for row in normalized {
             guard let field = field(for: row), result.per100[field] == nil,
-                  let value = firstAmount(in: row)
+                  let value = amount(of: field, in: row)
             else { continue }
             result.per100[field] = value
             result.fields.append(field)
@@ -78,11 +78,15 @@ enum NutritionLabelParser {
     private static let ignored = [
         "ungesattigt", "unsaturated", "insature", "insaturi", "mono", "poly",
         "natrium", "sodium", "sodio", "starke", "amidon", "amido", "starch",
+        // Zuckeralkohole sind kein Alkohol; „alkoholfrei“ hat keinen Wert.
+        "mehrwertig", "polyol", "polialcol", "alkoholfrei", "sans alcool", "analcolic", "alcohol free",
     ]
 
     /// Reihenfolge zählt: „davon gesättigte Fettsäuren“ vor „Fett“, „davon Zucker“
     /// vor „Kohlenhydrate“.
     private static let keywords: [(Nutrients.Field, [String])] = [
+        (.caffeine, ["koffein", "coffein", "cafeine", "caffeina", "caffeine"]),
+        (.alcohol, ["alkohol", "alcool", "alcohol"]),
         (.saturatedFat, ["gesattigt", "saturated", "satures", "saturi"]),
         (.sugar, ["zucker", "sucres", "zuccheri", "sugars", "sugar"]),
         (.fiber, ["ballaststoff", "fibres", "fibre", "fibra", "fiber"]),
@@ -122,6 +126,25 @@ enum NutritionLabelParser {
         return regex.matches(in: text, range: range).compactMap { match in
             guard let r = Range(match.range(at: 1), in: text) else { return nil }
             return Double(text[r].replacingOccurrences(of: ",", with: "."))
+        }
+    }
+
+    /// Wert eines Felds in seiner Einheit: Koffein in mg, Alkohol in g – steht
+    /// beim Alkohol nur „% vol“, wird er pro 100 ml in Gramm umgerechnet.
+    static func amount(of field: Nutrients.Field, in row: String) -> Double? {
+        switch field {
+        case .caffeine:
+            let mg = numbers(in: row, pattern: number + #"\s*mg\b"#)
+            if let value = mg.first { return value }
+            return firstAmount(in: row).map { $0 * 1000 }
+        case .alcohol:
+            if row.range(of: number + #"\s*g\b"#, options: .regularExpression) == nil,
+               let abv = numbers(in: row, pattern: number + #"\s*%"#).first {
+                return (DrinkMath.alcoholGrams(volumeMl: 100, abvPercent: abv) * 10).rounded() / 10
+            }
+            return firstAmount(in: row)
+        default:
+            return firstAmount(in: row)
         }
     }
 

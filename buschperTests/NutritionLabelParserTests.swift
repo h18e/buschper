@@ -69,6 +69,29 @@ struct NutritionLabelParserTests {
         #expect(result.per100.salt == 0.02)
     }
 
+    @Test("Koffein in mg, Alkohol in g oder aus Vol-%, Zuckeralkohole nicht")
+    func caffeineAndAlcohol() {
+        let drink = NutritionLabelParser.parse(rows: [
+            "Nährwerte pro 100 ml",
+            "Energie 46 kcal",
+            "Koffein 32 mg",
+            "Alkohol 4,8 % vol",
+        ])
+        #expect(drink.per100.caffeine == 32)
+        #expect(drink.per100.alcohol == 3.8)
+        #expect(drink.fields.contains(.caffeine))
+
+        let food = NutritionLabelParser.parse(rows: [
+            "Energie 380 kcal",
+            "Alkohol 2,5 g",
+            "davon mehrwertige Alkohole 12 g",
+            "Caffeine 0,05 g",
+        ])
+        #expect(food.per100.alcohol == 2.5)
+        #expect(food.per100.caffeine == 50)
+        #expect(food.per100.sugar == nil)
+    }
+
     @Test("Schnipsel auf gleicher Höhe werden zu einer Zeile, oben zuerst")
     func groupsRows() {
         let lines = [
